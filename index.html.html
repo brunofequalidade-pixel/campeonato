@@ -106,9 +106,21 @@
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Global variables for Firebase (MUST BE USED)
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        // --- Sua configuração do Firebase foi inserida aqui ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBo8G3ZcWk4EepN0cHdVBtXc7tGOfcw-yg",
+            authDomain: "inscricaosinuca.firebaseapp.com",
+            projectId: "inscricaosinuca",
+            storageBucket: "inscricaosinuca.firebasestorage.app",
+            messagingSenderId: "338241576305",
+            appId: "1:338241576305:web:288b6124384c6be4f76ad0",
+            measurementId: "G-PEDG30FS2R"
+        };
+        
+        // Usaremos o ID do projeto para criar um caminho único no banco de dados.
+        const appId = firebaseConfig.projectId;
+        // --- FIM DA CONFIGURAÇÃO ---
+
 
         // DOM Elements
         const formSection = document.getElementById('formSection');
@@ -143,6 +155,12 @@
         let isFirebaseInitialized = false;
 
         async function initFirebase() {
+             // Validação para garantir que a configuração não está vazia
+            if (!firebaseConfig.projectId) {
+                 loadingMessage.textContent = 'Erro: A configuração do Firebase não foi preenchida. Verifique o código.';
+                 console.error("Configuração do Firebase ausente. Preencha o objeto firebaseConfig no script.");
+                 return;
+            }
             try {
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
@@ -153,7 +171,7 @@
                 loadEntries();
             } catch (e) {
                 console.error("Erro ao inicializar Firebase:", e);
-                loadingMessage.textContent = 'Erro ao carregar dados. Verifique a configuração do Firebase.';
+                loadingMessage.textContent = 'Erro ao carregar dados. Verifique a configuração do Firebase e se o domínio está autorizado.';
             }
         }
 
@@ -165,7 +183,7 @@
                 querySnapshot.forEach((doc) => {
                     entries.push({ id: doc.id, ...doc.data() });
                 });
-                entries.sort((a, b) => b.criado_em.localeCompare(a.criado_em));
+                entries.sort((a, b) => (b.criado_em || "").localeCompare(a.criado_em || ""));
                 renderParticipants();
                 loadingMessage.classList.add('hidden');
             }, (error) => {
@@ -177,7 +195,7 @@
         async function saveEntry(newEntry) {
             try {
                 const docRef = await addDoc(collection(db, `artifacts/${appId}/public/data/participants`), newEntry);
-                showMessage('success', `Inscrição realizada com sucesso! ID: ${docRef.id}`);
+                showMessage('success', `Inscrição realizada com sucesso!`);
             } catch (e) {
                 console.error("Erro ao adicionar documento: ", e);
                 showMessage('error', 'Erro ao salvar a inscrição. Tente novamente.');

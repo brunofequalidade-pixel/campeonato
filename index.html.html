@@ -1,355 +1,196 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inscrições - Campeonato de Sinuca</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .modal-content {
-            background: white;
-            padding: 24px;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            max-width: 90%;
-            width: 400px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campeonato - Inscrições</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 flex items-center justify-center min-h-screen p-6">
+<body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
 
-    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-6">
-        <h1 class="text-2xl font-bold mb-2 text-gray-900">Inscrições - Campeonato de Sinuca</h1>
-        <p class="text-sm text-gray-600 mb-4">Gerencie as inscrições para o campeonato.</p>
+  <h1 class="text-2xl font-bold mb-6">🏆 Campeonato - Inscrições</h1>
 
-        <div class="flex justify-between items-center mb-4 border-b pb-4">
-            <h2 class="text-lg font-semibold text-gray-800">Participantes</h2>
-            <button id="toggleButton" class="px-4 py-2 rounded-xl bg-indigo-600 text-white font-semibold shadow-md hover:bg-indigo-700 transition duration-300 ease-in-out">
-                Nova Inscrição
-            </button>
-        </div>
+  <!-- Botão de alternância -->
+  <button id="toggleButton" class="mb-4 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg">
+    Nova Inscrição
+  </button>
 
-        <!-- Seção do Formulário (ocultada por padrão) -->
-        <div id="formSection" class="hidden">
-            <form id="registrationForm" class="space-y-4">
-                <input id="matriculaInput" type="text" placeholder="N° da Matrícula*" required class="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <input id="nomeInput" type="text" placeholder="Nome completo*" required class="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <input id="setorInput" type="text" placeholder="Setor*" required class="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                
-                <div class="flex flex-col sm:flex-row items-center gap-4">
-                    <input id="fotoInput" type="file" accept="image/*" required class="w-full p-3 border border-gray-300 rounded-xl file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
-                    <img id="previewFoto" class="hidden w-16 h-16 object-cover rounded-full border-2 border-indigo-500" alt="Pré-visualização da foto">
-                </div>
-                
-                <div class="flex flex-col sm:flex-row gap-2">
-                    <button type="submit" class="flex-1 px-4 py-2 rounded-xl bg-indigo-600 text-white font-semibold shadow-md hover:bg-indigo-700 transition duration-300 ease-in-out">
-                        Enviar inscrição
-                    </button>
-                    <button type="button" id="clearFormBtn" class="flex-1 px-4 py-2 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition duration-300 ease-in-out">
-                        Limpar
-                    </button>
-                    <button type="button" id="backBtn" class="flex-1 px-4 py-2 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition duration-300 ease-in-out">
-                        Voltar
-                    </button>
-                </div>
+  <!-- Formulário -->
+  <section id="formSection" class="hidden w-full max-w-md bg-white p-6 rounded-lg shadow">
+    <form id="registrationForm" class="space-y-4">
+      <input type="text" id="matricula" placeholder="Matrícula" class="w-full p-2 border rounded-lg" required>
+      <input type="text" id="nome" placeholder="Nome completo" class="w-full p-2 border rounded-lg" required>
+      <input type="text" id="setor" placeholder="Setor" class="w-full p-2 border rounded-lg" required>
 
-                <div id="messageArea" class="p-3 rounded-xl hidden"></div>
-            </form>
-            <hr class="my-6">
-        </div>
+      <!-- Modalidades -->
+      <div>
+        <p class="font-semibold mb-2">Escolha até 2 modalidades:</p>
+        <div id="modalidadeList" class="grid grid-cols-2 gap-2"></div>
+      </div>
 
-        <!-- Seção da Lista de Participantes -->
-        <div id="listSection" class="mt-4">
-            <div id="participantList" class="max-h-80 overflow-y-auto border border-gray-200 rounded-xl p-3">
-                <!-- A lista será renderizada aqui pelo JavaScript -->
-            </div>
-            <p id="loadingMessage" class="text-sm text-gray-500 p-2 text-center">Carregando participantes...</p>
-        </div>
-    </div>
-    
-    <!-- Modal de Confirmação -->
-    <div id="confirmationModal" class="modal">
-        <div class="modal-content">
-            <p id="modalMessage" class="text-lg font-semibold mb-2 text-gray-800">Digite a senha para apagar o participante.</p>
-            <input type="password" id="passwordInput" placeholder="Senha" class="w-full p-3 border border-gray-300 rounded-xl mb-4 focus:outline-none focus:ring-2 focus:ring-red-500">
-            <div id="modalError" class="text-sm text-red-600 mb-4 hidden">Senha incorreta. Tente novamente.</div>
-            <div class="flex justify-center gap-4">
-                <button id="confirmBtn" class="px-6 py-2 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 transition duration-300 ease-in-out">Confirmar</button>
-                <button id="cancelBtn" class="px-6 py-2 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition duration-300 ease-in-out">Cancelar</button>
-            </div>
-        </div>
-    </div>
+      <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg">
+        Enviar Inscrição
+      </button>
+    </form>
+  </section>
 
-    <footer class="mt-4 text-xs text-gray-500">
-        Dica: hospede este arquivo num serviço como Vercel ou Netlify para gerar um link público.
-    </footer>
+  <!-- Lista de inscritos -->
+  <section id="listSection" class="w-full max-w-2xl bg-white p-6 rounded-lg shadow">
+    <h2 class="text-xl font-semibold mb-4">📋 Lista de Inscritos</h2>
+    <div id="participantsList" class="space-y-3"></div>
+  </section>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+  <!-- Firebase + JS -->
+  <script type="module">
+    // Import Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, onSnapshot, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
-        // --- Sua configuração do Firebase foi inserida aqui ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyBo8G3ZcWk4EepN0cHdVBtXc7tGOfcw-yg",
-            authDomain: "inscricaosinuca.firebaseapp.com",
-            projectId: "inscricaosinuca",
-            storageBucket: "inscricaosinuca.firebasestorage.app",
-            messagingSenderId: "338241576305",
-            appId: "1:338241576305:web:288b6124384c6be4f76ad0",
-            measurementId: "G-PEDG30FS2R"
-        };
-        
-        // Usaremos o ID do projeto para criar um caminho único no banco de dados.
-        const appId = firebaseConfig.projectId;
-        // --- FIM DA CONFIGURAÇÃO ---
+    // 🔥 Sua configuração do Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyBo8G3ZcWk4EepN0cHdVBtXc7tGOfcw-yg",
+      authDomain: "inscricaosinuca.firebaseapp.com",
+      projectId: "inscricaosinuca",
+      storageBucket: "inscricaosinuca.firebasestorage.app",
+      messagingSenderId: "338241576305",
+      appId: "1:338241576305:web:288b6124384c6be4f76ad0",
+      measurementId: "G-PEDG30FS2R"
+    };
 
+    // Inicializa Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-        // DOM Elements
-        const formSection = document.getElementById('formSection');
-        const listSection = document.getElementById('listSection');
-        const toggleButton = document.getElementById('toggleButton');
-        const registrationForm = document.getElementById('registrationForm');
-        const matriculaInput = document.getElementById('matriculaInput');
-        const nomeInput = document.getElementById('nomeInput');
-        const setorInput = document.getElementById('setorInput');
-        const fotoInput = document.getElementById('fotoInput');
-        const previewFoto = document.getElementById('previewFoto');
-        const messageArea = document.getElementById('messageArea');
-        const participantList = document.getElementById('participantList');
-        const clearFormBtn = document.getElementById('clearFormBtn');
-        const backBtn = document.getElementById('backBtn');
-        const modal = document.getElementById('confirmationModal');
-        const passwordInput = document.getElementById('passwordInput');
-        const modalError = document.getElementById('modalError');
-        const confirmBtn = document.getElementById('confirmBtn');
-        const cancelBtn = document.getElementById('cancelBtn');
-        const loadingMessage = document.getElementById('loadingMessage');
+    // Elementos da página
+    const toggleButton = document.getElementById("toggleButton");
+    const formSection = document.getElementById("formSection");
+    const listSection = document.getElementById("listSection");
+    const registrationForm = document.getElementById("registrationForm");
+    const participantsList = document.getElementById("participantsList");
+    const modalidadeList = document.getElementById("modalidadeList");
 
-        // State Management
-        let entries = [];
-        let showForm = false;
-        let docIdToDelete = null;
+    let showForm = false;
 
-        // Firebase Initialization
-        let app;
-        let db;
-        let auth;
-        let isFirebaseInitialized = false;
+    // Alternar entre formulário e lista
+    toggleButton.addEventListener("click", () => {
+      showForm = !showForm;
+      if (showForm) {
+        formSection.classList.remove("hidden");
+        listSection.classList.add("hidden");
+        toggleButton.textContent = "Ver Inscritos";
+      } else {
+        formSection.classList.add("hidden");
+        listSection.classList.remove("hidden");
+        toggleButton.textContent = "Nova Inscrição";
+      }
+    });
 
-        async function initFirebase() {
-             // Validação para garantir que a configuração não está vazia
-            if (!firebaseConfig.projectId) {
-                 loadingMessage.textContent = 'Erro: A configuração do Firebase não foi preenchida. Verifique o código.';
-                 console.error("Configuração do Firebase ausente. Preencha o objeto firebaseConfig no script.");
-                 return;
-            }
-            try {
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                await signInAnonymously(auth);
-                isFirebaseInitialized = true;
-                loadingMessage.textContent = 'Carregando participantes...';
-                loadEntries();
-            } catch (e) {
-                console.error("Erro ao inicializar Firebase:", e);
-                loadingMessage.textContent = 'Erro ao carregar dados. Verifique a configuração do Firebase e se o domínio está autorizado.';
-            }
-        }
+    // 🔹 Carregar modalidades do Firestore
+    async function carregarModalidades() {
+      const snapshot = await getDocs(collection(db, "modalidades"));
+      modalidadeList.innerHTML = "";
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        const label = document.createElement("label");
+        label.className = "flex items-center space-x-2";
+        label.innerHTML = `
+          <input type="checkbox" name="modalidade" value="${data.nome}" class="modalidadeCheck">
+          <span>${data.nome}</span>
+        `;
+        modalidadeList.appendChild(label);
+      });
 
-        function loadEntries() {
-            if (!isFirebaseInitialized) return;
-            const participantsCollection = collection(db, `artifacts/${appId}/public/data/participants`);
-            onSnapshot(participantsCollection, (querySnapshot) => {
-                entries = [];
-                querySnapshot.forEach((doc) => {
-                    entries.push({ id: doc.id, ...doc.data() });
-                });
-                entries.sort((a, b) => (b.criado_em || "").localeCompare(a.criado_em || ""));
-                renderParticipants();
-                loadingMessage.classList.add('hidden');
-            }, (error) => {
-                console.error("Erro ao carregar dados do Firestore:", error);
-                loadingMessage.textContent = 'Erro ao carregar dados. Tente novamente mais tarde.';
-            });
-        }
+      // Limitar seleção a 2
+      const checkboxes = document.querySelectorAll(".modalidadeCheck");
+      checkboxes.forEach(cb => {
+        cb.addEventListener("change", () => {
+          const selecionados = [...checkboxes].filter(c => c.checked);
+          if (selecionados.length > 2) {
+            cb.checked = false;
+            alert("Você só pode escolher até 2 modalidades!");
+          }
+        });
+      });
+    }
+    carregarModalidades();
 
-        async function saveEntry(newEntry) {
-            try {
-                const docRef = await addDoc(collection(db, `artifacts/${appId}/public/data/participants`), newEntry);
-                showMessage('success', `Inscrição realizada com sucesso!`);
-            } catch (e) {
-                console.error("Erro ao adicionar documento: ", e);
-                showMessage('error', 'Erro ao salvar a inscrição. Tente novamente.');
-            }
-        }
+    // 🔹 Salvar inscrição
+    registrationForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-        async function deleteParticipant(docId) {
-            try {
-                await deleteDoc(doc(db, `artifacts/${appId}/public/data/participants`, docId));
-                showMessage('info', `Participante apagado.`);
-            } catch (e) {
-                console.error("Erro ao remover documento: ", e);
-                showMessage('error', 'Erro ao apagar o participante. Tente novamente.');
-            }
-        }
+      const matricula = document.getElementById("matricula").value.trim();
+      const nome = document.getElementById("nome").value.trim();
+      const setor = document.getElementById("setor").value.trim();
+      const submitBtn = registrationForm.querySelector("button[type='submit']");
 
-        function renderParticipants() {
-            if (entries.length === 0) {
-                participantList.innerHTML = `<p class="text-sm text-gray-500 p-2">Nenhum participante ainda.</p>`;
-                return;
-            }
+      const modalidadesSelecionadas = [...document.querySelectorAll(".modalidadeCheck:checked")].map(cb => cb.value);
 
-            const html = entries.map(r => `
-                <li class="flex items-center justify-between gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                    <div class="flex items-center gap-3">
-                        ${r.foto ? `<img src="${r.foto}" alt="${r.nome}" class="w-12 h-12 object-cover rounded-full border border-gray-200 shadow-sm" />` : ''}
-                        <div class="flex flex-col">
-                            <span class="font-semibold text-gray-800">${r.nome}</span>
-                            <span class="text-xs text-gray-500">Matrícula: ${r.matricula} | Setor: ${r.setor}</span>
-                        </div>
-                    </div>
-                    <button class="delete-btn px-3 py-1 bg-red-500 text-white rounded-xl text-sm font-semibold hover:bg-red-600 transition duration-300 ease-in-out" data-id="${r.id}">Apagar</button>
-                </li>
-            `).join('');
-            participantList.innerHTML = `<ul class="space-y-2">${html}</ul>`;
-        }
+      if (!matricula || !nome || !setor) {
+        alert("Todos os campos são obrigatórios!");
+        return;
+      }
+      if (modalidadesSelecionadas.length === 0) {
+        alert("Escolha pelo menos 1 modalidade!");
+        return;
+      }
 
-        function showMessage(type, text) {
-            messageArea.textContent = text;
-            messageArea.classList.remove('hidden', 'bg-red-100', 'bg-green-100', 'bg-blue-100', 'text-red-700', 'text-green-700', 'text-blue-700');
-            if (type === 'error') {
-                messageArea.classList.add('bg-red-100', 'text-red-700');
-            } else if (type === 'success') {
-                messageArea.classList.add('bg-green-100', 'text-green-700');
-            } else {
-                messageArea.classList.add('bg-blue-100', 'text-blue-700');
-            }
-            messageArea.style.display = 'block';
-        }
-        
-        function hideMessage() {
-            messageArea.style.display = 'none';
-        }
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Enviando...";
 
-        function resetForm() {
-            registrationForm.reset();
-            fotoInput.value = null;
-            previewFoto.src = '';
-            previewFoto.classList.add('hidden');
-            hideMessage();
-        }
-
-        // Event Listeners
-        toggleButton.addEventListener('click', () => {
-            showForm = !showForm;
-            if (showForm) {
-                formSection.classList.remove('hidden');
-                listSection.classList.add('hidden');
-                toggleButton.textContent = "Ver Participantes";
-            } else {
-                formSection.classList.add('hidden');
-                listSection.classList.remove('hidden');
-                toggleButton.textContent = "Nova Inscrição";
-            }
+      try {
+        await addDoc(collection(db, "inscritos"), {
+          matricula: matricula.toUpperCase(),
+          nome,
+          setor: setor.toUpperCase(),
+          modalidades: modalidadesSelecionadas,
+          criado_em: serverTimestamp()
         });
 
-        backBtn.addEventListener('click', () => {
-            showForm = false;
-            formSection.classList.add('hidden');
-            listSection.classList.remove('hidden');
-            toggleButton.textContent = "Nova Inscrição";
+        alert("Inscrição realizada com sucesso!");
+        registrationForm.reset();
+
+        showForm = false;
+        formSection.classList.add("hidden");
+        listSection.classList.remove("hidden");
+        toggleButton.textContent = "Nova Inscrição";
+      } catch (err) {
+        console.error("Erro ao salvar inscrição:", err);
+        alert("Erro ao salvar. Veja o console para mais detalhes.");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Enviar Inscrição";
+      }
+    });
+
+    // 🔹 Listar participantes em tempo real
+    onSnapshot(collection(db, "inscritos"), (snapshot) => {
+      participantsList.innerHTML = "";
+      snapshot.forEach(docSnap => {
+        const entry = docSnap.data();
+        const data = entry.criado_em?.toDate().toLocaleString("pt-BR") || "Data não disponível";
+
+        const div = document.createElement("div");
+        div.className = "flex justify-between items-center border p-3 rounded-lg";
+        div.innerHTML = `
+          <div>
+            <p class="font-medium">${entry.nome}</p>
+            <p class="text-sm text-gray-500">${entry.matricula} - ${entry.setor}</p>
+            <p class="text-sm text-gray-700">🎮 ${entry.modalidades?.join(", ") || "Nenhuma"}</p>
+            <p class="text-xs text-gray-400">Inscrito em: ${data}</p>
+          </div>
+          <button class="text-red-600 hover:text-red-800" data-id="${docSnap.id}">🗑️</button>
+        `;
+
+        // Excluir inscrição
+        div.querySelector("button").addEventListener("click", async () => {
+          if (confirm("Deseja excluir esta inscrição?")) {
+            await deleteDoc(doc(db, "inscritos", docSnap.id));
+          }
         });
 
-        fotoInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    previewFoto.src = e.target.result;
-                    previewFoto.classList.remove('hidden');
-                };
-                reader.readAsDataURL(file);
-            } else {
-                previewFoto.src = '';
-                previewFoto.classList.add('hidden');
-            }
-        });
-
-        registrationForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-
-            const newEntry = {
-                matricula: matriculaInput.value.trim(),
-                nome: nomeInput.value.trim(),
-                setor: setorInput.value.trim(),
-                foto: previewFoto.src,
-                criado_em: new Date().toISOString()
-            };
-
-            // Validation
-            if (!newEntry.matricula || !newEntry.nome || !newEntry.setor || !newEntry.foto) {
-                showMessage('error', 'Por favor, preencha todos os campos e envie uma foto.');
-                return;
-            }
-
-            saveEntry(newEntry);
-            resetForm();
-            showForm = false;
-            formSection.classList.add('hidden');
-            listSection.classList.remove('hidden');
-            toggleButton.textContent = "Nova Inscrição";
-        });
-
-        clearFormBtn.addEventListener('click', resetForm);
-
-        participantList.addEventListener('click', (e) => {
-            if (e.target.classList.contains('delete-btn')) {
-                docIdToDelete = e.target.getAttribute('data-id');
-                if (docIdToDelete) {
-                    modal.style.display = 'flex';
-                    passwordInput.value = '';
-                    modalError.classList.add('hidden');
-                }
-            }
-        });
-
-        confirmBtn.addEventListener('click', () => {
-            if (passwordInput.value === 'dpsp123') {
-                deleteParticipant(docIdToDelete);
-                modal.style.display = 'none';
-            } else {
-                modalError.classList.remove('hidden');
-                passwordInput.value = '';
-            }
-        });
-
-        cancelBtn.addEventListener('click', () => {
-            modal.style.display = 'none';
-        });
-
-        // Initial setup
-        document.addEventListener('DOMContentLoaded', () => {
-            initFirebase();
-        });
-    </script>
+        participantsList.appendChild(div);
+      });
+    });
+  </script>
 </body>
 </html>

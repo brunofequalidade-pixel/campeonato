@@ -3,50 +3,78 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Campeonato - Inscrições</title>
+  <title>Inscrições - Campeonato 🎱</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center p-6">
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-start p-6">
 
-  <h1 class="text-2xl font-bold mb-6">🏆 Campeonato - Inscrições</h1>
-
-  <!-- Botão de alternância -->
-  <button id="toggleButton" class="mb-4 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg">
-    Nova Inscrição
+  <!-- Botão Admin -->
+  <button id="adminButton" class="fixed top-4 right-4 bg-gray-800 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-900">
+    Admin ⚙️
   </button>
 
-  <!-- Formulário -->
-  <section id="formSection" class="hidden w-full max-w-md bg-white p-6 rounded-lg shadow">
-    <form id="registrationForm" class="space-y-4">
-      <input type="text" id="matricula" placeholder="Matrícula" class="w-full p-2 border rounded-lg" required>
-      <input type="text" id="nome" placeholder="Nome completo" class="w-full p-2 border rounded-lg" required>
-      <input type="text" id="setor" placeholder="Setor" class="w-full p-2 border rounded-lg" required>
+  <div class="bg-white p-6 rounded-2xl shadow-lg w-full max-w-lg">
+    <h1 class="text-2xl font-bold text-center mb-4">Inscrição Campeonato 🎮</h1>
 
-      <!-- Modalidades -->
-      <div>
-        <p class="font-semibold mb-2">Escolha até 2 modalidades:</p>
-        <div id="modalidadeList" class="grid grid-cols-2 gap-2"></div>
+    <!-- Botão alternar -->
+    <button id="toggleButton" class="w-full mb-4 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+      Nova Inscrição
+    </button>
+
+    <!-- Formulário -->
+    <section id="formSection" class="hidden">
+      <form id="registrationForm" class="space-y-4">
+        <input type="text" id="matricula" placeholder="Matrícula" class="w-full p-2 border rounded-lg" required>
+        <input type="text" id="nome" placeholder="Nome completo" class="w-full p-2 border rounded-lg" required>
+        <input type="text" id="setor" placeholder="Setor" class="w-full p-2 border rounded-lg" required>
+
+        <!-- Modalidades -->
+        <div>
+          <p class="font-semibold mb-2">Escolha até 2 modalidades:</p>
+          <div id="modalidadeList" class="grid grid-cols-2 gap-2"></div>
+        </div>
+
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg">Enviar Inscrição</button>
+      </form>
+    </section>
+
+    <!-- Lista de participantes -->
+    <section id="listSection">
+      <h2 class="text-xl font-semibold mb-2">Participantes inscritos</h2>
+      <div id="loadingMessage" class="text-gray-500 text-sm">Carregando participantes...</div>
+      <div id="participantList" class="space-y-2"></div>
+    </section>
+  </div>
+
+  <!-- Painel Admin -->
+  <section id="adminSection" class="hidden bg-white p-6 rounded-2xl shadow-lg w-full max-w-lg mt-4">
+    <h2 class="text-xl font-bold mb-4">Painel Administrativo</h2>
+
+    <!-- Modalidades -->
+    <div class="mb-6">
+      <h3 class="text-lg font-semibold mb-2">Modalidades</h3>
+      <div class="flex space-x-2 mb-2">
+        <input type="text" id="novaModalidade" placeholder="Nome da modalidade" class="flex-1 p-2 border rounded-lg">
+        <button id="addModalidadeBtn" class="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700">Adicionar</button>
       </div>
+      <ul id="listaModalidades" class="space-y-2"></ul>
+    </div>
 
-      <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg">
-        Enviar Inscrição
-      </button>
-    </form>
+    <!-- Participantes -->
+    <div>
+      <h3 class="text-lg font-semibold mb-2">Participantes</h3>
+      <p class="text-sm text-gray-500">A exclusão também pode ser feita na lista principal.</p>
+    </div>
   </section>
 
-  <!-- Lista de inscritos -->
-  <section id="listSection" class="w-full max-w-2xl bg-white p-6 rounded-lg shadow">
-    <h2 class="text-xl font-semibold mb-4">📋 Lista de Inscritos</h2>
-    <div id="participantsList" class="space-y-3"></div>
-  </section>
-
-  <!-- Firebase + JS -->
   <script type="module">
-    // Import Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, onSnapshot, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+    import { 
+      getFirestore, collection, addDoc, query, orderBy, onSnapshot, 
+      deleteDoc, doc, getDocs, serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
-    // 🔥 Sua configuração do Firebase
+    // 🔥 Configuração Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyBo8G3ZcWk4EepN0cHdVBtXc7tGOfcw-yg",
       authDomain: "inscricaosinuca.firebaseapp.com",
@@ -57,40 +85,40 @@
       measurementId: "G-PEDG30FS2R"
     };
 
-    // Inicializa Firebase
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Elementos da página
+    // 🔹 Elementos DOM
     const toggleButton = document.getElementById("toggleButton");
     const formSection = document.getElementById("formSection");
     const listSection = document.getElementById("listSection");
     const registrationForm = document.getElementById("registrationForm");
-    const participantsList = document.getElementById("participantsList");
+    const participantList = document.getElementById("participantList");
+    const loadingMessage = document.getElementById("loadingMessage");
     const modalidadeList = document.getElementById("modalidadeList");
+
+    const adminButton = document.getElementById("adminButton");
+    const adminSection = document.getElementById("adminSection");
+    const addModalidadeBtn = document.getElementById("addModalidadeBtn");
+    const novaModalidadeInput = document.getElementById("novaModalidade");
+    const listaModalidades = document.getElementById("listaModalidades");
 
     let showForm = false;
 
-    // Alternar entre formulário e lista
+    // 🔹 Alternar entre inscrição e lista
     toggleButton.addEventListener("click", () => {
       showForm = !showForm;
-      if (showForm) {
-        formSection.classList.remove("hidden");
-        listSection.classList.add("hidden");
-        toggleButton.textContent = "Ver Inscritos";
-      } else {
-        formSection.classList.add("hidden");
-        listSection.classList.remove("hidden");
-        toggleButton.textContent = "Nova Inscrição";
-      }
+      formSection.classList.toggle("hidden", !showForm);
+      listSection.classList.toggle("hidden", showForm);
+      toggleButton.textContent = showForm ? "Ver Participantes" : "Nova Inscrição";
     });
 
-    // 🔹 Carregar modalidades do Firestore
+    // 🔹 Carregar modalidades no formulário
     async function carregarModalidades() {
       const snapshot = await getDocs(collection(db, "modalidades"));
       modalidadeList.innerHTML = "";
-      snapshot.forEach(docSnap => {
-        const data = docSnap.data();
+      snapshot.forEach(doc => {
+        const data = doc.data();
         const label = document.createElement("label");
         label.className = "flex items-center space-x-2";
         label.innerHTML = `
@@ -117,12 +145,9 @@
     // 🔹 Salvar inscrição
     registrationForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-
       const matricula = document.getElementById("matricula").value.trim();
       const nome = document.getElementById("nome").value.trim();
       const setor = document.getElementById("setor").value.trim();
-      const submitBtn = registrationForm.querySelector("button[type='submit']");
-
       const modalidadesSelecionadas = [...document.querySelectorAll(".modalidadeCheck:checked")].map(cb => cb.value);
 
       if (!matricula || !nome || !setor) {
@@ -133,9 +158,6 @@
         alert("Escolha pelo menos 1 modalidade!");
         return;
       }
-
-      submitBtn.disabled = true;
-      submitBtn.textContent = "Enviando...";
 
       try {
         await addDoc(collection(db, "inscritos"), {
@@ -148,6 +170,7 @@
 
         alert("Inscrição realizada com sucesso!");
         registrationForm.reset();
+        carregarModalidades();
 
         showForm = false;
         formSection.classList.add("hidden");
@@ -156,41 +179,90 @@
       } catch (err) {
         console.error("Erro ao salvar inscrição:", err);
         alert("Erro ao salvar. Veja o console para mais detalhes.");
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = "Enviar Inscrição";
       }
     });
 
-    // 🔹 Listar participantes em tempo real
-    onSnapshot(collection(db, "inscritos"), (snapshot) => {
-      participantsList.innerHTML = "";
-      snapshot.forEach(docSnap => {
-        const entry = docSnap.data();
-        const data = entry.criado_em?.toDate().toLocaleString("pt-BR") || "Data não disponível";
+    // 🔹 Exibir participantes em tempo real
+    const q = query(collection(db, "inscritos"), orderBy("criado_em", "desc"));
+    onSnapshot(q, (snapshot) => {
+      loadingMessage.classList.add("hidden");
+      const entries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      participantList.innerHTML = "";
+      if (entries.length === 0) {
+        participantList.innerHTML = `<p class="text-sm text-gray-500">Nenhum participante ainda.</p>`;
+      } else {
+        entries.forEach(entry => {
+          const div = document.createElement("div");
+          div.className = "flex items-center justify-between p-2 border rounded-lg shadow-sm";
+          const dataFormatada = entry.criado_em?.toDate ? entry.criado_em.toDate().toLocaleString("pt-BR") : "";
 
-        const div = document.createElement("div");
-        div.className = "flex justify-between items-center border p-3 rounded-lg";
-        div.innerHTML = `
-          <div>
-            <p class="font-medium">${entry.nome}</p>
-            <p class="text-sm text-gray-500">${entry.matricula} - ${entry.setor}</p>
-            <p class="text-sm text-gray-700">🎮 ${entry.modalidades?.join(", ") || "Nenhuma"}</p>
-            <p class="text-xs text-gray-400">Inscrito em: ${data}</p>
-          </div>
-          <button class="text-red-600 hover:text-red-800" data-id="${docSnap.id}">🗑️</button>
+          div.innerHTML = `
+            <div>
+              <p class="font-medium">${entry.nome}</p>
+              <p class="text-sm text-gray-500">${entry.matricula} - ${entry.setor}</p>
+              <p class="text-sm text-gray-700">🎮 ${entry.modalidades?.join(", ") || "Nenhuma"}</p>
+              <p class="text-xs text-gray-400">${dataFormatada}</p>
+            </div>
+            <button class="text-red-600 hover:text-red-800" data-id="${entry.id}">🗑️</button>
+          `;
+
+          div.querySelector("button").addEventListener("click", async () => {
+            const senha = prompt("Digite a senha para excluir:");
+            if (senha === "dpsp123") {
+              await deleteDoc(doc(db, "inscritos", entry.id));
+            } else if (senha !== null) {
+              alert("Senha incorreta.");
+            }
+          });
+
+          participantList.appendChild(div);
+        });
+      }
+    });
+
+    // 🔹 ADMIN
+    adminButton.addEventListener("click", () => {
+      const senha = prompt("Digite a senha de administrador:");
+      if (senha === "dpsp123") {
+        adminSection.classList.toggle("hidden");
+        carregarModalidadesAdmin();
+      } else if (senha !== null) {
+        alert("Senha incorreta.");
+      }
+    });
+
+    // Adicionar modalidade
+    addModalidadeBtn.addEventListener("click", async () => {
+      const nome = novaModalidadeInput.value.trim();
+      if (!nome) return alert("Digite o nome da modalidade!");
+      await addDoc(collection(db, "modalidades"), { nome });
+      novaModalidadeInput.value = "";
+      carregarModalidades();
+      carregarModalidadesAdmin();
+    });
+
+    // Carregar modalidades no painel admin
+    async function carregarModalidadesAdmin() {
+      const snapshot = await getDocs(collection(db, "modalidades"));
+      listaModalidades.innerHTML = "";
+      snapshot.forEach(docItem => {
+        const data = docItem.data();
+        const li = document.createElement("li");
+        li.className = "flex items-center justify-between border p-2 rounded-lg";
+        li.innerHTML = `
+          <span>${data.nome}</span>
+          <button class="text-red-600 hover:text-red-800">🗑️</button>
         `;
-
-        // Excluir inscrição
-        div.querySelector("button").addEventListener("click", async () => {
-          if (confirm("Deseja excluir esta inscrição?")) {
-            await deleteDoc(doc(db, "inscritos", docSnap.id));
+        li.querySelector("button").addEventListener("click", async () => {
+          if (confirm(`Excluir modalidade "${data.nome}"?`)) {
+            await deleteDoc(doc(db, "modalidades", docItem.id));
+            carregarModalidades();
+            carregarModalidadesAdmin();
           }
         });
-
-        participantsList.appendChild(div);
+        listaModalidades.appendChild(li);
       });
-    });
+    }
   </script>
 </body>
 </html>

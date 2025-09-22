@@ -50,6 +50,17 @@
     <section id="adminSection" class="hidden">
       <h2 class="text-xl font-bold mb-2">Área do Administrador</h2>
       <div class="space-y-4">
+
+        <!-- Modalidades -->
+        <div class="p-4 border rounded-lg bg-gray-50">
+          <h3 class="font-bold mb-2">Gerenciar Modalidades</h3>
+          <div class="flex gap-2">
+            <input type="text" id="novaModalidade" placeholder="Nova modalidade" class="flex-1 p-2 border rounded-lg">
+            <button id="adicionarModalidadeBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Adicionar</button>
+          </div>
+          <ul id="listaModalidadesAdm" class="mt-2 list-disc pl-5 text-sm"></ul>
+        </div>
+
         <!-- Fases -->
         <div class="p-4 border rounded-lg bg-gray-50">
           <h3 class="font-bold">Gestão de Fases</h3>
@@ -113,9 +124,15 @@
     const avancarFaseBtn = document.getElementById("avancarFaseBtn");
     const resetFaseBtn = document.getElementById("resetFaseBtn");
 
+    const novaModalidadeInput = document.getElementById("novaModalidade");
+    const adicionarModalidadeBtn = document.getElementById("adicionarModalidadeBtn");
+    const listaModalidadesAdm = document.getElementById("listaModalidadesAdm");
+    const modalidadesList = document.getElementById("modalidadesList");
+
     let showForm = false;
     let showAdmin = false;
     let faseAtual = 1;
+    let modalidades = [];
 
     // Alternar telas
     toggleButton.addEventListener("click", () => {
@@ -136,12 +153,50 @@
         formSection.classList.add("hidden");
         showForm = false;
         carregarFaseAtual();
+        carregarModalidades();
       } else if (senha !== null) {
         alert("Senha incorreta.");
       }
     });
 
-    // Carregar fase atual
+    // ------------------------
+    // MODALIDADES
+    // ------------------------
+    async function carregarModalidades() {
+      const snapshot = await getDocs(collection(db, "modalidades"));
+      modalidades = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      renderizarModalidades();
+    }
+
+    function renderizarModalidades() {
+      modalidadesList.innerHTML = "";
+      listaModalidadesAdm.innerHTML = "";
+
+      modalidades.forEach((m) => {
+        // Para formulário
+        const label = document.createElement("label");
+        label.className = "flex items-center gap-2";
+        label.innerHTML = `<input type="checkbox" value="${m.nome}" class="modalidadeCheckbox"> ${m.nome}`;
+        modalidadesList.appendChild(label);
+
+        // Para ADM
+        const li = document.createElement("li");
+        li.textContent = m.nome;
+        listaModalidadesAdm.appendChild(li);
+      });
+    }
+
+    adicionarModalidadeBtn.addEventListener("click", async () => {
+      const nome = novaModalidadeInput.value.trim();
+      if (!nome) return alert("Digite uma modalidade");
+      await addDoc(collection(db, "modalidades"), { nome });
+      novaModalidadeInput.value = "";
+      carregarModalidades();
+    });
+
+    // ------------------------
+    // FASES
+    // ------------------------
     async function carregarFaseAtual() {
       const docSnap = await getDoc(doc(db, "config", "fase"));
       if (docSnap.exists()) {
@@ -162,11 +217,9 @@
     async function apagarFasesAnteriores(faseAtual) {
       const q = query(collection(db, "placar"), where("fase", "<", faseAtual));
       const snapshot = await getDocs(q);
-      if (snapshot.empty) return;
       for (const docSnap of snapshot.docs) {
         await deleteDoc(doc(db, "placar", docSnap.id));
       }
-      console.log("Fases anteriores excluídas!");
     }
 
     async function avancarFase() {
@@ -180,7 +233,6 @@
     }
 
     avancarFaseBtn.addEventListener("click", avancarFase);
-
     resetFaseBtn.addEventListener("click", async () => {
       if(confirm("Deseja apagar os placares da fase atual?")) {
         await apagarPlacaresFase(faseAtual);
@@ -190,14 +242,13 @@
     // ------------------------
     // PARTICIPANTES
     // ------------------------
-
-    // Salvar inscrição
     registrationForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const matricula = document.getElementById("matricula").value;
       const nome = document.getElementById("nome").value;
       const setor = document.getElementById("setor").value;
       const telefone = document.getElementById("telefone").value;
+      const modalidadesSelecionadas = Array.from(document.querySelectorAll(".modalidadeCheckbox:checked")).map(cb => cb.value);
 
       try {
         await addDoc(collection(db, "participantes"), {
@@ -205,17 +256,18 @@
           nome,
           setor,
           telefone,
+          modalidades: modalidadesSelecionadas,
           criadoEm: new Date()
         });
         alert("Inscrição salva com sucesso!");
         registrationForm.reset();
+        carregarModalidades();
       } catch (err) {
         console.error("Erro ao salvar inscrição", err);
         alert("Erro ao salvar inscrição!");
       }
     });
 
-    // Carregar participantes em tempo real
     function carregarParticipantes() {
       const q = query(collection(db, "participantes"), orderBy("criadoEm", "desc"));
       onSnapshot(q, (snapshot) => {
@@ -233,7 +285,7 @@
           // lista pública
           const div = document.createElement("div");
           div.className = "p-2 border rounded-lg";
-          div.textContent = `${p.nome} - ${p.setor}`;
+          div.textContent = `${p.nome} - ${p.setor} (${p.modalidades?.join(", ") || "-"})`;
           participantList.appendChild(div);
 
           // tabela ADM
@@ -243,7 +295,7 @@
             <td class="border p-2">${p.nome}</td>
             <td class="border p-2">${p.setor}</td>
             <td class="border p-2">${p.telefone}</td>
-            <td class="border p-2">-</td>
+            <td class="border p-2">${p.modalidades?.join(", ") || "-"}</td>
           `;
           adminTableBody.appendChild(tr);
         });
@@ -253,6 +305,7 @@
     // Inicialização
     carregarParticipantes();
     carregarFaseAtual();
+    carregarModalidades();
   </script>
 </body>
 </html>

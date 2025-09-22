@@ -42,9 +42,6 @@
             <h2 class="text-xl font-semibold mb-2">Participantes inscritos</h2>
             <div id="loadingMessage" class="text-gray-500 text-sm">Carregando participantes...</div>
             <div id="participantList" class="space-y-2"></div>
-            
-            <h2 class="text-xl font-semibold mt-6 mb-2">Histórico de Confrontos</h2>
-            <div id="historicoPlacares"></div>
         </section>
 
         <section id="adminSection" class="hidden">
@@ -63,14 +60,6 @@
                     <h3 class="font-semibold">Configurar Limite</h3>
                     <input type="number" id="limiteModalidades" min="1" class="p-2 border rounded-lg w-20">
                     <button id="salvarLimite" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg">Salvar</button>
-                </div>
-                
-                <div class="p-4 border rounded-lg bg-gray-50">
-                    <h3 class="font-bold">Gestão de Fases</h3>
-                    <p id="faseAtual" class="mt-1">Fase Atual: 1</p>
-                    <button id="avancarFaseBtn" class="mt-2 w-full bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg">
-                        Próxima Fase
-                    </button>
                 </div>
 
                 <div>
@@ -91,9 +80,6 @@
                     <button id="exportCSV" class="mt-3 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
                         📥 Exportar CSV
                     </button>
-                    <button id="sortearButton" class="mt-3 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg">
-                        🎲 Sortear Confrontos
-                    </button>
                 </div>
             </div>
         </section>
@@ -103,7 +89,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, deleteDoc, doc, getDoc, setDoc, getDocs, where } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
-        // Config Firebase
+        // Config Firebase - ATENÇÃO: SUBSTITUA POR SUAS CREDENCIAIS
         const firebaseConfig = {
             apiKey: "AIzaSyBo8G3ZcWk4EepN0cHdVBtXc7tGOfcw-yg",
             authDomain: "inscricaosinuca.firebaseapp.com",
@@ -134,17 +120,11 @@
         const modalidadeInfo = document.getElementById("modalidadeInfo");
         const adminTableBody = document.getElementById("adminTableBody");
         const exportCSVBtn = document.getElementById("exportCSV");
-        const sortearButton = document.getElementById("sortearButton");
-        const historicoPlacaresDiv = document.getElementById("historicoPlacares");
-        const avancarFaseBtn = document.getElementById("avancarFaseBtn");
-        const faseAtualSpan = document.getElementById("faseAtual");
 
         let showForm = false;
         let showAdmin = false;
         let limiteEscolha = 2;
         let inscritosCache = [];
-        let faseAtual = 1;
-        let vencedoresFase = [];
 
         toggleButton.addEventListener("click", () => {
             showForm = !showForm;
@@ -166,30 +146,10 @@
                 carregarModalidades();
                 carregarLimite();
                 carregarAdminTable();
-                carregarFaseAtual();
             } else if (senha !== null) {
                 alert("Senha incorreta.");
             }
         });
-
-        async function carregarFaseAtual() {
-            const docSnap = await getDoc(doc(db, "config", "fase"));
-            if (docSnap.exists()) {
-                faseAtual = docSnap.data().numero || 1;
-            }
-            faseAtualSpan.textContent = `Fase Atual: ${faseAtual}`;
-        }
-
-        async function avancarFase() {
-            if (confirm("Tem certeza que deseja avançar para a próxima fase? Os placares desta fase não poderão ser alterados.")) {
-                faseAtual++;
-                await setDoc(doc(db, "config", "fase"), { numero: faseAtual });
-                faseAtualSpan.textContent = `Fase Atual: ${faseAtual}`;
-                alert("Fase atualizada! Agora você pode sortear a próxima rodada com os vencedores.");
-            }
-        }
-
-        avancarFaseBtn.addEventListener("click", avancarFase);
 
         // Carregar modalidades
         async function carregarModalidades() {
@@ -298,84 +258,31 @@
             }
         });
 
-        // Lista pública e histórico
-        const qInscritos = query(collection(db, "inscritos"), orderBy("criado_em", "desc"));
-        onSnapshot(qInscritos, (snapshot) => {
+        // Lista pública (sem matrícula e sem telefone)
+        const q = query(collection(db, "inscritos"), orderBy("criado_em", "desc"));
+        onSnapshot(q, (snapshot) => {
             loadingMessage.classList.add("hidden");
             participantList.innerHTML = "";
             inscritosCache = [];
             if (snapshot.empty) {
                 participantList.innerHTML = `<p class="text-sm text-gray-500">Nenhum participante ainda.</p>`;
-            } else {
-                snapshot.forEach(docSnap => {
-                    const entry = docSnap.data();
-                    inscritosCache.push({ id: docSnap.id, ...entry });
-                    const div = document.createElement("div");
-                    div.className = "flex items-center justify-between p-2 border rounded-lg shadow-sm";
-                    div.innerHTML = `
-                        <div>
-                            <p class="font-medium">${entry.nome}</p>
-                            <p class="text-sm text-gray-500">${entry.setor}</p>
-                            <p class="text-xs text-blue-600">Modalidades: ${entry.modalidades.join(", ")}</p>
-                        </div>
-                    `;
-                    participantList.appendChild(div);
-                });
-            }
-            carregarAdminTable();
-        });
-
-        const qPlacares = query(collection(db, "placar"), orderBy("criado_em", "desc"));
-        onSnapshot(qPlacares, async (snapshot) => {
-            const placares = snapshot.docs.map(doc => doc.data());
-            const participantesMap = new Map();
-            inscritosCache.forEach(p => participantesMap.set(p.id, p.nome));
-
-            historicoPlacaresDiv.innerHTML = "";
-            let historicoHtml = "";
-            let faseAtualExibida = 0;
-            vencedoresFase = [];
-
-            if (placares.length === 0) {
-                historicoPlacaresDiv.innerHTML = `<p class="text-sm text-gray-500">Nenhum placar registrado ainda.</p>`;
                 return;
             }
-
-            // Exibir placares agrupados por fase
-            const placaresPorFase = placares.reduce((acc, placar) => {
-                const fase = placar.fase || 1; // Default to phase 1
-                if (!acc[fase]) acc[fase] = [];
-                acc[fase].push(placar);
-                return acc;
-            }, {});
-
-            for (const fase in placaresPorFase) {
-                historicoHtml += `<h4 class="font-bold text-lg mt-4 mb-2">Fase ${fase}</h4>`;
-                placaresPorFase[fase].forEach(p => {
-                    const nome1 = participantesMap.get(p.jogador1.id) || "Desconhecido";
-                    const nome2 = participantesMap.get(p.jogador2.id) || "Desconhecido";
-                    const vencedor = p.jogador1.placar > p.jogador2.placar ? nome1 : (p.jogador2.placar > p.jogador1.placar ? nome2 : "Empate");
-
-                    historicoHtml += `
-                        <div class="border p-2 rounded-lg bg-white mb-2 shadow-sm">
-                            <p class="font-medium">${nome1} vs ${nome2}</p>
-                            <p class="text-sm text-gray-600">Placar: ${p.jogador1.placar} - ${p.jogador2.placar}</p>
-                            <p class="text-xs text-blue-700">Vencedor: ${vencedor}</p>
-                        </div>
-                    `;
-
-                    // Lógica para determinar vencedores da fase atual
-                    if (parseInt(fase) === faseAtual) {
-                        if (p.jogador1.placar > p.jogador2.placar) {
-                            vencedoresFase.push(p.jogador1.id);
-                        } else if (p.jogador2.placar > p.jogador1.placar) {
-                            vencedoresFase.push(p.jogador2.id);
-                        }
-                    }
-                });
-            }
-
-            historicoPlacaresDiv.innerHTML = historicoHtml;
+            snapshot.forEach(docSnap => {
+                const entry = docSnap.data();
+                inscritosCache.push({ id: docSnap.id, ...entry });
+                const div = document.createElement("div");
+                div.className = "flex items-center justify-between p-2 border rounded-lg shadow-sm";
+                div.innerHTML = `
+                    <div>
+                        <p class="font-medium">${entry.nome}</p>
+                        <p class="text-sm text-gray-500">${entry.setor}</p>
+                        <p class="text-xs text-blue-600">Modalidades: ${entry.modalidades.join(", ")}</p>
+                    </div>
+                `;
+                participantList.appendChild(div);
+            });
+            carregarAdminTable();
         });
 
         // Tabela do ADM (com matrícula e telefone)
@@ -421,102 +328,8 @@
             a.click();
         });
 
-        // Sorteio de Confrontos
-        sortearButton.addEventListener("click", async () => {
-            // Se for a primeira fase, usa todos os inscritos. Se não, usa os vencedores.
-            const participantesParaSorteio = faseAtual === 1 ? inscritosCache : inscritosCache.filter(p => vencedoresFase.includes(p.id));
-
-            if (participantesParaSorteio.length < 2) {
-                alert("É necessário no mínimo 2 participantes para o sorteio. Avance a fase ou espere por mais inscritos.");
-                return;
-            }
-
-            // Embaralhar a lista
-            const participantesEmbaralhados = [...participantesParaSorteio];
-            for (let i = participantesEmbaralhados.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [participantesEmbaralhados[i], participantesEmbaralhados[j]] = [participantesEmbaralhados[j], participantesEmbaralhados[i]];
-            }
-
-            let sorteioHTML = "<h3 class='font-bold'>Confrontos Sorteados:</h3><div id='confrontosList' class='space-y-4 mt-2'>";
-            for (let i = 0; i < participantesEmbaralhados.length; i += 2) {
-                const p1 = participantesEmbaralhados[i];
-                const p2 = participantesEmbaralhados[i + 1];
-                const confrontoId = `confronto-${p1.id}-${p2 ? p2.id : 'bye'}`;
-
-                if (p2) {
-                    sorteioHTML += `
-                        <div class="border rounded-lg p-3 bg-white shadow" id="${confrontoId}">
-                            <div class="flex items-center justify-between gap-4 mb-2">
-                                <span class="font-medium">${p1.nome}</span>
-                                <span class="font-bold text-lg">⚔️</span>
-                                <span class="font-medium">${p2.nome}</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <input type="number" id="placar1-${confrontoId}" placeholder="Placar ${p1.nome}" class="w-1/2 p-2 border rounded-lg text-sm">
-                                <input type="number" id="placar2-${confrontoId}" placeholder="Placar ${p2.nome}" class="w-1/2 p-2 border rounded-lg text-sm">
-                            </div>
-                            <button class="mt-2 w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg salvar-placar-btn" data-id="${confrontoId}">
-                                Salvar Placar
-                            </button>
-                        </div>
-                    `;
-                } else {
-                    sorteioHTML += `
-                        <div class="border rounded-lg p-3 bg-white shadow">
-                            <span class="font-medium">${p1.nome}</span> (aguardando o próximo round)
-                        </div>
-                    `;
-                }
-            }
-            sorteioHTML += "</div>";
-
-            const sorteioDiv = document.createElement("div");
-            sorteioDiv.className = "mt-4 p-4 border rounded-lg bg-gray-50";
-            sorteioDiv.innerHTML = sorteioHTML;
-
-            const oldSorteio = document.getElementById("sorteioResultado");
-            if(oldSorteio) oldSorteio.remove();
-            sorteioDiv.id = "sorteioResultado";
-
-            adminSection.appendChild(sorteioDiv);
-            
-            // Adicionar event listeners aos novos botões de salvar placar
-            const salvarPlacarButtons = document.querySelectorAll('.salvar-placar-btn');
-            salvarPlacarButtons.forEach(button => {
-                button.addEventListener('click', async (e) => {
-                    const confrontoId = e.target.getAttribute('data-id');
-                    const placar1 = document.getElementById(`placar1-${confrontoId}`).value;
-                    const placar2 = document.getElementById(`placar2-${confrontoId}`).value;
-
-                    if (placar1 === "" || placar2 === "") {
-                        alert("Por favor, preencha os dois placares.");
-                        return;
-                    }
-                    
-                    const [ , p1Id, p2Id] = confrontoId.split('-');
-                    
-                    const confrontoData = {
-                        jogador1: { id: p1Id, placar: parseInt(placar1) },
-                        jogador2: { id: p2Id, placar: parseInt(placar2) },
-                        fase: faseAtual, // Salva a fase do confronto
-                        criado_em: new Date().toISOString()
-                    };
-
-                    try {
-                        await addDoc(collection(db, "placar"), confrontoData);
-                        alert("Placar salvo com sucesso!");
-                    } catch (error) {
-                        console.error("Erro ao salvar o placar: ", error);
-                        alert("Erro ao salvar o placar.");
-                    }
-                });
-            });
-        });
-
         carregarModalidades();
         carregarLimite();
-        carregarFaseAtual();
     </script>
 </body>
 </html>

@@ -19,7 +19,7 @@
             </button>
         </div>
 
-        <!-- Formulário de inscrição -->
+        <!-- Formulário -->
         <section id="formSection" class="hidden">
             <form id="registrationForm" class="space-y-4">
                 <input type="text" id="matricula" placeholder="Matrícula" class="w-full p-2 border rounded-lg" required>
@@ -39,17 +39,18 @@
             </form>
         </section>
 
-        <!-- Lista pública de participantes -->
+        <!-- Lista pública -->
         <section id="listSection">
             <h2 class="text-xl font-semibold mb-2">Participantes inscritos</h2>
             <div id="loadingMessage" class="text-gray-500 text-sm">Carregando participantes...</div>
             <div id="participantList" class="space-y-2"></div>
         </section>
 
-        <!-- Área do ADM -->
+        <!-- ADM -->
         <section id="adminSection" class="hidden">
             <h2 class="text-xl font-bold mb-2">Área do Administrador</h2>
             <div class="space-y-4">
+
                 <!-- Modalidades -->
                 <div>
                     <h3 class="font-semibold">Gerenciar Modalidades</h3>
@@ -67,23 +68,28 @@
                     <button id="salvarLimite" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg">Salvar</button>
                 </div>
 
-                <!-- Fases -->
+                <!-- Gestão de fases -->
                 <div class="p-4 border rounded-lg bg-gray-50">
-                    <h3 class="font-bold">Gestão de Fases</h3>
+                    <h3 class="font-bold mb-2">Gestão de Fases</h3>
                     <p id="faseAtual" class="mt-1">Fase Atual: 1</p>
-                    <button id="avancarFaseBtn" class="mt-2 w-full bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg">Próxima Fase</button>
-                    <button id="resetFaseBtn" class="mt-2 w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">Resetar Fase</button>
-                    <div class="mt-3 flex gap-2 items-center">
-                        <select id="faseParaExcluir" class="p-2 border rounded">
+                    <button id="avancarFaseBtn" class="mt-2 w-full bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg">
+                        Próxima Fase
+                    </button>
+
+                    <div class="mt-2 flex gap-2 items-center">
+                        <select id="faseParaExcluir" class="p-2 border rounded-lg flex-1">
                             <option value="">-- Selecionar fase --</option>
                         </select>
-                        <button id="apagarFaseBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">
+                        <select id="modalidadeParaExcluir" class="p-2 border rounded-lg flex-1">
+                            <option value="">-- Selecionar modalidade (opcional) --</option>
+                        </select>
+                        <button id="apagarFaseBtn" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg">
                             Apagar Fase
                         </button>
                     </div>
                 </div>
 
-                <!-- Tabela ADM -->
+                <!-- Lista completa -->
                 <div>
                     <h3 class="font-semibold mb-2">Lista completa de inscritos</h3>
                     <table class="w-full border text-sm" id="adminTable">
@@ -103,6 +109,21 @@
                         📥 Exportar CSV
                     </button>
                 </div>
+
+                <!-- Sorteio -->
+                <div class="p-4 border rounded-lg bg-gray-50 mt-4">
+                    <h3 class="font-bold mb-2">Sorteio de Participantes</h3>
+                    <div class="flex gap-2 items-center">
+                        <select id="modalidadeParaSorteio" class="p-2 border rounded">
+                            <option value="">-- Selecionar modalidade --</option>
+                        </select>
+                        <button id="botaoSorteio" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded">
+                            Sortear
+                        </button>
+                    </div>
+                    <p id="resultadoSorteio" class="mt-2 text-sm text-green-700"></p>
+                </div>
+
             </div>
         </section>
     </div>
@@ -143,9 +164,12 @@
         const exportCSVBtn = document.getElementById("exportCSV");
         const faseAtualSpan = document.getElementById("faseAtual");
         const avancarFaseBtn = document.getElementById("avancarFaseBtn");
-        const resetFaseBtn = document.getElementById("resetFaseBtn");
         const faseParaExcluirSelect = document.getElementById("faseParaExcluir");
+        const modalidadeParaExcluir = document.getElementById("modalidadeParaExcluir");
         const apagarFaseBtn = document.getElementById("apagarFaseBtn");
+        const botaoSorteio = document.getElementById("botaoSorteio");
+        const modalidadeParaSorteio = document.getElementById("modalidadeParaSorteio");
+        const resultadoSorteio = document.getElementById("resultadoSorteio");
 
         let showForm = false;
         let showAdmin = false;
@@ -171,28 +195,28 @@
                 formSection.classList.add("hidden");
                 showForm = false;
                 carregarModalidades();
+                carregarModalidadesSorteio();
                 carregarLimite();
                 carregarAdminTable();
-                carregarFaseAtual();
                 carregarFasesExistentes();
+                carregarFaseAtual();
             } else if (senha !== null) {
                 alert("Senha incorreta.");
             }
         });
 
-        // Modalidades
         async function carregarModalidades() {
             const snapshot = await getDocs(collection(db, "modalidades"));
             modalidadesList.innerHTML = "";
             adminModalidadesList.innerHTML = "";
+            modalidadeParaExcluir.innerHTML = `<option value="">-- Selecionar modalidade (opcional) --</option>`;
             snapshot.forEach(docSnap => {
                 const modalidade = docSnap.id;
-                // Para participantes
                 const label = document.createElement("label");
                 label.className = "flex items-center gap-2";
                 label.innerHTML = `<input type="checkbox" value="${modalidade}"> ${modalidade}`;
                 modalidadesList.appendChild(label);
-                // Para ADM
+
                 const div = document.createElement("div");
                 div.className = "flex justify-between items-center border p-1 rounded";
                 div.innerHTML = `<span>${modalidade}</span>
@@ -200,21 +224,30 @@
                 div.querySelector("button").addEventListener("click", async () => {
                     await deleteDoc(doc(db, "modalidades", modalidade));
                     carregarModalidades();
+                    carregarModalidadesSorteio();
                 });
                 adminModalidadesList.appendChild(div);
+
+                // Preenche select opcional de exclusão de fase por modalidade
+                const opt = document.createElement("option");
+                opt.value = modalidade;
+                opt.textContent = modalidade;
+                modalidadeParaExcluir.appendChild(opt);
             });
             atualizarInfo();
         }
 
-        addModalidadeBtn.addEventListener("click", async () => {
-            const nome = novaModalidade.value.trim();
-            if (!nome) return;
-            await setDoc(doc(db, "modalidades", nome), { criado_em: new Date().toISOString() });
-            novaModalidade.value = "";
-            carregarModalidades();
-        });
+        async function carregarModalidadesSorteio() {
+            const snap = await getDocs(collection(db, "modalidades"));
+            modalidadeParaSorteio.innerHTML = `<option value="">-- Selecionar modalidade --</option>`;
+            snap.forEach(docSnap => {
+                const opt = document.createElement("option");
+                opt.value = docSnap.id;
+                opt.textContent = docSnap.id;
+                modalidadeParaSorteio.appendChild(opt);
+            });
+        }
 
-        // Limite
         async function carregarLimite() {
             const snap = await getDoc(doc(db, "config", "limite"));
             if (snap.exists()) {
@@ -222,6 +255,10 @@
                 limiteInput.value = limiteEscolha;
             }
             atualizarInfo();
+        }
+
+        function atualizarInfo() {
+            modalidadeInfo.textContent = `Você pode escolher até ${limiteEscolha} modalidade(s).`;
         }
 
         salvarLimiteBtn.addEventListener("click", async () => {
@@ -234,11 +271,6 @@
             }
         });
 
-        function atualizarInfo() {
-            modalidadeInfo.textContent = `Você pode escolher até ${limiteEscolha} modalidade(s).`;
-        }
-
-        // Inscrição
         registrationForm.addEventListener("submit", async (e) => {
             e.preventDefault();
             const matricula = document.getElementById("matricula").value.trim();
@@ -247,26 +279,16 @@
             const telefone = document.getElementById("telefone").value.trim();
             const escolhidas = Array.from(modalidadesList.querySelectorAll("input:checked")).map(c => c.value);
 
-            if (!matricula || !nome || !setor || !telefone) {
-                alert("Preencha todos os campos!");
-                return;
-            }
-            if (escolhidas.length === 0 || escolhidas.length > limiteEscolha) {
-                alert(`Escolha entre 1 e ${limiteEscolha} modalidades.`);
-                return;
-            }
+            if (!matricula || !nome || !setor || !telefone) return alert("Preencha todos os campos!");
+            if (escolhidas.length === 0 || escolhidas.length > limiteEscolha) return alert(`Escolha entre 1 e ${limiteEscolha} modalidades.`);
+
             const qMatricula = query(collection(db, "inscritos"), where("matricula", "==", matricula));
             const snapshot = await getDocs(qMatricula);
-            if (!snapshot.empty) {
-                alert("Essa matrícula já está inscrita!");
-                return;
-            }
+            if (!snapshot.empty) return alert("Essa matrícula já está inscrita!");
+
             try {
                 await addDoc(collection(db, "inscritos"), {
-                    matricula,
-                    nome,
-                    setor,
-                    telefone,
+                    matricula, nome, setor, telefone,
                     modalidades: escolhidas,
                     criado_em: new Date().toISOString()
                 });
@@ -277,12 +299,11 @@
                 listSection.classList.remove("hidden");
                 toggleButton.textContent = "Nova Inscrição";
             } catch (err) {
-                console.error("Erro:", err);
+                console.error(err);
                 alert("Erro ao salvar.");
             }
         });
 
-        // Lista pública
         const q = query(collection(db, "inscritos"), orderBy("criado_em", "desc"));
         onSnapshot(q, (snapshot) => {
             loadingMessage.classList.add("hidden");
@@ -309,7 +330,6 @@
             carregarAdminTable();
         });
 
-        // Tabela ADM
         function carregarAdminTable() {
             adminTableBody.innerHTML = "";
             inscritosCache.forEach(entry => {
@@ -326,20 +346,14 @@
                 `;
                 tr.querySelector("button").addEventListener("click", async () => {
                     const senha = prompt("Digite a senha para excluir:");
-                    if (senha === "dpsp123") {
-                        await deleteDoc(doc(db, "inscritos", entry.id));
-                    }
+                    if (senha === "dpsp123") await deleteDoc(doc(db, "inscritos", entry.id));
                 });
                 adminTableBody.appendChild(tr);
             });
         }
 
-        // Exportar CSV
         exportCSVBtn.addEventListener("click", () => {
-            if (inscritosCache.length === 0) {
-                alert("Nenhum inscrito para exportar!");
-                return;
-            }
+            if (inscritosCache.length === 0) return alert("Nenhum inscrito para exportar!");
             let csv = "Matrícula,Nome,Setor,Telefone,Modalidades\n";
             inscritosCache.forEach(e => {
                 csv += `"${e.matricula}","${e.nome}","${e.setor}","${e.telefone}","${e.modalidades.join(" | ")}"\n`;
@@ -353,48 +367,12 @@
         });
 
         // Fases
-        async function carregarFaseAtual() {
-            const docSnap = await getDoc(doc(db, "config", "fase"));
-            if (docSnap.exists()) {
-                faseAtual = docSnap.data().numero || 1;
-            }
-            faseAtualSpan.textContent = `Fase Atual: ${faseAtual}`;
-        }
-
-        avancarFaseBtn.addEventListener("click", async () => {
-            if (confirm("Tem certeza que deseja avançar para a próxima fase?")) {
-                faseAtual++;
-                await setDoc(doc(db, "config", "fase"), { numero: faseAtual });
-                faseAtualSpan.textContent = `Fase Atual: ${faseAtual}`;
-                alert("Fase atualizada!");
-                carregarFasesExistentes();
-            }
-        });
-
-        async function apagarPlacaresFase(fase) {
-            const q = query(collection(db, "placar"), where("fase", "==", fase));
-            const snapshot = await getDocs(q);
-            snapshot.forEach(async (docSnap) => {
-                await deleteDoc(doc(db, "placar", docSnap.id));
-            });
-            alert(`Placares da fase ${fase} apagados!`);
-        }
-
-        resetFaseBtn.addEventListener("click", async () => {
-            if(confirm("Deseja apagar os placares da fase atual?")) {
-                await apagarPlacaresFase(faseAtual);
-            }
-        });
-
-        // Carregar fases existentes no select
         async function carregarFasesExistentes() {
             faseParaExcluirSelect.innerHTML = `<option value="">-- Selecionar fase --</option>`;
             try {
                 const snap = await getDocs(collection(db, "placar"));
                 const fasesSet = new Set();
-                snap.forEach(d => {
-                    if (d.data().fase) fasesSet.add(d.data().fase);
-                });
+                snap.forEach(d => { if (d.data().fase) fasesSet.add(d.data().fase); });
                 const fases = Array.from(fasesSet).sort((a,b)=>a-b);
                 fases.forEach(f => {
                     const opt = document.createElement("option");
@@ -403,24 +381,51 @@
                     faseParaExcluirSelect.appendChild(opt);
                 });
             } catch (err) {
-                console.error("Erro carregar fases existentes:", err);
+                console.error(err);
             }
         }
 
         apagarFaseBtn.addEventListener("click", async () => {
             const faseSelecionada = parseInt(faseParaExcluirSelect.value);
+            const modalidadeSelecionada = modalidadeParaExcluir.value;
             if (!faseSelecionada) return alert("Selecione uma fase para apagar!");
             if (!confirm(`Deseja apagar a Fase ${faseSelecionada}?`)) return;
-            await apagarPlacaresFase(faseSelecionada);
-            await carregarFasesExistentes();
-        });
 
-        onSnapshot(collection(db, "placar"), () => {
+            const placarRef = collection(db, "placar");
+            const snap = await getDocs(placarRef);
+            snap.forEach(async d => {
+                const data = d.data();
+                if (data.fase === faseSelecionada) {
+                    if (!modalidadeSelecionada || data.modalidade === modalidadeSelecionada) {
+                        await deleteDoc(doc(db, "placar", d.id));
+                    }
+                }
+            });
             carregarFasesExistentes();
         });
 
+        onSnapshot(collection(db, "placar"), () => { carregarFasesExistentes(); });
+
+        function carregarFaseAtual() { faseAtualSpan.textContent = `Fase Atual: ${faseAtual}`; }
+
+        avancarFaseBtn.addEventListener("click", () => { faseAtual++; carregarFaseAtual(); });
+
+        // Sorteio
+        botaoSorteio.addEventListener("click", () => {
+            const modalidade = modalidadeParaSorteio.value;
+            if (!modalidade) return alert("Selecione uma modalidade para sortear!");
+            const candidatos = inscritosCache.filter(p => p.modalidades.includes(modalidade));
+            if (candidatos.length === 0) return alert("Nenhum participante nessa modalidade!");
+            const sorteado = candidatos[Math.floor(Math.random() * candidatos.length)];
+            resultadoSorteio.textContent = `🎉 Sorteado: ${sorteado.nome} (${sorteado.setor})`;
+        });
+
         carregarModalidades();
+        carregarModalidadesSorteio();
         carregarLimite();
+        carregarFasesExistentes();
+        carregarFaseAtual();
+
     </script>
 </body>
 </html>

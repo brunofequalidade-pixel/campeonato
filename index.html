@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
-    <div class="bg-white p-6 rounded-2xl shadow-lg w-full max-w-3xl">
+    <div class="bg-white p-6 rounded-2xl shadow-lg w-full max-w-4xl">
         <h1 class="text-2xl font-bold text-center mb-4">Campeonato 🎮</h1>
 
         <div class="flex justify-between mb-4">
@@ -19,7 +19,7 @@
             </button>
         </div>
 
-        <!-- Formulário -->
+        <!-- Formulário de inscrição -->
         <section id="formSection" class="hidden">
             <form id="registrationForm" class="space-y-4">
                 <input type="text" id="matricula" placeholder="Matrícula" class="w-full p-2 border rounded-lg" required>
@@ -39,19 +39,19 @@
             </form>
         </section>
 
-        <!-- Lista pública -->
+        <!-- Lista de participantes -->
         <section id="listSection">
             <h2 class="text-xl font-semibold mb-2">Participantes inscritos</h2>
             <div id="loadingMessage" class="text-gray-500 text-sm">Carregando participantes...</div>
             <div id="participantList" class="space-y-2"></div>
         </section>
 
-        <!-- ADM -->
+        <!-- Área do ADM -->
         <section id="adminSection" class="hidden">
             <h2 class="text-xl font-bold mb-2">Área do Administrador</h2>
-            <div class="space-y-4">
+            <div class="space-y-6">
 
-                <!-- Modalidades -->
+                <!-- Gerenciar modalidades -->
                 <div>
                     <h3 class="font-semibold">Gerenciar Modalidades</h3>
                     <div id="adminModalidadesList" class="space-y-1 mb-2"></div>
@@ -61,35 +61,14 @@
                     </div>
                 </div>
 
-                <!-- Limite -->
+                <!-- Limite de modalidades -->
                 <div>
                     <h3 class="font-semibold">Configurar Limite</h3>
                     <input type="number" id="limiteModalidades" min="1" class="p-2 border rounded-lg w-20">
                     <button id="salvarLimite" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg">Salvar</button>
                 </div>
 
-                <!-- Gestão de fases -->
-                <div class="p-4 border rounded-lg bg-gray-50">
-                    <h3 class="font-bold mb-2">Gestão de Fases</h3>
-                    <p id="faseAtual" class="mt-1">Fase Atual: 1</p>
-                    <button id="avancarFaseBtn" class="mt-2 w-full bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg">
-                        Próxima Fase
-                    </button>
-
-                    <div class="mt-2 flex gap-2 items-center">
-                        <select id="faseParaExcluir" class="p-2 border rounded-lg flex-1">
-                            <option value="">-- Selecionar fase --</option>
-                        </select>
-                        <select id="modalidadeParaExcluir" class="p-2 border rounded-lg flex-1">
-                            <option value="">-- Selecionar modalidade (opcional) --</option>
-                        </select>
-                        <button id="apagarFaseBtn" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg">
-                            Apagar Fase
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Lista completa -->
+                <!-- Lista de inscritos -->
                 <div>
                     <h3 class="font-semibold mb-2">Lista completa de inscritos</h3>
                     <table class="w-full border text-sm" id="adminTable">
@@ -110,18 +89,29 @@
                     </button>
                 </div>
 
-                <!-- Sorteio -->
-                <div class="p-4 border rounded-lg bg-gray-50 mt-4">
-                    <h3 class="font-bold mb-2">Sorteio de Participantes</h3>
-                    <div class="flex gap-2 items-center">
-                        <select id="modalidadeParaSorteio" class="p-2 border rounded">
-                            <option value="">-- Selecionar modalidade --</option>
-                        </select>
-                        <button id="botaoSorteio" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded">
-                            Sortear
-                        </button>
+                <!-- Gerenciar fases -->
+                <div class="p-4 border rounded-lg bg-gray-50">
+                    <h3 class="font-bold">Gestão de Fases</h3>
+                    <p id="faseAtual" class="mt-1">Fase Atual: 1</p>
+                    <button id="avancarFaseBtn" class="mt-2 w-full bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg">Próxima Fase</button>
+                    <button id="resetFaseBtn" class="mt-2 w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">Resetar Fase</button>
+
+                    <div class="mt-4">
+                        <label>Modalidade:</label>
+                        <select id="modalidadeParaExcluir" class="border p-1 rounded"></select>
+                        <label>Fase:</label>
+                        <select id="faseParaExcluir" class="border p-1 rounded"></select>
+                        <button id="apagarFaseBtn" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded ml-2">Apagar Fase</button>
                     </div>
-                    <p id="resultadoSorteio" class="mt-2 text-sm text-green-700"></p>
+                </div>
+
+                <!-- Sorteio -->
+                <div class="p-4 border rounded-lg bg-gray-50">
+                    <h3 class="font-bold">Sorteio de Confrontos</h3>
+                    <label>Modalidade:</label>
+                    <select id="modalidadeParaSorteio" class="border p-1 rounded mb-2"></select>
+                    <button id="botaoSorteio" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg ml-2">Sortear</button>
+                    <div id="resultadoSorteio" class="mt-2 text-gray-700"></div>
                 </div>
 
             </div>
@@ -145,6 +135,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // Elementos
         const toggleButton = document.getElementById("toggleButton");
         const adminButton = document.getElementById("adminButton");
         const formSection = document.getElementById("formSection");
@@ -162,13 +153,16 @@
         const modalidadeInfo = document.getElementById("modalidadeInfo");
         const adminTableBody = document.getElementById("adminTableBody");
         const exportCSVBtn = document.getElementById("exportCSV");
+
         const faseAtualSpan = document.getElementById("faseAtual");
         const avancarFaseBtn = document.getElementById("avancarFaseBtn");
-        const faseParaExcluirSelect = document.getElementById("faseParaExcluir");
+        const resetFaseBtn = document.getElementById("resetFaseBtn");
         const modalidadeParaExcluir = document.getElementById("modalidadeParaExcluir");
+        const faseParaExcluirSelect = document.getElementById("faseParaExcluir");
         const apagarFaseBtn = document.getElementById("apagarFaseBtn");
-        const botaoSorteio = document.getElementById("botaoSorteio");
+
         const modalidadeParaSorteio = document.getElementById("modalidadeParaSorteio");
+        const botaoSorteio = document.getElementById("botaoSorteio");
         const resultadoSorteio = document.getElementById("resultadoSorteio");
 
         let showForm = false;
@@ -177,6 +171,7 @@
         let inscritosCache = [];
         let faseAtual = 1;
 
+        // Toggle Form/Admin
         toggleButton.addEventListener("click", () => {
             showForm = !showForm;
             formSection.classList.toggle("hidden", !showForm);
@@ -195,28 +190,28 @@
                 formSection.classList.add("hidden");
                 showForm = false;
                 carregarModalidades();
-                carregarModalidadesSorteio();
                 carregarLimite();
                 carregarAdminTable();
+                carregarModalidadesSelects();
                 carregarFasesExistentes();
-                carregarFaseAtual();
             } else if (senha !== null) {
                 alert("Senha incorreta.");
             }
         });
 
+        // Modalidades
         async function carregarModalidades() {
             const snapshot = await getDocs(collection(db, "modalidades"));
             modalidadesList.innerHTML = "";
             adminModalidadesList.innerHTML = "";
-            modalidadeParaExcluir.innerHTML = `<option value="">-- Selecionar modalidade (opcional) --</option>`;
             snapshot.forEach(docSnap => {
                 const modalidade = docSnap.id;
+                // Para participantes
                 const label = document.createElement("label");
                 label.className = "flex items-center gap-2";
                 label.innerHTML = `<input type="checkbox" value="${modalidade}"> ${modalidade}`;
                 modalidadesList.appendChild(label);
-
+                // Para ADM
                 const div = document.createElement("div");
                 div.className = "flex justify-between items-center border p-1 rounded";
                 div.innerHTML = `<span>${modalidade}</span>
@@ -224,30 +219,27 @@
                 div.querySelector("button").addEventListener("click", async () => {
                     await deleteDoc(doc(db, "modalidades", modalidade));
                     carregarModalidades();
-                    carregarModalidadesSorteio();
+                    carregarModalidadesSelects();
                 });
                 adminModalidadesList.appendChild(div);
-
-                // Preenche select opcional de exclusão de fase por modalidade
-                const opt = document.createElement("option");
-                opt.value = modalidade;
-                opt.textContent = modalidade;
-                modalidadeParaExcluir.appendChild(opt);
             });
             atualizarInfo();
         }
 
-        async function carregarModalidadesSorteio() {
-            const snap = await getDocs(collection(db, "modalidades"));
-            modalidadeParaSorteio.innerHTML = `<option value="">-- Selecionar modalidade --</option>`;
-            snap.forEach(docSnap => {
-                const opt = document.createElement("option");
-                opt.value = docSnap.id;
-                opt.textContent = docSnap.id;
-                modalidadeParaSorteio.appendChild(opt);
-            });
+        addModalidadeBtn.addEventListener("click", async () => {
+            const nome = novaModalidade.value.trim();
+            if (!nome) return;
+            await setDoc(doc(db, "modalidades", nome), { criado_em: new Date().toISOString() });
+            novaModalidade.value = "";
+            carregarModalidades();
+            carregarModalidadesSelects();
+        });
+
+        function atualizarInfo() {
+            modalidadeInfo.textContent = `Você pode escolher até ${limiteEscolha} modalidade(s).`;
         }
 
+        // Limite
         async function carregarLimite() {
             const snap = await getDoc(doc(db, "config", "limite"));
             if (snap.exists()) {
@@ -255,10 +247,6 @@
                 limiteInput.value = limiteEscolha;
             }
             atualizarInfo();
-        }
-
-        function atualizarInfo() {
-            modalidadeInfo.textContent = `Você pode escolher até ${limiteEscolha} modalidade(s).`;
         }
 
         salvarLimiteBtn.addEventListener("click", async () => {
@@ -271,7 +259,8 @@
             }
         });
 
-        registrationForm.addEventListener("submit", async (e) => {
+        // Cadastro
+        registrationForm.addEventListener("submit", async e => {
             e.preventDefault();
             const matricula = document.getElementById("matricula").value.trim();
             const nome = document.getElementById("nome").value.trim();
@@ -287,63 +276,47 @@
             if (!snapshot.empty) return alert("Essa matrícula já está inscrita!");
 
             try {
-                await addDoc(collection(db, "inscritos"), {
-                    matricula, nome, setor, telefone,
-                    modalidades: escolhidas,
-                    criado_em: new Date().toISOString()
-                });
-                alert("Inscrição realizada com sucesso!");
+                await addDoc(collection(db, "inscritos"), { matricula, nome, setor, telefone, modalidades: escolhidas, criado_em: new Date().toISOString() });
                 registrationForm.reset();
                 carregarModalidades();
-                formSection.classList.add("hidden");
-                listSection.classList.remove("hidden");
-                toggleButton.textContent = "Nova Inscrição";
-            } catch (err) {
-                console.error(err);
-                alert("Erro ao salvar.");
-            }
+            } catch (err) { console.error(err); alert("Erro ao salvar."); }
         });
 
+        // Lista participantes
         const q = query(collection(db, "inscritos"), orderBy("criado_em", "desc"));
-        onSnapshot(q, (snapshot) => {
+        onSnapshot(q, snapshot => {
             loadingMessage.classList.add("hidden");
             participantList.innerHTML = "";
             inscritosCache = [];
-            if (snapshot.empty) {
-                participantList.innerHTML = `<p class="text-sm text-gray-500">Nenhum participante ainda.</p>`;
-                return;
-            }
+            if (snapshot.empty) participantList.innerHTML = `<p class="text-sm text-gray-500">Nenhum participante ainda.</p>`;
             snapshot.forEach(docSnap => {
                 const entry = docSnap.data();
                 inscritosCache.push({ id: docSnap.id, ...entry });
                 const div = document.createElement("div");
                 div.className = "flex items-center justify-between p-2 border rounded-lg shadow-sm";
-                div.innerHTML = `
-                    <div>
-                        <p class="font-medium">${entry.nome}</p>
-                        <p class="text-sm text-gray-500">${entry.setor}</p>
-                        <p class="text-xs text-blue-600">Modalidades: ${entry.modalidades.join(", ")}</p>
-                    </div>
-                `;
+                div.innerHTML = `<div>
+                    <p class="font-medium">${entry.nome}</p>
+                    <p class="text-sm text-gray-500">${entry.setor}</p>
+                    <p class="text-xs text-blue-600">Modalidades: ${entry.modalidades.join(", ")}</p>
+                </div>`;
                 participantList.appendChild(div);
             });
             carregarAdminTable();
         });
 
+        // Tabela ADM
         function carregarAdminTable() {
             adminTableBody.innerHTML = "";
             inscritosCache.forEach(entry => {
                 const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td class="border p-2">${entry.matricula}</td>
-                    <td class="border p-2">${entry.nome}</td>
-                    <td class="border p-2">${entry.setor}</td>
-                    <td class="border p-2">${entry.telefone}</td>
-                    <td class="border p-2">${entry.modalidades.join(", ")}</td>
-                    <td class="border p-2 text-center">
-                        <button class="text-red-600 hover:text-red-800" data-id="${entry.id}">🗑️</button>
-                    </td>
-                `;
+                tr.innerHTML = `<td class="border p-2">${entry.matricula}</td>
+                                <td class="border p-2">${entry.nome}</td>
+                                <td class="border p-2">${entry.setor}</td>
+                                <td class="border p-2">${entry.telefone}</td>
+                                <td class="border p-2">${entry.modalidades.join(", ")}</td>
+                                <td class="border p-2 text-center">
+                                    <button class="text-red-600 hover:text-red-800" data-id="${entry.id}">🗑️</button>
+                                </td>`;
                 tr.querySelector("button").addEventListener("click", async () => {
                     const senha = prompt("Digite a senha para excluir:");
                     if (senha === "dpsp123") await deleteDoc(doc(db, "inscritos", entry.id));
@@ -352,6 +325,7 @@
             });
         }
 
+        // Exportar CSV
         exportCSVBtn.addEventListener("click", () => {
             if (inscritosCache.length === 0) return alert("Nenhum inscrito para exportar!");
             let csv = "Matrícula,Nome,Setor,Telefone,Modalidades\n";
@@ -361,14 +335,12 @@
             const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
-            a.href = url;
-            a.download = "inscritos.csv";
-            a.click();
+            a.href = url; a.download = "inscritos.csv"; a.click();
         });
 
         // Fases
         async function carregarFasesExistentes() {
-            faseParaExcluirSelect.innerHTML = `<option value="">-- Selecionar fase --</option>`;
+            faseParaExcluirSelect.innerHTML = "";
             try {
                 const snap = await getDocs(collection(db, "placar"));
                 const fasesSet = new Set();
@@ -376,56 +348,53 @@
                 const fases = Array.from(fasesSet).sort((a,b)=>a-b);
                 fases.forEach(f => {
                     const opt = document.createElement("option");
-                    opt.value = f;
-                    opt.textContent = `Fase ${f}`;
+                    opt.value = f; opt.textContent = `Fase ${f}`;
                     faseParaExcluirSelect.appendChild(opt);
                 });
-            } catch (err) {
-                console.error(err);
-            }
+            } catch(err){ console.error(err); }
         }
 
         apagarFaseBtn.addEventListener("click", async () => {
             const faseSelecionada = parseInt(faseParaExcluirSelect.value);
-            const modalidadeSelecionada = modalidadeParaExcluir.value;
-            if (!faseSelecionada) return alert("Selecione uma fase para apagar!");
+            if (!faseSelecionada) return alert("Selecione uma fase!");
             if (!confirm(`Deseja apagar a Fase ${faseSelecionada}?`)) return;
-
-            const placarRef = collection(db, "placar");
-            const snap = await getDocs(placarRef);
-            snap.forEach(async d => {
-                const data = d.data();
-                if (data.fase === faseSelecionada) {
-                    if (!modalidadeSelecionada || data.modalidade === modalidadeSelecionada) {
-                        await deleteDoc(doc(db, "placar", d.id));
-                    }
-                }
-            });
+            const snap = await getDocs(collection(db, "placar"));
+            snap.forEach(async d => { if (d.data().fase === faseSelecionada) await deleteDoc(doc(db,"placar",d.id)); });
             carregarFasesExistentes();
         });
 
-        onSnapshot(collection(db, "placar"), () => { carregarFasesExistentes(); });
+        // Avançar/resetar fase
+        avancarFaseBtn.addEventListener("click", () => { faseAtual++; faseAtualSpan.textContent = `Fase Atual: ${faseAtual}`; });
+        resetFaseBtn.addEventListener("click", () => { if(confirm("Deseja resetar a fase?")) faseAtual=1; faseAtualSpan.textContent=`Fase Atual: ${faseAtual}`; });
 
-        function carregarFaseAtual() { faseAtualSpan.textContent = `Fase Atual: ${faseAtual}`; }
+        // Modalidade selects (excluir/sorteio)
+        async function carregarModalidadesSelects() {
+            const snap = await getDocs(collection(db,"modalidades"));
+            modalidadeParaExcluir.innerHTML=""; modalidadeParaSorteio.innerHTML="";
+            snap.forEach(d => {
+                const opt = document.createElement("option"); opt.value=d.id; opt.textContent=d.id;
+                modalidadeParaExcluir.appendChild(opt);
+                const opt2 = opt.cloneNode(true); modalidadeParaSorteio.appendChild(opt2);
+            });
+        }
 
-        avancarFaseBtn.addEventListener("click", () => { faseAtual++; carregarFaseAtual(); });
-
-        // Sorteio
+        // Sorteio de confrontos
         botaoSorteio.addEventListener("click", () => {
             const modalidade = modalidadeParaSorteio.value;
-            if (!modalidade) return alert("Selecione uma modalidade para sortear!");
+            if (!modalidade) return alert("Selecione uma modalidade!");
             const candidatos = inscritosCache.filter(p => p.modalidades.includes(modalidade));
-            if (candidatos.length === 0) return alert("Nenhum participante nessa modalidade!");
-            const sorteado = candidatos[Math.floor(Math.random() * candidatos.length)];
-            resultadoSorteio.textContent = `🎉 Sorteado: ${sorteado.nome} (${sorteado.setor})`;
+            if (candidatos.length < 2) return alert("Precisa de pelo menos 2 participantes nessa modalidade!");
+            const shuffled = candidatos.sort(()=>Math.random()-0.5);
+            const confrontos=[];
+            for(let i=0;i<shuffled.length;i+=2){
+                if(shuffled[i+1]) confrontos.push(`${shuffled[i].nome} x ${shuffled[i+1].nome}`);
+                else confrontos.push(`${shuffled[i].nome} (passa para próxima fase)`);
+            }
+            resultadoSorteio.innerHTML = `<strong>Confrontos para ${modalidade}:</strong><br>${confrontos.join("<br>")}`;
         });
 
         carregarModalidades();
-        carregarModalidadesSorteio();
         carregarLimite();
-        carregarFasesExistentes();
-        carregarFaseAtual();
-
     </script>
 </body>
 </html>

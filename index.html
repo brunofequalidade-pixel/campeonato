@@ -1,101 +1,133 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inscrições - Campeonato</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Campeonato - Inscrições & Confrontos</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
-  <div class="bg-white p-6 rounded-2xl shadow-lg w-full max-w-3xl">
-    <h1 class="text-2xl font-bold text-center mb-4">Campeonato 🎮</h1>
+<body class="bg-gray-100 min-h-screen p-6">
+  <div class="max-w-4xl mx-auto">
+    <header class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold">Campeonato 🎮 — Inscrições & Acompanhamento</h1>
+      <div class="flex gap-2">
+        <button id="toggleButton" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Nova Inscrição</button>
+        <button id="followBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Acompanhar Campeonato</button>
+        <button id="adminButton" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">Área do ADM</button>
+      </div>
+    </header>
 
-    <div class="flex justify-between mb-4">
-      <button id="toggleButton" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
-        Nova Inscrição
-      </button>
-      <button id="adminButton" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">
-        Área do ADM
-      </button>
-    </div>
-
-    <!-- Formulário de inscrição -->
-    <section id="formSection" class="hidden">
+    <!-- Inscrição -->
+    <section id="formSection" class="hidden bg-white p-6 rounded shadow mb-6">
       <form id="registrationForm" class="space-y-4">
-        <input type="text" id="matricula" placeholder="Matrícula" class="w-full p-2 border rounded-lg" required>
-        <input type="text" id="nome" placeholder="Nome completo" class="w-full p-2 border rounded-lg" required>
-        <input type="text" id="setor" placeholder="Setor" class="w-full p-2 border rounded-lg" required>
-        <input type="tel" id="telefone" placeholder="Telefone (somente ADM verá)" class="w-full p-2 border rounded-lg" required>
+        <div>
+          <label class="block text-sm font-medium">Matrícula</label>
+          <input id="matricula" class="w-full p-2 border rounded" required />
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Nome completo</label>
+          <input id="nome" class="w-full p-2 border rounded" required />
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Setor</label>
+          <input id="setor" class="w-full p-2 border rounded" required />
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Telefone (apenas ADM verá)</label>
+          <input id="telefone" class="w-full p-2 border rounded" placeholder="(99) 99999-9999" required />
+        </div>
 
         <div>
-          <p class="font-semibold mb-2">Escolha suas modalidades:</p>
+          <p class="font-semibold mb-1">Escolha suas modalidades</p>
           <div id="modalidadesList" class="grid grid-cols-2 gap-2"></div>
           <p id="modalidadeInfo" class="text-xs text-gray-500 mt-1"></p>
         </div>
 
-        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg">
-          Enviar Inscrição
-        </button>
+        <div class="flex gap-2">
+          <button type="submit" id="submitBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Enviar Inscrição</button>
+          <button type="button" id="cancelBtn" class="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded">Cancelar</button>
+        </div>
       </form>
     </section>
 
-    <!-- Lista de participantes (sem matrícula e sem telefone) -->
-    <section id="listSection">
-      <h2 class="text-xl font-semibold mb-2">Participantes inscritos</h2>
-      <div id="loadingMessage" class="text-gray-500 text-sm">Carregando participantes...</div>
-      <div id="participantList" class="space-y-2"></div>
+    <!-- Lista pública de inscritos -->
+    <section id="listSection" class="bg-white p-6 rounded shadow mb-6">
+      <h2 class="text-lg font-semibold mb-3">Participantes inscritos</h2>
+      <div id="loadingMessage" class="text-sm text-gray-500 mb-2">Carregando participantes...</div>
+      <div id="participantList" class="space-y-3"></div>
     </section>
 
-    <!-- Área do Administrador -->
-    <section id="adminSection" class="hidden">
-      <h2 class="text-xl font-bold mb-2">Área do Administrador</h2>
-      <div class="space-y-4">
-        <!-- Gerenciar modalidades -->
-        <div>
-          <h3 class="font-semibold">Gerenciar Modalidades</h3>
-          <div id="adminModalidadesList" class="space-y-1 mb-2"></div>
-          <div class="flex gap-2">
-            <input type="text" id="novaModalidade" placeholder="Nova modalidade" class="flex-1 p-2 border rounded-lg">
-            <button id="addModalidade" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg">Adicionar</button>
-          </div>
-        </div>
+    <!-- Acompanhamento (confrontos) público -->
+    <section id="followSection" class="hidden bg-white p-6 rounded shadow mb-6">
+      <h2 class="text-lg font-semibold mb-3">Acompanhar Campeonato — Confrontos</h2>
+      <div id="confrontosList" class="space-y-3"></div>
+    </section>
 
-        <!-- Configurar limite -->
-        <div>
-          <h3 class="font-semibold">Configurar Limite</h3>
-          <input type="number" id="limiteModalidades" min="1" class="p-2 border rounded-lg w-20">
-          <button id="salvarLimite" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg">Salvar</button>
-        </div>
+    <!-- Painel Admin -->
+    <section id="adminSection" class="hidden bg-white p-6 rounded shadow mb-6">
+      <h2 class="text-lg font-semibold mb-3">Painel do Administrador</h2>
 
-        <!-- Lista de inscritos (ADM vê matrícula e telefone) -->
-        <div>
-          <h3 class="font-semibold mb-2">Lista completa de inscritos</h3>
-          <table class="w-full border text-sm" id="adminTable">
-            <thead class="bg-gray-200">
-              <tr>
-                <th class="border p-2">Matrícula</th>
-                <th class="border p-2">Nome</th>
-                <th class="border p-2">Setor</th>
-                <th class="border p-2">Telefone</th>
-                <th class="border p-2">Modalidades</th>
-                <th class="border p-2">Ações</th>
-              </tr>
-            </thead>
-            <tbody id="adminTableBody"></tbody>
-          </table>
-          <button id="exportCSV" class="mt-3 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
-            📥 Exportar CSV
-          </button>
+      <!-- Modalidades -->
+      <div class="mb-4">
+        <h3 class="font-medium">Modalidades</h3>
+        <div id="adminModalidadesList" class="space-y-2 mb-2"></div>
+        <div class="flex gap-2">
+          <input id="novaModalidade" class="flex-1 p-2 border rounded" placeholder="Nova modalidade" />
+          <button id="addModalidade" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded">Adicionar</button>
         </div>
+      </div>
+
+      <!-- Config -->
+      <div class="mb-4">
+        <h3 class="font-medium">Configurações</h3>
+        <div class="flex items-center gap-2">
+          <label>Máximo de modalidades por participante:</label>
+          <input id="limiteModalidades" type="number" min="1" class="w-20 p-2 border rounded" />
+          <button id="salvarLimite" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded">Salvar</button>
+        </div>
+      </div>
+
+      <!-- Confrontos ADM -->
+      <div class="mb-4">
+        <h3 class="font-medium">Gerenciar Confrontos</h3>
+        <div class="grid grid-cols-2 gap-2 mb-2">
+          <select id="selectJogadorA" class="p-2 border rounded w-full"><option value="">Jogador A</option></select>
+          <select id="selectJogadorB" class="p-2 border rounded w-full"><option value="">Jogador B</option></select>
+        </div>
+        <div class="flex gap-2 mb-2">
+          <input id="dataConfronto" type="date" class="p-2 border rounded" />
+          <input id="placarConfronto" placeholder="Placar (ex: 3x2)" class="p-2 border rounded w-full" />
+        </div>
+        <div class="flex gap-2 mb-4">
+          <button id="addConfronto" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded">Salvar Confronto</button>
+          <button id="refreshAdmin" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded">Atualizar listas</button>
+        </div>
+      </div>
+
+      <!-- Lista completa de inscritos (ADM vê matrícula e telefone) -->
+      <div class="mb-4">
+        <h3 class="font-medium">Inscritos (com Matrícula e Telefone)</h3>
+        <div id="adminList" class="space-y-2 mb-2"></div>
+        <button id="exportCSV" class="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-2 rounded">📥 Exportar CSV</button>
+      </div>
+
+      <!-- Lista de confrontos ADM -->
+      <div>
+        <h3 class="font-medium">Confrontos Cadastrados</h3>
+        <div id="adminConfrontos" class="space-y-2 mt-2"></div>
       </div>
     </section>
   </div>
 
   <script type="module">
+    // Firebase imports
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, deleteDoc, doc, getDoc, setDoc, getDocs, where } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+    import {
+      getFirestore, collection, addDoc, doc, setDoc, getDoc, getDocs,
+      query, orderBy, onSnapshot, where, deleteDoc, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
-    // Config Firebase
+    // ===== CONFIGURE AQUI SUA CHAVE FIREBASE (já preenchida) =====
     const firebaseConfig = {
       apiKey: "AIzaSyBo8G3ZcWk4EepN0cHdVBtXc7tGOfcw-yg",
       authDomain: "inscricaosinuca.firebaseapp.com",
@@ -105,237 +137,547 @@
       appId: "1:338241576305:web:288b6124384c6be4f76ad0",
       measurementId: "G-PEDG30FS2R"
     };
+    // =============================================================
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const toggleButton = document.getElementById("toggleButton");
-    const adminButton = document.getElementById("adminButton");
-    const formSection = document.getElementById("formSection");
-    const listSection = document.getElementById("listSection");
-    const adminSection = document.getElementById("adminSection");
-    const registrationForm = document.getElementById("registrationForm");
-    const participantList = document.getElementById("participantList");
-    const loadingMessage = document.getElementById("loadingMessage");
-    const modalidadesList = document.getElementById("modalidadesList");
-    const adminModalidadesList = document.getElementById("adminModalidadesList");
-    const novaModalidade = document.getElementById("novaModalidade");
-    const addModalidadeBtn = document.getElementById("addModalidade");
-    const limiteInput = document.getElementById("limiteModalidades");
-    const salvarLimiteBtn = document.getElementById("salvarLimite");
-    const modalidadeInfo = document.getElementById("modalidadeInfo");
-    const adminTableBody = document.getElementById("adminTableBody");
-    const exportCSVBtn = document.getElementById("exportCSV");
+    // DOM
+    const toggleButton = document.getElementById('toggleButton');
+    const followBtn = document.getElementById('followBtn');
+    const adminButton = document.getElementById('adminButton');
 
-    let showForm = false;
-    let showAdmin = false;
+    const formSection = document.getElementById('formSection');
+    const registrationForm = document.getElementById('registrationForm');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const modalidadesList = document.getElementById('modalidadesList');
+    const modalidadeInfo = document.getElementById('modalidadeInfo');
+
+    const listSection = document.getElementById('listSection');
+    const participantList = document.getElementById('participantList');
+    const loadingMessage = document.getElementById('loadingMessage');
+
+    const followSection = document.getElementById('followSection');
+    const confrontosList = document.getElementById('confrontosList');
+
+    const adminSection = document.getElementById('adminSection');
+    const adminModalidadesList = document.getElementById('adminModalidadesList');
+    const novaModalidade = document.getElementById('novaModalidade');
+    const addModalidade = document.getElementById('addModalidade');
+    const limiteModalidades = document.getElementById('limiteModalidades');
+    const salvarLimite = document.getElementById('salvarLimite');
+
+    const adminList = document.getElementById('adminList');
+    const exportCSV = document.getElementById('exportCSV');
+
+    const selectJogadorA = document.getElementById('selectJogadorA');
+    const selectJogadorB = document.getElementById('selectJogadorB');
+    const dataConfronto = document.getElementById('dataConfronto');
+    const placarConfronto = document.getElementById('placarConfronto');
+    const addConfrontoBtn = document.getElementById('addConfronto');
+    const adminConfrontos = document.getElementById('adminConfrontos');
+    const refreshAdmin = document.getElementById('refreshAdmin');
+
+    // state
     let limiteEscolha = 2;
-    let inscritosCache = [];
+    let inscritosCache = []; // manter cache para uso ADM e selects
+    let modalidadesCache = [];
 
-    toggleButton.addEventListener("click", () => {
-      showForm = !showForm;
-      formSection.classList.toggle("hidden", !showForm);
-      listSection.classList.toggle("hidden", showForm);
-      adminSection.classList.add("hidden");
-      showAdmin = false;
-      toggleButton.textContent = showForm ? "Ver Participantes" : "Nova Inscrição";
+    // toggle inscrição
+    toggleButton.addEventListener('click', () => {
+      formSection.classList.toggle('hidden', false);
+      listSection.classList.toggle('hidden', true);
+      followSection.classList.add('hidden');
+      adminSection.classList.add('hidden');
+      toggleButton.textContent = 'Nova Inscrição';
     });
 
-    adminButton.addEventListener("click", async () => {
-      const senha = prompt("Digite a senha do administrador:");
-      if (senha === "dpsp123") {
-        showAdmin = !showAdmin;
-        adminSection.classList.toggle("hidden", !showAdmin);
-        listSection.classList.toggle("hidden", showAdmin);
-        formSection.classList.add("hidden");
-        showForm = false;
-        carregarModalidades();
-        carregarLimite();
-        carregarAdminTable();
+    cancelBtn.addEventListener('click', () => {
+      registrationForm.reset();
+      formSection.classList.add('hidden');
+      listSection.classList.remove('hidden');
+    });
+
+    // acompanhar campeonato (público)
+    followBtn.addEventListener('click', () => {
+      followSection.classList.toggle('hidden', false);
+      formSection.classList.add('hidden');
+      listSection.classList.add('hidden');
+      adminSection.classList.add('hidden');
+    });
+
+    // admin login
+    adminButton.addEventListener('click', async () => {
+      const senha = prompt('Digite a senha do administrador:');
+      if (senha === 'dpsp123') {
+        adminSection.classList.toggle('hidden', false);
+        formSection.classList.add('hidden');
+        listSection.classList.add('hidden');
+        followSection.classList.add('hidden');
+        await carregarModalidades();
+        await carregarLimite();
+        carregarInscritosParaADM();
+        carregarConfrontosADM();
       } else if (senha !== null) {
-        alert("Senha incorreta.");
+        alert('Senha incorreta.');
       }
     });
 
-    // Carregar modalidades
+    // ======= MODALIDADES =======
     async function carregarModalidades() {
-      const snapshot = await getDocs(collection(db, "modalidades"));
-      modalidadesList.innerHTML = "";
-      adminModalidadesList.innerHTML = "";
-      snapshot.forEach(docSnap => {
-        const modalidade = docSnap.id;
-        // Para participantes
-        const label = document.createElement("label");
-        label.className = "flex items-center gap-2";
-        label.innerHTML = `<input type="checkbox" value="${modalidade}"> ${modalidade}`;
+      modalidadesList.innerHTML = '';
+      adminModalidadesList.innerHTML = '';
+      modalidadesCache = [];
+
+      const snap = await getDocs(collection(db, 'modalidades'));
+      snap.forEach(d => {
+        const nome = d.id; // usamos id do doc como nome (compat com seu setup)
+        modalidadesCache.push(nome);
+
+        // checkbox para inscrição
+        const label = document.createElement('label');
+        label.className = 'flex items-center gap-2';
+        label.innerHTML = `<input type="checkbox" value="${nome}"> <span>${nome}</span>`;
         modalidadesList.appendChild(label);
-        // Para administrador
-        const div = document.createElement("div");
-        div.className = "flex justify-between items-center border p-1 rounded";
-        div.innerHTML = `<span>${modalidade}</span>
-          <button class="text-red-600 hover:text-red-800" data-id="${modalidade}">🗑️</button>`;
-        div.querySelector("button").addEventListener("click", async () => {
-          await deleteDoc(doc(db, "modalidades", modalidade));
-          carregarModalidades();
+
+        // admin list item
+        const div = document.createElement('div');
+        div.className = 'flex justify-between items-center border p-2 rounded';
+        div.innerHTML = `<span>${nome}</span><button class="text-red-600">🗑️</button>`;
+        div.querySelector('button').addEventListener('click', async () => {
+          if (!confirm('Excluir modalidade "' + nome + '"?')) return;
+          await deleteDoc(doc(db, 'modalidades', nome));
+          await carregarModalidades();
         });
         adminModalidadesList.appendChild(div);
       });
-      atualizarInfo();
+
+      // setup listener to limit selection on the checkboxes
+      const checkboxes = modalidadesList.querySelectorAll('input[type="checkbox"]');
+      checkboxes.forEach(cb => {
+        cb.addEventListener('change', () => {
+          const checked = [...checkboxes].filter(c => c.checked);
+          if (checked.length > limiteEscolha) {
+            cb.checked = false;
+            alert('Você só pode escolher até ' + limiteEscolha + ' modalidade(s).');
+          }
+        });
+      });
+
+      atualizarInfoModalidade();
     }
 
-    // Adicionar modalidade
-    addModalidadeBtn.addEventListener("click", async () => {
+    addModalidade.addEventListener('click', async () => {
       const nome = novaModalidade.value.trim();
       if (!nome) return;
-      await setDoc(doc(db, "modalidades", nome), { criado_em: new Date().toISOString() });
-      novaModalidade.value = "";
-      carregarModalidades();
+      // cria doc com id = nome (compatibilidade com versões anteriores)
+      await setDoc(doc(db, 'modalidades', nome), { criado_em: new Date().toISOString() });
+      novaModalidade.value = '';
+      await carregarModalidades();
     });
 
-    // Carregar limite
+    // ======= LIMITE =======
     async function carregarLimite() {
-      const snap = await getDoc(doc(db, "config", "limite"));
-      if (snap.exists()) {
-        limiteEscolha = snap.data().valor;
-        limiteInput.value = limiteEscolha;
+      const snap = await getDocs(collection(db, 'config'));
+      // tentativa simples: checar doc 'limite' se existir
+      const limiteDoc = await getDoc(doc(db, 'config', 'limite'));
+      if (limiteDoc.exists()) {
+        limiteEscolha = limiteDoc.data().valor || 2;
+        limiteModalidades.value = limiteEscolha;
+      } else {
+        limiteEscolha = 2;
+        limiteModalidades.value = '';
       }
-      atualizarInfo();
+      atualizarInfoModalidade();
     }
 
-    salvarLimiteBtn.addEventListener("click", async () => {
-      const valor = parseInt(limiteInput.value);
-      if (valor > 0) {
-        limiteEscolha = valor;
-        await setDoc(doc(db, "config", "limite"), { valor });
-        atualizarInfo();
-        alert("Limite atualizado!");
-      }
+    salvarLimite.addEventListener('click', async () => {
+      const v = parseInt(limiteModalidades.value) || 1;
+      limiteEscolha = v;
+      await setDoc(doc(db, 'config', 'limite'), { valor: v });
+      alert('Limite salvo: ' + v);
+      atualizarInfoModalidade();
     });
 
-    function atualizarInfo() {
-      modalidadeInfo.textContent = `Você pode escolher até ${limiteEscolha} modalidade(s).`;
+    function atualizarInfoModalidade() {
+      modalidadeInfo.textContent = 'Você pode escolher até ' + limiteEscolha + ' modalidade(s).';
     }
 
-    // Formulário de inscrição
-    registrationForm.addEventListener("submit", async (e) => {
+    // ======= INSCRIÇÃO =======
+    registrationForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const matricula = document.getElementById("matricula").value.trim();
-      const nome = document.getElementById("nome").value.trim();
-      const setor = document.getElementById("setor").value.trim();
-      const telefone = document.getElementById("telefone").value.trim();
+      const matricula = document.getElementById('matricula').value.trim();
+      const nome = document.getElementById('nome').value.trim();
+      const setor = document.getElementById('setor').value.trim();
+      const telefone = document.getElementById('telefone').value?.trim() || '';
 
-      const escolhidas = Array.from(modalidadesList.querySelectorAll("input:checked")).map(c => c.value);
+      const escolhidas = Array.from(modalidadesList.querySelectorAll('input:checked')).map(i => i.value);
 
-      if (!matricula || !nome || !setor || !telefone) {
-        alert("Preencha todos os campos!");
+      if (!matricula || !nome || !setor) {
+        alert('Preencha todos os campos obrigatórios!');
         return;
       }
-
       if (escolhidas.length === 0 || escolhidas.length > limiteEscolha) {
-        alert(`Escolha entre 1 e ${limiteEscolha} modalidades.`);
+        alert('Escolha entre 1 e ' + limiteEscolha + ' modalidade(s).');
         return;
       }
 
-      const qMatricula = query(collection(db, "inscritos"), where("matricula", "==", matricula));
-      const snapshot = await getDocs(qMatricula);
+      // verifica duplicidade por campo matricula (compatível com registros antigos)
+      const qMat = query(collection(db, 'inscritos'), where('matricula', '==', matricula));
+      const snapshot = await getDocs(qMat);
       if (!snapshot.empty) {
-        alert("Essa matrícula já está inscrita!");
+        alert('Essa matrícula já está cadastrada!');
         return;
       }
 
       try {
-        await addDoc(collection(db, "inscritos"), {
+        // usa addDoc (não sobrescreve docs existentes). grava criado_em como serverTimestamp
+        await addDoc(collection(db, 'inscritos'), {
           matricula,
           nome,
           setor,
           telefone,
           modalidades: escolhidas,
-          criado_em: new Date().toISOString()
+          criado_em: serverTimestamp()
         });
-        alert("Inscrição realizada com sucesso!");
+        alert('Inscrição realizada com sucesso!');
         registrationForm.reset();
-        carregarModalidades();
-        formSection.classList.add("hidden");
-        listSection.classList.remove("hidden");
-        toggleButton.textContent = "Nova Inscrição";
+        await carregarModalidades();
+        formSection.classList.add('hidden');
+        listSection.classList.remove('hidden');
       } catch (err) {
-        console.error("Erro:", err);
-        alert("Erro ao salvar.");
+        console.error('Erro ao salvar inscrição', err);
+        alert('Erro ao salvar inscrição. Veja console.');
       }
     });
 
-    // Lista pública (sem matrícula e sem telefone)
-    const q = query(collection(db, "inscritos"), orderBy("criado_em", "desc"));
-    onSnapshot(q, (snapshot) => {
-      loadingMessage.classList.add("hidden");
-      participantList.innerHTML = "";
+    // ======= LISTA PÚBLICA DE INSCRITOS =======
+    const qInscritos = query(collection(db, 'inscritos'), orderBy('criado_em', 'desc'));
+    onSnapshot(qInscritos, (snap) => {
+      loadingMessage.classList.add('hidden');
+      participantList.innerHTML = '';
       inscritosCache = [];
-      if (snapshot.empty) {
-        participantList.innerHTML = `<p class="text-sm text-gray-500">Nenhum participante ainda.</p>`;
+      if (snap.empty) {
+        participantList.innerHTML = '<p class="text-sm text-gray-500">Nenhum participante ainda.</p>';
         return;
       }
-      snapshot.forEach(docSnap => {
-        const entry = docSnap.data();
-        inscritosCache.push({ id: docSnap.id, ...entry });
-        const div = document.createElement("div");
-        div.className = "flex items-center justify-between p-2 border rounded-lg shadow-sm";
-        div.innerHTML = `
+      snap.forEach(docSnap => {
+        const data = docSnap.data();
+        inscritosCache.push({ id: docSnap.id, ...data });
+        const wrapper = document.createElement('div');
+        wrapper.className = 'p-3 border rounded flex justify-between items-center';
+        wrapper.innerHTML = `
           <div>
-            <p class="font-medium">${entry.nome}</p>
-            <p class="text-sm text-gray-500">${entry.setor}</p>
-            <p class="text-xs text-blue-600">Modalidades: ${entry.modalidades.join(", ")}</p>
+            <div class="font-medium">${escapeHtml(data.nome)}</div>
+            <div class="text-sm text-gray-500">${escapeHtml(data.setor)}</div>
+            <div class="text-xs text-blue-600">Modalidades: ${Array.isArray(data.modalidades) ? escapeHtml(data.modalidades.join(', ')) : ''}</div>
           </div>
         `;
-        participantList.appendChild(div);
+        participantList.appendChild(wrapper);
       });
-      carregarAdminTable();
+      // atualizar selects ADM a cada alteração
+      preencherSelectsComInscritos();
     });
 
-    // Tabela do ADM (com matrícula e telefone)
-    function carregarAdminTable() {
-      adminTableBody.innerHTML = "";
-      inscritosCache.forEach(entry => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td class="border p-2">${entry.matricula}</td>
-          <td class="border p-2">${entry.nome}</td>
-          <td class="border p-2">${entry.setor}</td>
-          <td class="border p-2">${entry.telefone}</td>
-          <td class="border p-2">${entry.modalidades.join(", ")}</td>
-          <td class="border p-2 text-center">
-            <button class="text-red-600 hover:text-red-800" data-id="${entry.id}">🗑️</button>
-          </td>
+    // ======= ADMIN: lista completa + export CSV + delete =======
+    function carregarInscritosParaADM() {
+      adminList.innerHTML = '';
+      inscritosCache.forEach(e => {
+        const div = document.createElement('div');
+        div.className = 'p-2 border rounded flex justify-between items-center';
+        div.innerHTML = `
+          <div>
+            <div class="font-medium">${escapeHtml(e.nome)}</div>
+            <div class="text-sm">Matrícula: ${escapeHtml(e.matricula || '')}</div>
+            <div class="text-sm">Setor: ${escapeHtml(e.setor || '')}</div>
+            <div class="text-sm">Telefone: ${escapeHtml(e.telefone || '')}</div>
+            <div class="text-xs text-blue-600">Modalidades: ${Array.isArray(e.modalidades) ? escapeHtml(e.modalidades.join(' / ')) : ''}</div>
+          </div>
+          <div class="flex flex-col items-end gap-2">
+            <button class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded" data-id="${e.id}">Excluir</button>
+          </div>
         `;
-        tr.querySelector("button").addEventListener("click", async () => {
-          const senha = prompt("Digite a senha para excluir:");
-          if (senha === "dpsp123") {
-            await deleteDoc(doc(db, "inscritos", entry.id));
+        div.querySelector('button').addEventListener('click', async () => {
+          const senha = prompt('Digite a senha para excluir:');
+          if (senha === 'dpsp123') {
+            await deleteDoc(doc(db, 'inscritos', e.id));
+          } else if (senha !== null) {
+            alert('Senha incorreta.');
           }
         });
-        adminTableBody.appendChild(tr);
+        adminList.appendChild(div);
       });
     }
 
-    // Exportar CSV
-    exportCSVBtn.addEventListener("click", () => {
-      if (inscritosCache.length === 0) {
-        alert("Nenhum inscrito para exportar!");
-        return;
-      }
-      let csv = "Matrícula,Nome,Setor,Telefone,Modalidades\n";
+    exportCSV.addEventListener('click', () => {
+      if (!inscritosCache.length) { alert('Nenhum inscrito para exportar'); return; }
+      let csv = 'Matrícula,Nome,Setor,Telefone,Modalidades,Data_Criacao\n';
       inscritosCache.forEach(e => {
-        csv += `"${e.matricula}","${e.nome}","${e.setor}","${e.telefone}","${e.modalidades.join(" | ")}"\n`;
+        const created = e.criado_em && e.criado_em.toDate ? e.criado_em.toDate().toLocaleString('pt-BR') : (e.criado_em || '');
+        csv += `"${(e.matricula||'')}" ,"${(e.nome||'')}" ,"${(e.setor||'')}" ,"${(e.telefone||'')}" ,"${(Array.isArray(e.modalidades)? e.modalidades.join(' | '): '')}" ,"${created}"\n`;
       });
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "inscritos.csv";
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'inscritos.csv';
       a.click();
     });
 
-    carregarModalidades();
-    carregarLimite();
+    // ======= CONFRONTOS =======
+    // grava confronto com referências: idJogadorA, idJogadorB, nomeA, nomeB, data, placar, status
+    addConfrontoBtn.addEventListener('click', async () => {
+      const idA = selectJogadorA.value;
+      const idB = selectJogadorB.value;
+      const dataStr = dataConfronto.value;
+      const placar = placarConfronto.value.trim();
+
+      if (!idA || !idB) { alert('Escolha os dois jogadores'); return; }
+      if (idA === idB) { alert('Escolha jogadores diferentes'); return; }
+
+      // pegar nomes a partir do cache
+      const jogadorA = inscritosCache.find(x => x.id === idA);
+      const jogadorB = inscritosCache.find(x => x.id === idB);
+      if (!jogadorA || !jogadorB) { alert('Jogador não encontrado'); return; }
+
+      try {
+        await addDoc(collection(db, 'confrontos'), {
+          idA, idB,
+          nomeA: jogadorA.nome, nomeB: jogadorB.nome,
+          data: dataStr || null,
+          placar: placar || null,
+          status: placar ? 'Finalizado' : 'Pendente',
+          criado_em: serverTimestamp()
+        });
+        alert('Confronto salvo!');
+        dataConfronto.value = '';
+        placarConfronto.value = '';
+        carregarConfrontosADM();
+      } catch (err) {
+        console.error(err);
+        alert('Erro ao salvar confronto');
+      }
+    });
+
+    // lista pública de confrontos
+    const qConfrontos = query(collection(db, 'confrontos'), orderBy('criado_em', 'desc'));
+    onSnapshot(qConfrontos, (snap) => {
+      confrontosList.innerHTML = '';
+      if (snap.empty) {
+        confrontosList.innerHTML = '<p class="text-sm text-gray-500">Nenhum confronto cadastrado.</p>';
+        return;
+      }
+      snap.forEach(docSnap => {
+        const c = docSnap.data();
+        const dateText = c.data ? c.data : 'Data indefinida';
+        const statusText = c.status || 'Pendente';
+        const placarText = c.placar ? ` — Placar: ${c.placar}` : '';
+        const div = document.createElement('div');
+        div.className = 'p-3 border rounded';
+        div.innerHTML = `<div class="font-medium">${escapeHtml(c.nomeA)} x ${escapeHtml(c.nomeB)}</div>
+                         <div class="text-sm text-gray-600">${escapeHtml(dateText)} — ${escapeHtml(statusText)}${placarText}</div>`;
+        confrontosList.appendChild(div);
+      });
+    });
+
+    // admin: listar confrontos e permitir edição simples (apagar / editar placar)
+    async function carregarConfrontosADM() {
+      adminConfrontos.innerHTML = '';
+      const snap = await getDocs(query(collection(db, 'confrontos'), orderBy('criado_em', 'desc')));
+      if (snap.empty) {
+        adminConfrontos.innerHTML = '<p class="text-sm text-gray-500">Nenhum confronto cadastrado.</p>';
+        return;
+      }
+      snap.forEach(docSnap => {
+        const id = docSnap.id;
+        const c = docSnap.data();
+        const div = document.createElement('div');
+        div.className = 'p-2 border rounded flex flex-col gap-2';
+        div.innerHTML = `
+          <div class="flex justify-between items-center">
+            <div>
+              <div class="font-medium">${escapeHtml(c.nomeA)} x ${escapeHtml(c.nomeB)}</div>
+              <div class="text-sm text-gray-600">${escapeHtml(c.data || 'Data indefinida')}</div>
+            </div>
+            <div class="flex gap-2">
+              <input data-id="${id}" class="placarInput p-1 border rounded" placeholder="placar (ex: 3x2)" value="${c.placar || ''}" />
+              <button data-id="${id}" class="savePlacBtn bg-green-600 text-white px-2 py-1 rounded">Salvar</button>
+              <button data-id="${id}" class="delConfBtn bg-red-600 text-white px-2 py-1 rounded">Excluir</button>
+            </div>
+          </div>
+        `;
+        // salvar placar
+        div.querySelector('.savePlacBtn').addEventListener('click', async (ev) => {
+          const idLocal = ev.currentTarget.dataset.id;
+          const input = div.querySelector('.placarInput');
+          const newPlacar = input.value.trim();
+          try {
+            await setDoc(doc(db, 'confrontos', idLocal), {
+              ...c,
+              placar: newPlacar || null,
+              status: newPlacar ? 'Finalizado' : 'Pendente',
+              criado_em: c.criado_em || serverTimestamp()
+            });
+            alert('Placar atualizado');
+            carregarConfrontosADM();
+          } catch (err) {
+            console.error(err);
+            alert('Erro ao atualizar placar');
+          }
+        });
+        // excluir confronto
+        div.querySelector('.delConfBtn').addEventListener('click', async (ev) => {
+          const idLocal = ev.currentTarget.dataset.id;
+          if (!confirm('Excluir confronto?')) return;
+          try {
+            await deleteDoc(doc(db, 'confrontos', idLocal));
+            carregarConfrontosADM();
+          } catch (err) {
+            console.error(err);
+            alert('Erro ao excluir confronto');
+          }
+        });
+
+        adminConfrontos.appendChild(div);
+      });
+    }
+
+    // preenche selects de jogador no ADM (com inscritosCache)
+    function preencherSelectsComInscritos() {
+      // limpar e preencher selects
+      [selectJogadorA, selectJogadorB].forEach(s => {
+        s.innerHTML = '<option value="">Escolha</option>';
+      });
+      inscritosCache.forEach(p => {
+        const opt = `<option value="${p.id}">${escapeHtml(p.nome)} (${escapeHtml(p.setor || '')})</option>`;
+        selectJogadorA.insertAdjacentHTML('beforeend', opt);
+        selectJogadorB.insertAdjacentHTML('beforeend', opt);
+      });
+    }
+
+    // atualizar ADM inscritos e selects
+    function carregarInscritosParaADM() {
+      carregarInscritosParaADM_once();
+    }
+    function carregarInscritosParaADM_once() {
+      // usa cache já populada por onSnapshot
+      carregarInscritosDOM();
+      preencherSelectsComInscritos();
+    }
+    function carregarInscritosDOM() {
+      adminList.innerHTML = '';
+      inscritosCache.forEach(e => {
+        const div = document.createElement('div');
+        div.className = 'p-2 border rounded flex justify-between items-center';
+        div.innerHTML = `
+          <div>
+            <div class="font-medium">${escapeHtml(e.nome)}</div>
+            <div class="text-sm">Matrícula: ${escapeHtml(e.matricula || '')}</div>
+            <div class="text-sm">Setor: ${escapeHtml(e.setor || '')}</div>
+            <div class="text-sm">Telefone: ${escapeHtml(e.telefone || '')}</div>
+            <div class="text-xs text-blue-600">Modalidades: ${Array.isArray(e.modalidades) ? escapeHtml(e.modalidades.join(' / ')) : ''}</div>
+          </div>
+          <div class="flex flex-col items-end gap-2">
+            <button class="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded" data-id="${e.id}">Excluir</button>
+          </div>
+        `;
+        div.querySelector('button').addEventListener('click', async () => {
+          const senha = prompt('Digite a senha para excluir:');
+          if (senha === 'dpsp123') {
+            await deleteDoc(doc(db, 'inscritos', e.id));
+          } else if (senha !== null) {
+            alert('Senha incorreta.');
+          }
+        });
+        adminList.appendChild(div);
+      });
+    }
+
+    // carregar confrontos ADM (invocado manualmente)
+    async function carregarConfrontosADM() {
+      await carregarConfrontosADM_once();
+    }
+    async function carregarConfrontosADM_once() {
+      adminConfrontos.innerHTML = '';
+      const snap = await getDocs(query(collection(db, 'confrontos'), orderBy('criado_em', 'desc')));
+      if (snap.empty) {
+        adminConfrontos.innerHTML = '<p class="text-sm text-gray-500">Nenhum confronto cadastrado.</p>';
+        return;
+      }
+      snap.forEach(docSnap => {
+        const id = docSnap.id;
+        const c = docSnap.data();
+        const div = document.createElement('div');
+        div.className = 'p-2 border rounded flex justify-between items-center gap-4';
+        div.innerHTML = `
+          <div>
+            <div class="font-medium">${escapeHtml(c.nomeA)} x ${escapeHtml(c.nomeB)}</div>
+            <div class="text-sm text-gray-600">${escapeHtml(c.data || 'Data indefinida')}</div>
+            <div class="text-sm text-gray-700">Placar: ${escapeHtml(c.placar || ' - ')}</div>
+            <div class="text-xs text-gray-500">Status: ${escapeHtml(c.status || 'Pendente')}</div>
+          </div>
+          <div class="flex flex-col gap-2">
+            <button data-id="${id}" class="editConf bg-yellow-500 text-white px-2 py-1 rounded">Editar</button>
+            <button data-id="${id}" class="delConf bg-red-600 text-white px-2 py-1 rounded">Excluir</button>
+          </div>
+        `;
+        div.querySelector('.delConf').addEventListener('click', async (ev) => {
+          const idLocal = ev.currentTarget.dataset.id;
+          if (!confirm('Excluir confronto?')) return;
+          await deleteDoc(doc(db, 'confrontos', idLocal));
+          carregarConfrontosADM_once();
+        });
+        div.querySelector('.editConf').addEventListener('click', async (ev) => {
+          const idLocal = ev.currentTarget.dataset.id;
+          // simples: abre prompt para editar placar e data
+          const novoPlacar = prompt('Novo placar (ex: 3x2):', c.placar || '');
+          const novaData = prompt('Nova data (YYYY-MM-DD):', c.data || '');
+          if (novoPlacar === null && novaData === null) return;
+          // mescla e grava
+          await setDoc(doc(db, 'confrontos', idLocal), {
+            ...c,
+            placar: novoPlacar || null,
+            data: novaData || c.data || null,
+            status: novoPlacar ? 'Finalizado' : (c.status || 'Pendente'),
+            criado_em: c.criado_em || serverTimestamp()
+          });
+          carregarConfrontosADM_once();
+        });
+        adminConfrontos.appendChild(div);
+      });
+    }
+
+    // refresh admin lists
+    refreshAdmin.addEventListener('click', async () => {
+      await carregarModalidades();
+      carregarInscritosParaADM();
+      await carregarConfrontosADM();
+    });
+
+    // helper: escape HTML (pequena proteção XSS)
+    function escapeHtml(str) {
+      if (!str && str !== 0) return '';
+      return String(str)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    // utility: initial load
+    (async function init() {
+      await carregarModalidades();
+      await carregarLimite();
+
+      // carregar inscritos & confrontos via onSnapshot (listeners already set above for inscritos & confrontos)
+      // preencher selects se já houver inscritos
+      // carregarConfrontosADM pode ser chamado quando ADM abrir painel
+    })();
+
+    // quando os inscritos mudam, atualizar ADM displays automaticamente
+    // já feito por onSnapshot de inscritos (chama preencherSelectsComInscritos e atualiza cache)
+    // porém precisamos expor uma chamada para preencher selects -> já criada: preencherSelectsComInscritos()
+
   </script>
 </body>
 </html>

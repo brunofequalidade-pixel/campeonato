@@ -123,7 +123,7 @@
         const modalidadeInfo = document.getElementById("modalidadeInfo");
         const adminTableBody = document.getElementById("adminTableBody");
         const exportCSVBtn = document.getElementById("exportCSV");
-        const sortearButton = document.getElementById("sortearButton"); // Novo elemento
+        const sortearButton = document.getElementById("sortearButton");
 
         let showForm = false;
         let showAdmin = false;
@@ -333,7 +333,7 @@
         });
 
         // Sorteio de Confrontos
-        sortearButton.addEventListener("click", () => {
+        sortearButton.addEventListener("click", async () => {
             if (inscritosCache.length < 2) {
                 alert("É necessário no mínimo 2 participantes para o sorteio.");
                 return;
@@ -345,18 +345,38 @@
                 [participantes[i], participantes[j]] = [participantes[j], participantes[i]];
             }
 
-            let sorteioHTML = "<h3>Confrontos Sorteados:</h3><ul class='list-disc pl-5 mt-2 space-y-1'>";
+            let sorteioHTML = "<h3 class='font-bold'>Confrontos Sorteados:</h3><div id='confrontosList' class='space-y-4 mt-2'>";
             for (let i = 0; i < participantes.length; i += 2) {
                 const p1 = participantes[i];
                 const p2 = participantes[i + 1];
+                const confrontoId = `confronto-${p1.id}-${p2 ? p2.id : 'bye'}`;
 
                 if (p2) {
-                    sorteioHTML += `<li><strong>${p1.nome}</strong> ⚔️ <strong>${p2.nome}</strong></li>`;
+                    sorteioHTML += `
+                        <div class="border rounded-lg p-3 bg-white shadow" id="${confrontoId}">
+                            <div class="flex items-center justify-between gap-4 mb-2">
+                                <span class="font-medium">${p1.nome}</span>
+                                <span class="font-bold text-lg">⚔️</span>
+                                <span class="font-medium">${p2.nome}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="number" id="placar1-${confrontoId}" placeholder="Placar ${p1.nome}" class="w-1/2 p-2 border rounded-lg text-sm">
+                                <input type="number" id="placar2-${confrontoId}" placeholder="Placar ${p2.nome}" class="w-1/2 p-2 border rounded-lg text-sm">
+                            </div>
+                            <button class="mt-2 w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg salvar-placar-btn" data-id="${confrontoId}">
+                                Salvar Placar
+                            </button>
+                        </div>
+                    `;
                 } else {
-                    sorteioHTML += `<li><strong>${p1.nome}</strong> (aguardando o próximo round)</li>`;
+                    sorteioHTML += `
+                        <div class="border rounded-lg p-3 bg-white shadow">
+                            <span class="font-medium">${p1.nome}</span> (aguardando o próximo round)
+                        </div>
+                    `;
                 }
             }
-            sorteioHTML += "</ul>";
+            sorteioHTML += "</div>";
 
             const sorteioDiv = document.createElement("div");
             sorteioDiv.className = "mt-4 p-4 border rounded-lg bg-gray-50";
@@ -367,6 +387,37 @@
             sorteioDiv.id = "sorteioResultado";
 
             adminSection.appendChild(sorteioDiv);
+            
+            // Adicionar event listeners aos novos botões de salvar placar
+            const salvarPlacarButtons = document.querySelectorAll('.salvar-placar-btn');
+            salvarPlacarButtons.forEach(button => {
+                button.addEventListener('click', async (e) => {
+                    const confrontoId = e.target.getAttribute('data-id');
+                    const placar1 = document.getElementById(`placar1-${confrontoId}`).value;
+                    const placar2 = document.getElementById(`placar2-${confrontoId}`).value;
+
+                    if (placar1 === "" || placar2 === "") {
+                        alert("Por favor, preencha os dois placares.");
+                        return;
+                    }
+                    
+                    const [ , p1Id, p2Id] = confrontoId.split('-');
+                    
+                    const confrontoData = {
+                        jogador1: { id: p1Id, placar: parseInt(placar1) },
+                        jogador2: { id: p2Id, placar: parseInt(placar2) },
+                        criado_em: new Date().toISOString()
+                    };
+
+                    try {
+                        await addDoc(collection(db, "placar"), confrontoData);
+                        alert("Placar salvo com sucesso!");
+                    } catch (error) {
+                        console.error("Erro ao salvar o placar: ", error);
+                        alert("Erro ao salvar o placar.");
+                    }
+                });
+            });
         });
 
         carregarModalidades();

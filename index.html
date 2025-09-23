@@ -25,7 +25,7 @@
             </button>
         </div>
 
-        <section id="inscricaoSection" class="bg-white p-6 rounded-lg shadow mb-6">
+        <section id="inscricaoSection" class="bg-white p-6 rounded-lg shadow mb-6 hidden">
             <h2 class="text-xl font-bold mb-4">Nova Inscrição</h2>
             <form id="inscricaoForm" class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -126,73 +126,34 @@
         </section>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
-
     <script>
-        // Configuração do Firebase
-        const firebaseConfig = {
-            apiKey: "SUA_API_KEY",
-            authDomain: "SEU_AUTH_DOMAIN",
-            databaseURL: "SUA_DATABASE_URL",
-            projectId: "SEU_PROJECT_ID",
-            storageBucket: "SEU_STORAGE_BUCKET",
-            messagingSenderId: "SEU_MESSAGING_SENDER_ID",
-            appId: "SEU_APP_ID"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-        
+        // Variáveis globais
         let inscritos = [];
         let modalidades = [];
         let limite = 2;
-        let fases = {};
-        let jogos = {};
 
-        // Sincronização com Firebase
-        function syncWithFirebase() {
-            database.ref('inscritos').on('value', (snapshot) => {
-                inscritos = snapshot.val() ? Object.values(snapshot.val()) : [];
-                carregarAdmin();
-                carregarListaPublica();
-            });
+        // Simulando Firebase com localStorage
+        const storage = {
+            inscritos: JSON.parse(localStorage.getItem('inscritos') || '[]'),
+            modalidades: JSON.parse(localStorage.getItem('modalidades') || '["Sinuca", "Dominó", "Dama"]'),
+            fases: JSON.parse(localStorage.getItem('fases') || '{}'),
+            jogos: JSON.parse(localStorage.getItem('jogos') || '{}'),
+            config: JSON.parse(localStorage.getItem('config') || '{"limite": 2}')
+        };
 
-            database.ref('modalidades').on('value', (snapshot) => {
-                modalidades = snapshot.val() || ["Sinuca", "Dominó", "Dama"];
-                carregarModalidades();
-                carregarModalidadesSelect();
-                carregarPlacarSelect();
-            });
-
-            database.ref('config/limite').on('value', (snapshot) => {
-                limite = snapshot.val() || 2;
-                document.getElementById('limiteInput').value = limite;
-                document.getElementById('modalidadeInfo').textContent = `Escolha até ${limite} modalidade(s)`;
-            });
-            
-            database.ref('fases').on('value', (snapshot) => {
-                fases = snapshot.val() || {};
-                const currentModalidade = document.getElementById('modalidadeSelect').value;
-                if (currentModalidade) {
-                    mostrarFaseAtual(currentModalidade);
-                }
-            });
-
-            database.ref('jogos').on('value', (snapshot) => {
-                jogos = snapshot.val() || {};
-                const currentModalidadePlacar = document.getElementById('modalidadePlacar').value;
-                if (currentModalidadePlacar) {
-                    mostrarJogosPendentes(currentModalidadePlacar);
-                }
-                carregarAcompanhamento();
-            });
+        function saveStorage() {
+            localStorage.setItem('inscritos', JSON.stringify(storage.inscritos));
+            localStorage.setItem('modalidades', JSON.stringify(storage.modalidades));
+            localStorage.setItem('fases', JSON.stringify(storage.fases));
+            localStorage.setItem('jogos', JSON.stringify(storage.jogos));
+            localStorage.setItem('config', JSON.stringify(storage.config));
         }
-        
+
         // Navegação
         function showSection(section) {
             document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
             document.getElementById(section + 'Section').classList.remove('hidden');
-            
+
             // Reset button colors
             document.querySelectorAll('div.flex.flex-wrap.justify-center.gap-2.mb-6 button').forEach(btn => {
                 const id = btn.id;
@@ -215,15 +176,18 @@
         document.getElementById('inscricaoBtn').onclick = () => showSection('inscricao');
         document.getElementById('publicoBtn').onclick = () => {
             showSection('publico');
+            carregarListaPublica();
         };
         document.getElementById('acompanharBtn').onclick = () => {
             showSection('acompanhar');
+            carregarAcompanhamento();
         };
         document.getElementById('adminBtn').onclick = () => {
             const senha = prompt("Senha do administrador:");
             if (senha === "dpsp123") {
                 showSection('admin');
-                showAdminTab('config');
+                carregarAdmin();
+                showAdminTab('config'); // Adiciona esta linha para mostrar a aba padrão
             } else if (senha) {
                 alert("Senha incorreta!");
             }
@@ -244,14 +208,19 @@
         document.getElementById('configTab').onclick = () => showAdminTab('config');
         document.getElementById('fasesTab').onclick = () => {
             showAdminTab('fases');
+            carregarModalidadesSelect();
         };
         document.getElementById('placaresTab').onclick = () => {
             showAdminTab('placares');
+            carregarPlacarSelect();
         };
         document.getElementById('resetTab').onclick = () => showAdminTab('reset');
 
         // Modalidades
         function carregarModalidades() {
+            modalidades = storage.modalidades;
+            limite = storage.config.limite || 2;
+
             // Lista para inscrição
             const lista = document.getElementById('modalidadesList');
             lista.innerHTML = '';
@@ -270,22 +239,26 @@
                 div.innerHTML = `<span>${m}</span><button onclick="removerModalidade('${m}')" class="text-red-600 px-2">🗑️</button>`;
                 adminLista.appendChild(div);
             });
+            document.getElementById('modalidadeInfo').textContent = `Escolha até ${limite} modalidade(s)`;
+            document.getElementById('limiteInput').value = limite;
         }
 
         function removerModalidade(modalidade) {
             if (confirm(`Remover ${modalidade}?`)) {
-                const novaLista = modalidades.filter(m => m !== modalidade);
-                database.ref('modalidades').set(novaLista);
+                storage.modalidades = storage.modalidades.filter(m => m !== modalidade);
+                saveStorage();
+                carregarModalidades();
             }
         }
 
         // Adicionar modalidade
         document.getElementById('addModalidade').onclick = () => {
             const nome = document.getElementById('novaModalidade').value.trim();
-            if (nome && !modalidades.includes(nome)) {
-                const novaLista = [...modalidades, nome];
-                database.ref('modalidades').set(novaLista);
+            if (nome && !storage.modalidades.includes(nome)) {
+                storage.modalidades.push(nome);
+                saveStorage();
                 document.getElementById('novaModalidade').value = '';
+                carregarModalidades();
                 alert('Modalidade adicionada!');
             } else {
                 alert('Nome inválido ou já existe!');
@@ -296,11 +269,12 @@
         document.getElementById('salvarLimite').onclick = () => {
             const novoLimite = parseInt(document.getElementById('limiteInput').value);
             if (novoLimite > 0) {
-                database.ref('config/limite').set(novoLimite);
+                storage.config.limite = novoLimite;
+                saveStorage();
+                carregarModalidades();
                 alert('Limite salvo!');
             }
         };
-
         // Inscrição
         document.getElementById('inscricaoForm').onsubmit = (e) => {
             e.preventDefault();
@@ -309,23 +283,23 @@
             const setor = document.getElementById('setor').value.trim();
             const telefone = document.getElementById('telefone').value.trim();
             const escolhidas = Array.from(document.querySelectorAll('#modalidadesList input:checked')).map(c => c.value);
-            
+
             if (!matricula || !nome || !setor || !telefone) {
                 alert('Preencha todos os campos!');
                 return;
             }
-            
+
             if (escolhidas.length === 0 || escolhidas.length > limite) {
                 alert(`Escolha entre 1 e ${limite} modalidades!`);
                 return;
             }
-            
-            if (inscritos.find(i => i.matricula === matricula)) {
+
+            if (storage.inscritos.find(i => i.matricula === matricula)) {
                 alert('Matrícula já inscrita!');
                 return;
             }
-            
-            const novoInscrito = {
+
+            storage.inscritos.push({
                 id: Date.now().toString(),
                 matricula,
                 nome,
@@ -333,27 +307,24 @@
                 telefone,
                 modalidades: escolhidas,
                 criado: new Date().toISOString()
-            };
-
-            database.ref('inscritos').push(novoInscrito).then(() => {
-                alert('Inscrição realizada!');
-                document.getElementById('inscricaoForm').reset();
-            }).catch(error => {
-                alert('Erro ao salvar inscrição: ' + error.message);
             });
+            saveStorage();
+            alert('Inscrição realizada!');
+            document.getElementById('inscricaoForm').reset();
+            carregarModalidades();
         };
 
         // Lista pública
         function carregarListaPublica() {
             const lista = document.getElementById('participantesList');
             lista.innerHTML = '';
-            
-            if (inscritos.length === 0) {
+
+            if (storage.inscritos.length === 0) {
                 lista.innerHTML = '<p class="text-gray-500">Nenhum participante ainda.</p>';
                 return;
             }
-            
-            inscritos.forEach(p => {
+
+            storage.inscritos.forEach(p => {
                 const div = document.createElement('div');
                 div.className = 'p-3 border rounded-lg';
                 div.innerHTML = `
@@ -369,8 +340,8 @@
         function carregarAdmin() {
             const tabela = document.getElementById('tabelaInscritos');
             tabela.innerHTML = '';
-            
-            inscritos.forEach(p => {
+
+            storage.inscritos.forEach(p => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="border p-2">${p.nome}</td>
@@ -388,25 +359,22 @@
             if (confirm('Remover participante?')) {
                 const senha = prompt('Confirme a senha:');
                 if (senha === 'dpsp123') {
-                    const inscritoRef = database.ref('inscritos').orderByChild('id').equalTo(id);
-                    inscritoRef.once('value', snapshot => {
-                        snapshot.forEach(child => {
-                            child.ref.remove();
-                        });
-                    });
+                    storage.inscritos = storage.inscritos.filter(i => i.id !== id);
+                    saveStorage();
+                    carregarAdmin();
                 }
             }
         }
 
         // Export CSV
         document.getElementById('exportBtn').onclick = () => {
-            if (inscritos.length === 0) {
+            if (storage.inscritos.length === 0) {
                 alert('Nenhum inscrito!');
                 return;
             }
-            
+
             let csv = 'Nome,Setor,Telefone,Modalidades\n';
-            inscritos.forEach(p => {
+            storage.inscritos.forEach(p => {
                 csv += `"${p.nome}","${p.setor}","${p.telefone}","${p.modalidades.join(' | ')}"\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv' });
@@ -421,7 +389,7 @@
         function carregarModalidadesSelect() {
             const select = document.getElementById('modalidadeSelect');
             select.innerHTML = '<option value="">Selecione modalidade</option>';
-            modalidades.forEach(m => {
+            storage.modalidades.forEach(m => {
                 select.innerHTML += `<option value="${m}">${m}</option>`;
             });
         }
@@ -429,7 +397,7 @@
         function carregarPlacarSelect() {
             const select = document.getElementById('modalidadePlacar');
             select.innerHTML = '<option value="">Selecione modalidade</option>';
-            modalidades.forEach(m => {
+            storage.modalidades.forEach(m => {
                 select.innerHTML += `<option value="${m}">${m}</option>`;
             });
         }
@@ -441,34 +409,35 @@
                 alert('Selecione uma modalidade!');
                 return;
             }
-            
+
             criarFase(modalidade);
         };
 
-        async function criarFase(modalidade) {
-            const participantes = inscritos.filter(p => p.modalidades.includes(modalidade));
+        function criarFase(modalidade) {
+            const participantes = storage.inscritos.filter(p => p.modalidades.includes(modalidade));
             if (participantes.length < 2) {
                 alert('Mínimo 2 participantes!');
                 return;
             }
-            
+
             const faseKey = `${modalidade}_fase`;
             let numeroFase = 1;
             let jogadores = [...participantes];
-            
-            const faseData = fases[modalidade];
-            if (faseData) {
-                const vencedores = getVencedoresFase(modalidade, faseData.numero);
+
+            // Verificar se já existe fase
+            if (storage.fases[faseKey]) {
+                const vencedores = getVencedoresFase(modalidade, storage.fases[faseKey].numero);
                 if (vencedores.length === 1) {
                     alert(`${vencedores[0].nome} é o campeão!`);
                     return;
                 }
-                
-                numeroFase = faseData.numero + 1;
+
+                numeroFase = storage.fases[faseKey].numero + 1;
                 jogadores = vencedores;
-                
+
+                // Se ímpar, sortear um perdedor
                 if (jogadores.length % 2 === 1) {
-                    const perdedores = getPerdedoresFase(modalidade, faseData.numero);
+                    const perdedores = getPerdedoresFase(modalidade, storage.fases[faseKey].numero);
                     if (perdedores.length > 0) {
                         const sorteado = perdedores[Math.floor(Math.random() * perdedores.length)];
                         jogadores.push(sorteado);
@@ -476,12 +445,14 @@
                     }
                 }
             }
-            
+
+            // Embaralhar jogadores
             for (let i = jogadores.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [jogadores[i], jogadores[j]] = [jogadores[j], jogadores[i]];
             }
-            
+
+            // Criar confrontos
             const confrontos = [];
             for (let i = 0; i < jogadores.length; i += 2) {
                 if (jogadores[i + 1]) {
@@ -495,25 +466,26 @@
                     });
                 }
             }
-            
-            await database.ref(`fases/${modalidade}`).set({ numero: numeroFase, confrontos });
-            await database.ref(`jogos/${modalidade}/${numeroFase}`).set(confrontos);
-            
+
+            storage.fases[faseKey] = { numero: numeroFase, confrontos };
+            if (!storage.jogos[modalidade]) storage.jogos[modalidade] = {};
+            storage.jogos[modalidade][numeroFase] = confrontos;
+
+            saveStorage();
+            mostrarFaseAtual(modalidade);
             alert(`Fase ${numeroFase} criada com ${confrontos.length} confrontos!`);
         }
 
         function mostrarFaseAtual(modalidade) {
             const div = document.getElementById('faseAtual');
-            const faseData = fases[modalidade];
-            
-            if (!faseData) {
+            const faseKey = `${modalidade}_fase`;
+            if (!storage.fases[faseKey]) {
                 div.innerHTML = '<p class="text-gray-500">Nenhuma fase criada ainda.</p>';
                 return;
             }
-            
-            let html = `<h3 class="font-bold mb-3">Fase ${faseData.numero} - ${modalidade}</h3>`;
-            
-            faseData.confrontos.forEach(c => {
+            const fase = storage.fases[faseKey];
+            let html = `<h3 class="font-bold mb-3">Fase ${fase.numero} - ${modalidade}</h3>`;
+            fase.confrontos.forEach(c => {
                 html += `
                     <div class="flex justify-between items-center p-3 border rounded mb-2 ${c.finalizado ? 'bg-green-50' : 'bg-yellow-50'}">
                         <span>${c.jogador1.nome} vs ${c.jogador2.nome}</span>
@@ -526,31 +498,34 @@
             div.innerHTML = html;
         }
 
+        // Event listener para select de modalidade nas fases
         document.getElementById('modalidadeSelect').onchange = (e) => {
             if (e.target.value) {
                 mostrarFaseAtual(e.target.value);
             }
         };
 
+        // Placares
+        document.getElementById('modalidadePlacar').onchange = (e) => {
+            mostrarJogosPendentes(e.target.value);
+        };
+
         function mostrarJogosPendentes(modalidade) {
             const div = document.getElementById('jogosPendentes');
             div.innerHTML = '';
-            
-            if (!modalidade || !jogos[modalidade]) {
+            if (!modalidade || !storage.jogos[modalidade]) {
                 div.innerHTML = '<p class="text-gray-500">Nenhum jogo encontrado.</p>';
                 return;
             }
-            
-            const fasesDoJogo = Object.keys(jogos[modalidade]);
-            const ultimaFase = Math.max(...fasesDoJogo.map(f => parseInt(f)));
-            const jogosDaFase = jogos[modalidade][ultimaFase] || [];
-            
-            const pendentes = jogosDaFase.filter(j => !j.finalizado);
+            const fases = Object.keys(storage.jogos[modalidade]);
+            const ultimaFase = Math.max(...fases.map(f => parseInt(f)));
+            const jogos = storage.jogos[modalidade][ultimaFase] || [];
+            const pendentes = jogos.filter(j => !j.finalizado);
+
             if (pendentes.length === 0) {
                 div.innerHTML = '<p class="text-green-600">Todos os jogos da fase atual foram finalizados!</p>';
                 return;
             }
-            
             pendentes.forEach(jogo => {
                 const jogoDiv = document.createElement('div');
                 jogoDiv.className = 'p-4 border rounded bg-gray-50 mb-3';
@@ -559,17 +534,14 @@
                     <div class="grid grid-cols-2 gap-4 mb-3">
                         <div>
                             <label class="block text-sm font-medium">${jogo.jogador1.nome}</label>
-                            <input type="number" min="0" max="2" value="${jogo.placar1}" 
-                                   class="w-full p-2 border rounded" data-jogador="1" data-jogo="${jogo.id}">
+                            <input type="number" min="0" max="2" value="${jogo.placar1}" class="w-full p-2 border rounded" data-jogador="1" data-jogo="${jogo.id}">
                         </div>
                         <div>
                             <label class="block text-sm font-medium">${jogo.jogador2.nome}</label>
-                            <input type="number" min="0" max="2" value="${jogo.placar2}" 
-                                   class="w-full p-2 border rounded" data-jogador="2" data-jogo="${jogo.id}">
+                            <input type="number" min="0" max="2" value="${jogo.placar2}" class="w-full p-2 border rounded" data-jogador="2" data-jogo="${jogo.id}">
                         </div>
                     </div>
-                    <button onclick="salvarPlacar('${modalidade}', '${jogo.id}')" 
-                            class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
+                    <button onclick="salvarPlacar('${modalidade}', '${jogo.id}')" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
                         Salvar Placar
                     </button>
                 `;
@@ -577,122 +549,97 @@
             });
         }
 
-        document.getElementById('modalidadePlacar').onchange = (e) => {
-            mostrarJogosPendentes(e.target.value);
-        };
-
         function salvarPlacar(modalidade, jogoId) {
             const placar1Input = document.querySelector(`input[data-jogo="${jogoId}"][data-jogador="1"]`);
             const placar2Input = document.querySelector(`input[data-jogo="${jogoId}"][data-jogador="2"]`);
-            
             const placar1 = parseInt(placar1Input.value);
             const placar2 = parseInt(placar2Input.value);
-
             if (placar1 < 0 || placar1 > 2 || placar2 < 0 || placar2 > 2) {
                 alert('Placar deve ser entre 0 e 2!');
                 return;
             }
-            
             if (placar1 === placar2) {
                 alert('Deve haver um vencedor! (2x0, 2x1, 1x2 ou 0x2)');
                 return;
             }
-            
             if (placar1 < 2 && placar2 < 2) {
                 alert('Alguém deve fazer 2 pontos para vencer!');
                 return;
             }
-            
-            const fasesDoJogo = Object.keys(jogos[modalidade]);
-            const ultimaFase = Math.max(...fasesDoJogo.map(f => parseInt(f)));
-            
-            const jogoIndex = jogos[modalidade][ultimaFase].findIndex(j => j.id === jogoId);
+            // Atualizar jogo
+            const fases = Object.keys(storage.jogos[modalidade]);
+            const ultimaFase = Math.max(...fases.map(f => parseInt(f)));
+            const jogoIndex = storage.jogos[modalidade][ultimaFase].findIndex(j => j.id === jogoId);
             if (jogoIndex !== -1) {
-                const jogoAtualizado = {
-                    ...jogos[modalidade][ultimaFase][jogoIndex],
-                    placar1,
-                    placar2,
-                    finalizado: true
-                };
-
-                const updates = {};
-                updates[`jogos/${modalidade}/${ultimaFase}/${jogoIndex}`] = jogoAtualizado;
-                
-                const faseConfrontoIndex = fases[modalidade].confrontos.findIndex(c => c.id === jogoId);
-                if (faseConfrontoIndex !== -1) {
-                    updates[`fases/${modalidade}/confrontos/${faseConfrontoIndex}`] = jogoAtualizado;
-                }
-                
-                database.ref().update(updates).then(() => {
-                    alert('Placar salvo!');
-                    const todosFinalizados = jogos[modalidade][ultimaFase].every(j => j.finalizado);
-                    if (todosFinalizados) {
-                        alert('Todos os jogos da fase finalizados! Você pode criar a próxima fase.');
+                storage.jogos[modalidade][ultimaFase][jogoIndex].placar1 = placar1;
+                storage.jogos[modalidade][ultimaFase][jogoIndex].placar2 = placar2;
+                storage.jogos[modalidade][ultimaFase][jogoIndex].finalizado = true;
+                // Atualizar também nas fases
+                const faseKey = `${modalidade}_fase`;
+                if (storage.fases[faseKey]) {
+                    const confrontoIndex = storage.fases[faseKey].confrontos.findIndex(c => c.id === jogoId);
+                    if (confrontoIndex !== -1) {
+                        storage.fases[faseKey].confrontos[confrontoIndex].placar1 = placar1;
+                        storage.fases[faseKey].confrontos[confrontoIndex].placar2 = placar2;
+                        storage.fases[faseKey].confrontos[confrontoIndex].finalizado = true;
                     }
-                });
+                }
+                saveStorage();
+                alert('Placar salvo!');
+                mostrarJogosPendentes(modalidade);
+                // Verificar se todos os jogos da fase terminaram
+                const todosFinalizado = storage.jogos[modalidade][ultimaFase].every(j => j.finalizado);
+                if (todosFinalizado) {
+                    alert('Todos os jogos da fase foram finalizados! Crie a próxima fase.');
+                }
             }
         }
 
         function getVencedoresFase(modalidade, numeroFase) {
-            if (!jogos[modalidade] || !jogos[modalidade][numeroFase]) return [];
-            return jogos[modalidade][numeroFase]
-                .filter(j => j.finalizado)
-                .map(j => j.placar1 > j.placar2 ? j.jogador1 : j.jogador2);
+            const jogos = storage.jogos[modalidade][numeroFase];
+            return jogos.map(j => (j.placar1 > j.placar2 ? j.jogador1 : j.jogador2));
         }
 
         function getPerdedoresFase(modalidade, numeroFase) {
-            if (!jogos[modalidade] || !jogos[modalidade][numeroFase]) return [];
-            return jogos[modalidade][numeroFase]
-                .filter(j => j.finalizado)
-                .map(j => j.placar1 < j.placar2 ? j.jogador1 : j.jogador2);
+            const jogos = storage.jogos[modalidade][numeroFase];
+            return jogos.map(j => (j.placar1 < j.placar2 ? j.jogador1 : j.jogador2));
         }
 
-        // Acompanhamento público
+        // Acompanhar jogos
         function carregarAcompanhamento() {
             const div = document.getElementById('jogosAcompanhar');
             div.innerHTML = '';
-            
-            if (Object.keys(jogos).length === 0) {
-                div.innerHTML = '<p class="text-gray-500">Nenhum campeonato iniciado ainda.</p>';
+            if (Object.keys(storage.jogos).length === 0) {
+                div.innerHTML = '<p class="text-gray-500">Nenhum jogo ainda. Crie uma fase na área de Admin.</p>';
                 return;
             }
-            
-            Object.keys(jogos).forEach(modalidade => {
+
+            Object.keys(storage.jogos).forEach(modalidade => {
                 const modalidadeDiv = document.createElement('div');
-                modalidadeDiv.className = 'mb-6 p-4 border rounded-lg';
-                
-                let html = `<h3 class="text-lg font-bold mb-3">${modalidade}</h3>`;
-                
-                const fasesDoJogo = Object.keys(jogos[modalidade]);
-                fasesDoJogo.sort((a, b) => parseInt(b) - parseInt(a));
-                
-                fasesDoJogo.forEach(numeroFase => {
-                    const jogosDaFase = jogos[modalidade][numeroFase];
-                    html += `<h4 class="font-semibold mb-2">Fase ${numeroFase}</h4>`;
-                    
-                    jogosDaFase.forEach(jogo => {
-                        if (jogo.finalizado) {
-                            const vencedor = jogo.placar1 > jogo.placar2 ? jogo.jogador1.nome : jogo.jogador2.nome;
-                            html += `
-                                <div class="flex justify-between items-center p-2 mb-1 bg-green-50 border rounded">
-                                    <span>${jogo.jogador1.nome} vs ${jogo.jogador2.nome}</span>
-                                    <div class="text-right">
-                                        <span class="font-mono">${jogo.placar1} x ${jogo.placar2}</span>
-                                        <div class="text-xs text-green-600">Vencedor: ${vencedor}</div>
-                                    </div>
-                                </div>
-                            `;
-                        } else {
-                            html += `
-                                <div class="flex justify-between items-center p-2 mb-1 bg-yellow-50 border rounded">
-                                    <span>${jogo.jogador1.nome} vs ${jogo.jogador2.nome}</span>
-                                    <span class="text-orange-600 text-sm">Aguardando resultado</span>
-                                </div>
-                            `;
-                        }
-                    });
+                modalidadeDiv.className = 'p-4 border rounded-lg bg-white mb-4';
+                const fases = Object.keys(storage.jogos[modalidade]).map(f => parseInt(f));
+                const ultimaFase = Math.max(...fases);
+
+                let html = `<h3 class="font-bold text-lg mb-2">🏆 ${modalidade} - Fase ${ultimaFase}</h3>`;
+                const jogos = storage.jogos[modalidade][ultimaFase];
+                jogos.forEach(jogo => {
+                    if (jogo.finalizado) {
+                        html += `
+                            <div class="flex items-center justify-between p-2 rounded bg-green-50 text-sm mb-1">
+                                <span>${jogo.jogador1.nome} vs ${jogo.jogador2.nome}</span>
+                                <span class="text-green-700 font-semibold">${jogo.placar1} x ${jogo.placar2}</span>
+                            </div>
+                        `;
+                    } else {
+                        html += `
+                            <div class="flex items-center justify-between p-2 rounded bg-yellow-50 text-sm mb-1">
+                                <span>${jogo.jogador1.nome} vs ${jogo.jogador2.nome}</span>
+                                <span class="text-orange-600 text-sm">Aguardando resultado</span>
+                            </div>
+                        `;
+                    }
                 });
-                
+
                 modalidadeDiv.innerHTML = html;
                 div.appendChild(modalidadeDiv);
             });
@@ -703,21 +650,24 @@
             if (confirm('⚠️ ATENÇÃO: Isto apagará todas as fases, confrontos e placares!\n\nOs participantes inscritos serão mantidos.\n\nDeseja continuar?')) {
                 const senha = prompt('Digite a senha para confirmar:');
                 if (senha === 'dpsp123') {
-                    database.ref('fases').remove();
-                    database.ref('jogos').remove().then(() => {
-                        alert('✅ Campeonato resetado com sucesso!');
-                        document.getElementById('faseAtual').innerHTML = '';
-                        document.getElementById('jogosPendentes').innerHTML = '';
-                        document.getElementById('jogosAcompanhar').innerHTML = '';
-                    });
+                    storage.fases = {};
+                    storage.jogos = {};
+                    saveStorage();
+                    alert('✅ Campeonato resetado com sucesso!');
+
+                    // Limpar interfaces
+                    document.getElementById('faseAtual').innerHTML = '';
+                    document.getElementById('jogosPendentes').innerHTML = '';
+                    document.getElementById('jogosAcompanhar').innerHTML = '';
                 } else if (senha) {
                     alert('Senha incorreta!');
                 }
             }
         };
 
+        // Inicialização
         window.onload = () => {
-            syncWithFirebase();
+            carregarModalidades();
             showSection('inscricao');
         };
     </script>

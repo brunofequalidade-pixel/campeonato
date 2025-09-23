@@ -3,361 +3,389 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inscrições - Campeonato</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Sistema de Campeonato - Completo</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-    </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
-    <div class="bg-white p-6 rounded-2xl shadow-lg w-full max-w-3xl">
-        <h1 class="text-2xl font-bold text-center mb-4 text-purple-700">Campeonato 🎮</h1>
+<body class="bg-gray-100 min-h-screen p-4">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold text-center mb-6">Sistema de Campeonato 🏆</h1>
 
-        <div class="flex flex-col sm:flex-row justify-between mb-4 space-y-2 sm:space-y-0 sm:space-x-2">
-            <button id="toggleButton" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
-                Nova Inscrição
+        <!-- Navegação -->
+        <div class="flex flex-wrap justify-center gap-2 mb-6">
+            <button id="inscricaoBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                📝 Inscrições
             </button>
-            <button id="adminButton" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
-                Área do ADM
+            <button id="publicoBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+                👥 Lista Pública
+            </button>
+            <button id="adminBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">
+                ⚙️ Admin
+            </button>
+            <button id="acompanharBtn" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg">
+                📊 Acompanhar Jogos
             </button>
         </div>
 
-        <section id="formSection" class="hidden transition-all duration-300">
-            <h2 class="text-xl font-bold mb-4 text-center text-gray-700">Formulário de Inscrição</h2>
-            <form id="registrationForm" class="space-y-4">
-                <input type="text" id="matricula" placeholder="Matrícula" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
-                <input type="text" id="nome" placeholder="Nome completo" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
-                <input type="text" id="setor" placeholder="Setor" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
-                <input type="tel" id="telefone" placeholder="Telefone (somente ADM verá)" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
-
-                <div>
-                    <p class="font-semibold mb-2 text-gray-700">Escolha suas modalidades:</p>
-                    <div id="modalidadesList" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
-                    <p id="modalidadeInfo" class="text-xs text-gray-500 mt-1"></p>
+        <!-- Seção de Inscrições -->
+        <section id="inscricaoSection" class="bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-xl font-bold mb-4">Nova Inscrição</h2>
+            <form id="inscricaoForm" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="text" id="matricula" placeholder="Matrícula" class="p-2 border rounded-lg" required>
+                    <input type="text" id="nome" placeholder="Nome completo" class="p-2 border rounded-lg" required>
+                    <input type="text" id="setor" placeholder="Setor" class="p-2 border rounded-lg" required>
+                    <input type="tel" id="telefone" placeholder="Telefone" class="p-2 border rounded-lg" required>
                 </div>
-
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors">
+                <div>
+                    <p class="font-semibold mb-2">Escolha suas modalidades:</p>
+                    <div id="modalidadesList" class="grid grid-cols-2 md:grid-cols-3 gap-2"></div>
+                    <p id="modalidadeInfo" class="text-sm text-gray-500 mt-2"></p>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg">
                     Enviar Inscrição
                 </button>
             </form>
         </section>
 
-        <section id="listSection">
-            <h2 class="text-xl font-semibold mb-2 text-center text-gray-700">Participantes inscritos</h2>
-            <div id="loadingMessage" class="text-gray-500 text-sm text-center">Carregando participantes...</div>
-            <div id="participantList" class="space-y-2"></div>
+        <!-- Lista Pública -->
+        <section id="publicoSection" class="bg-white p-6 rounded-lg shadow mb-6 hidden">
+            <h2 class="text-xl font-bold mb-4">Participantes Inscritos</h2>
+            <div id="participantesList"></div>
         </section>
 
-        <section id="adminSection" class="hidden transition-all duration-300">
-            <h2 class="text-2xl font-bold mb-4 text-center text-gray-700">Área do Administrador</h2>
-            <div class="space-y-6">
-                <!-- Gerenciar Modalidades e Limite -->
-                <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
-                    <h3 class="font-bold text-lg mb-2 text-gray-700">Gerenciar Configurações</h3>
-                    <div class="space-y-4">
-                        <div>
-                            <h4 class="font-semibold text-gray-600 mb-1">Modalidades</h4>
-                            <div id="adminModalidadesList" class="space-y-1 mb-2"></div>
-                            <div class="flex gap-2">
-                                <input type="text" id="novaModalidade" placeholder="Nova modalidade" class="flex-1 p-2 border rounded-lg">
-                                <button id="addModalidade" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg">Adicionar</button>
-                            </div>
-                        </div>
+        <!-- Acompanhar Jogos -->
+        <section id="acompanharSection" class="bg-white p-6 rounded-lg shadow mb-6 hidden">
+            <h2 class="text-xl font-bold mb-4">Acompanhar Campeonato</h2>
+            <div id="modalidadesAcompanhar" class="space-y-6"></div>
+        </section>
 
-                        <div>
-                            <h4 class="font-semibold text-gray-600 mb-1">Limite de Modalidades</h4>
-                            <div class="flex gap-2 items-center">
-                                <input type="number" id="limiteModalidades" min="1" class="p-2 border rounded-lg w-20">
-                                <button id="salvarLimite" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg">Salvar</button>
-                            </div>
-                        </div>
+        <!-- Área Administrativa -->
+        <section id="adminSection" class="bg-white p-6 rounded-lg shadow mb-6 hidden">
+            <h2 class="text-xl font-bold mb-4">Área Administrativa</h2>
+            
+            <!-- Tabs do Admin -->
+            <div class="flex flex-wrap gap-2 mb-4">
+                <button id="configTab" class="bg-gray-600 text-white px-3 py-1 rounded">Configurações</button>
+                <button id="faseTab" class="bg-gray-400 text-white px-3 py-1 rounded">Gerenciar Fases</button>
+                <button id="placarTab" class="bg-gray-400 text-white px-3 py-1 rounded">Placares</button>
+                <button id="resetTab" class="bg-gray-400 text-white px-3 py-1 rounded">Reset Campeonato</button>
+            </div>
+
+            <!-- Configurações -->
+            <div id="configContent" class="space-y-4">
+                <div>
+                    <h3 class="font-semibold mb-2">Gerenciar Modalidades</h3>
+                    <div id="adminModalidadesList" class="space-y-2 mb-3"></div>
+                    <div class="flex gap-2">
+                        <input type="text" id="novaModalidade" placeholder="Nova modalidade" class="flex-1 p-2 border rounded">
+                        <button id="addModalidade" class="bg-green-600 text-white px-3 py-2 rounded">Adicionar</button>
                     </div>
                 </div>
 
-                <!-- Gestão de Partidas -->
-                <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
-                    <h3 class="font-bold text-lg mb-2 text-gray-700">Gerenciar Partidas</h3>
-                    <div class="space-y-4">
-                        <div>
-                            <h4 class="font-semibold text-gray-600 mb-1">Criar Nova Fase</h4>
-                            <select id="selectModalidade" class="w-full p-2 border rounded-lg">
-                                <option value="">Selecione a modalidade</option>
-                            </select>
-                            <button id="gerarConfrontosButton" class="mt-2 w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
-                                🎲 Sortear Confrontos
-                            </button>
-                            <button id="limparTudoButton" class="mt-2 w-full bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-lg font-semibold transition-colors">
-                                ❌ Limpar Fases
-                            </button>
-                        </div>
-                        
-                        <div>
-                            <h4 class="font-semibold text-gray-600 mb-2">Partidas Pendentes</h4>
-                            <div id="partidasPendentesList" class="space-y-2"></div>
-                        </div>
+                <div>
+                    <h3 class="font-semibold mb-2">Limite de Modalidades por Participante</h3>
+                    <div class="flex gap-2">
+                        <input type="number" id="limiteModalidades" min="1" class="p-2 border rounded w-20">
+                        <button id="salvarLimite" class="bg-blue-600 text-white px-3 py-2 rounded">Salvar</button>
                     </div>
                 </div>
 
-                <!-- Tabela de Inscritos -->
-                <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
-                    <h3 class="font-bold text-lg mb-2 text-gray-700">Lista Completa de Inscritos</h3>
-                    <table class="w-full border text-sm rounded-lg overflow-hidden" id="adminTable">
-                        <thead class="bg-gray-200">
-                            <tr>
-                                <th class="border p-2 text-left">Matrícula</th>
-                                <th class="border p-2 text-left">Nome</th>
-                                <th class="border p-2 text-left">Setor</th>
-                                <th class="border p-2 text-left">Telefone</th>
-                                <th class="border p-2 text-left">Modalidades</th>
-                                <th class="border p-2 text-center">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="adminTableBody"></tbody>
-                    </table>
-                    <button id="exportCSV" class="mt-3 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors w-full sm:w-auto">
-                        📥 Exportar CSV
+                <div>
+                    <h3 class="font-semibold mb-2">Lista Completa de Inscritos</h3>
+                    <button id="exportCSV" class="bg-indigo-600 text-white px-4 py-2 rounded mb-3">📥 Exportar CSV</button>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border text-sm">
+                            <thead class="bg-gray-200">
+                                <tr>
+                                    <th class="border p-2">Matrícula</th>
+                                    <th class="border p-2">Nome</th>
+                                    <th class="border p-2">Setor</th>
+                                    <th class="border p-2">Telefone</th>
+                                    <th class="border p-2">Modalidades</th>
+                                    <th class="border p-2">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gerenciar Fases -->
+            <div id="faseContent" class="hidden space-y-4">
+                <div class="flex gap-2 mb-4">
+                    <select id="modalidadeSelect" class="p-2 border rounded flex-1">
+                        <option value="">Selecione uma modalidade</option>
+                    </select>
+                    <button id="criarFase" class="bg-green-600 text-white px-4 py-2 rounded">Criar Nova Fase</button>
+                </div>
+                <div id="faseAtual"></div>
+            </div>
+
+            <!-- Placares -->
+            <div id="placarContent" class="hidden space-y-4">
+                <div class="flex gap-2 mb-4">
+                    <select id="modalidadePlacarSelect" class="p-2 border rounded flex-1">
+                        <option value="">Selecione uma modalidade</option>
+                    </select>
+                </div>
+                <div id="jogosPendentes"></div>
+            </div>
+
+            <!-- Reset Campeonato -->
+            <div id="resetContent" class="hidden space-y-4">
+                <div class="bg-red-50 p-4 rounded border border-red-200">
+                    <h3 class="font-semibold text-red-800 mb-2">⚠️ Reset do Campeonato</h3>
+                    <p class="text-red-700 mb-4">Esta ação apagará todas as fases, confrontos e placares salvos. Os participantes inscritos serão mantidos.</p>
+                    <button id="resetCampeonato" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+                        🗑️ Reset Completo
                     </button>
                 </div>
             </div>
         </section>
-
-        <!-- Seção de Placar para o Público -->
-        <section id="placarPublico" class="hidden">
-            <h2 class="text-xl font-bold mb-2 text-center text-gray-700">Placar do Campeonato</h2>
-            <div id="placarList" class="space-y-4"></div>
-        </section>
-
-        <!-- Modal de Confirmação customizada -->
-        <div id="customModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden">
-            <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm text-center">
-                <p id="modalMessage" class="mb-4 text-gray-800"></p>
-                <div class="flex justify-center gap-4">
-                    <button id="modalConfirmBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">Confirmar</button>
-                    <button id="modalCancelBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg">Cancelar</button>
-                </div>
-            </div>
-        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, onSnapshot, deleteDoc, doc, getDoc, setDoc, getDocs, where, writeBatch, updateDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
-        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, deleteDoc, doc, getDoc, setDoc, getDocs, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
-        // Enable Firestore debug logging
-        setLogLevel('debug');
-
-        // Variáveis globais de ambiente
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const firebaseConfig = {
+            apiKey: "AIzaSyBo8G3ZcWk4EepN0cHdVBtXc7tGOfcw-yg",
+            authDomain: "inscricaosinuca.firebaseapp.com",
+            projectId: "inscricaosinuca",
+            storageBucket: "inscricaosinuca.firebasestorage.app",
+            messagingSenderId: "338241576305",
+            appId: "1:338241576305:web:288b6124384c6be4f76ad0",
+            measurementId: "G-PEDG30FS2R"
+        };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const auth = getAuth(app);
 
-        // UI Elements
-        const toggleButton = document.getElementById("toggleButton");
-        const adminButton = document.getElementById("adminButton");
-        const formSection = document.getElementById("formSection");
-        const listSection = document.getElementById("listSection");
-        const adminSection = document.getElementById("adminSection");
-        const registrationForm = document.getElementById("registrationForm");
-        const participantList = document.getElementById("participantList");
-        const loadingMessage = document.getElementById("loadingMessage");
-        const modalidadesList = document.getElementById("modalidadesList");
-        const adminModalidadesList = document.getElementById("adminModalidadesList");
-        const novaModalidade = document.getElementById("novaModalidade");
-        const addModalidadeBtn = document.getElementById("addModalidade");
-        const limiteInput = document.getElementById("limiteModalidades");
-        const salvarLimiteBtn = document.getElementById("salvarLimite");
-        const modalidadeInfo = document.getElementById("modalidadeInfo");
-        const adminTableBody = document.getElementById("adminTableBody");
-        const exportCSVBtn = document.getElementById("exportCSV");
-        const selectModalidade = document.getElementById("selectModalidade");
-        const gerarConfrontosButton = document.getElementById("gerarConfrontosButton");
-        const partidasPendentesList = document.getElementById("partidasPendentesList");
-        const placarPublico = document.getElementById("placarPublico");
-        const placarList = document.getElementById("placarList");
-        const limparTudoButton = document.getElementById("limparTudoButton");
-
-        const customModal = document.getElementById("customModal");
-        const modalMessage = document.getElementById("modalMessage");
-        const modalConfirmBtn = document.getElementById("modalConfirmBtn");
-        const modalCancelBtn = document.getElementById("modalCancelBtn");
-
-        let showForm = false;
-        let showAdmin = false;
-        let limiteEscolha = 2;
+        // Estado da aplicação
         let inscritosCache = [];
         let modalidadesCache = [];
+        let limiteEscolha = 2;
+        let currentSection = 'inscricao';
 
-        // Authentication
-        if (initialAuthToken) {
-            signInWithCustomToken(auth, initialAuthToken).catch(console.error);
-        } else {
-            signInAnonymously(auth).catch(console.error);
-        }
+        // Elementos DOM
+        const inscricaoBtn = document.getElementById("inscricaoBtn");
+        const publicoBtn = document.getElementById("publicoBtn");
+        const adminBtn = document.getElementById("adminBtn");
+        const acompanharBtn = document.getElementById("acompanharBtn");
 
-        // Wait for authentication state to be ready before initializing Firestore listeners
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                console.log("Usuário autenticado:", user.uid);
-                // Inicie os listeners do Firestore aqui
-                carregarModalidades();
-                carregarLimite();
-                setupFirestoreListeners();
-            } else {
-                console.log("Nenhum usuário autenticado.");
+        const inscricaoSection = document.getElementById("inscricaoSection");
+        const publicoSection = document.getElementById("publicoSection");
+        const adminSection = document.getElementById("adminSection");
+        const acompanharSection = document.getElementById("acompanharSection");
+
+        // Navegação entre seções
+        function showSection(section) {
+            // Esconder todas as seções
+            [inscricaoSection, publicoSection, adminSection, acompanharSection].forEach(s => s.classList.add('hidden'));
+            
+            // Resetar cores dos botões
+            [inscricaoBtn, publicoBtn, adminBtn, acompanharBtn].forEach(btn => {
+                btn.className = btn.className.replace('bg-gray-800', 'bg-blue-600').replace('bg-gray-800', 'bg-green-600').replace('bg-gray-800', 'bg-purple-600').replace('bg-gray-800', 'bg-orange-600');
+            });
+
+            // Mostrar seção selecionada
+            switch(section) {
+                case 'inscricao':
+                    inscricaoSection.classList.remove('hidden');
+                    inscricaoBtn.className = inscricaoBtn.className.replace('bg-blue-600', 'bg-gray-800');
+                    break;
+                case 'publico':
+                    publicoSection.classList.remove('hidden');
+                    publicoBtn.className = publicoBtn.className.replace('bg-green-600', 'bg-gray-800');
+                    carregarListaPublica();
+                    break;
+                case 'admin':
+                    adminSection.classList.remove('hidden');
+                    adminBtn.className = adminBtn.className.replace('bg-purple-600', 'bg-gray-800');
+                    break;
+                case 'acompanhar':
+                    acompanharSection.classList.remove('hidden');
+                    acompanharBtn.className = acompanharBtn.className.replace('bg-orange-600', 'bg-gray-800');
+                    carregarAcompanhamento();
+                    break;
             }
-        });
-
-
-        // Custom Modal Function
-        function showCustomModal(message) {
-            return new Promise((resolve) => {
-                modalMessage.textContent = message;
-                customModal.classList.remove("hidden");
-                
-                const handleConfirm = () => {
-                    customModal.classList.add("hidden");
-                    resolve(true);
-                };
-
-                const handleCancel = () => {
-                    customModal.classList.add("hidden");
-                    resolve(false);
-                };
-
-                modalConfirmBtn.addEventListener("click", handleConfirm, { once: true });
-                modalCancelBtn.addEventListener("click", handleCancel, { once: true });
-            });
+            currentSection = section;
         }
 
-        // Custom password modal
-        function showPasswordModal() {
-            return new Promise((resolve) => {
-                const input = document.createElement('input');
-                input.type = 'password';
-                input.placeholder = 'Senha do administrador';
-                input.className = 'w-full p-2 border rounded-lg mb-4';
-                
-                modalMessage.textContent = 'Digite a senha do administrador:';
-                modalMessage.parentNode.insertBefore(input, modalMessage.nextSibling);
-
-                customModal.classList.remove("hidden");
-                
-                const handleConfirm = () => {
-                    customModal.classList.add("hidden");
-                    input.remove();
-                    resolve(input.value);
-                };
-
-                const handleCancel = () => {
-                    customModal.classList.add("hidden");
-                    input.remove();
-                    resolve(null);
-                };
-
-                modalConfirmBtn.addEventListener("click", handleConfirm, { once: true });
-                modalCancelBtn.addEventListener("click", handleCancel, { once: true });
-            });
-        }
-        
-        // --- Event Listeners ---
-        toggleButton.addEventListener("click", () => {
-            showForm = !showForm;
-            formSection.classList.toggle("hidden", !showForm);
-            listSection.classList.toggle("hidden", showForm);
-            adminSection.classList.add("hidden");
-            placarPublico.classList.add("hidden");
-            showAdmin = false;
-            toggleButton.textContent = showForm ? "Ver Participantes" : "Nova Inscrição";
-        });
-
-        adminButton.addEventListener("click", async () => {
-            const senha = await showPasswordModal();
+        // Event listeners para navegação
+        inscricaoBtn.addEventListener('click', () => showSection('inscricao'));
+        publicoBtn.addEventListener('click', () => showSection('publico'));
+        acompanharBtn.addEventListener('click', () => showSection('acompanhar'));
+        adminBtn.addEventListener('click', async () => {
+            const senha = prompt("Digite a senha do administrador:");
             if (senha === "dpsp123") {
-                showAdmin = !showAdmin;
-                adminSection.classList.toggle("hidden", !showAdmin);
-                listSection.classList.toggle("hidden", showAdmin);
-                formSection.classList.add("hidden");
-                placarPublico.classList.add("hidden");
-                showForm = false;
-                carregarAdminTable();
-                carregarPartidasPendentes();
+                showSection('admin');
             } else if (senha !== null) {
-                showCustomModal("Senha incorreta.");
+                alert("Senha incorreta.");
             }
         });
+
+        // Tabs do Admin
+        const configTab = document.getElementById("configTab");
+        const faseTab = document.getElementById("faseTab");
+        const placarTab = document.getElementById("placarTab");
+        const resetTab = document.getElementById("resetTab");
+
+        const configContent = document.getElementById("configContent");
+        const faseContent = document.getElementById("faseContent");
+        const placarContent = document.getElementById("placarContent");
+        const resetContent = document.getElementById("resetContent");
+
+        function showAdminTab(tab) {
+            // Resetar tabs
+            [configTab, faseTab, placarTab, resetTab].forEach(t => {
+                t.className = "bg-gray-400 text-white px-3 py-1 rounded";
+            });
+            [configContent, faseContent, placarContent, resetContent].forEach(c => c.classList.add('hidden'));
+
+            // Mostrar tab selecionada
+            switch(tab) {
+                case 'config':
+                    configTab.className = "bg-gray-600 text-white px-3 py-1 rounded";
+                    configContent.classList.remove('hidden');
+                    break;
+                case 'fase':
+                    faseTab.className = "bg-gray-600 text-white px-3 py-1 rounded";
+                    faseContent.classList.remove('hidden');
+                    carregarModalidadesSelect();
+                    break;
+                case 'placar':
+                    placarTab.className = "bg-gray-600 text-white px-3 py-1 rounded";
+                    placarContent.classList.remove('hidden');
+                    carregarModalidadesPlacarSelect();
+                    break;
+                case 'reset':
+                    resetTab.className = "bg-gray-600 text-white px-3 py-1 rounded";
+                    resetContent.classList.remove('hidden');
+                    break;
+            }
+        }
+
+        configTab.addEventListener('click', () => showAdminTab('config'));
+        faseTab.addEventListener('click', () => showAdminTab('fase'));
+        placarTab.addEventListener('click', () => showAdminTab('placar'));
+        resetTab.addEventListener('click', () => showAdminTab('reset'));
+
+        // Funções de modalidades
+        async function carregarModalidades() {
+            const snapshot = await getDocs(collection(db, "modalidades"));
+            modalidadesCache = [];
+            const modalidadesList = document.getElementById("modalidadesList");
+            const adminModalidadesList = document.getElementById("adminModalidadesList");
+            
+            modalidadesList.innerHTML = "";
+            adminModalidadesList.innerHTML = "";
+            
+            snapshot.forEach(docSnap => {
+                const modalidade = docSnap.id;
+                modalidadesCache.push(modalidade);
+                
+                // Para inscrições
+                const label = document.createElement("label");
+                label.className = "flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50";
+                label.innerHTML = `<input type="checkbox" value="${modalidade}" class="rounded"> ${modalidade}`;
+                modalidadesList.appendChild(label);
+                
+                // Para admin
+                const div = document.createElement("div");
+                div.className = "flex justify-between items-center p-2 border rounded";
+                div.innerHTML = `
+                    <span>${modalidade}</span>
+                    <button class="text-red-600 hover:text-red-800 px-2 py-1" data-modalidade="${modalidade}">🗑️</button>
+                `;
+                div.querySelector("button").addEventListener("click", async (e) => {
+                    const modalidade = e.target.getAttribute('data-modalidade');
+                    if (confirm(`Tem certeza que deseja excluir a modalidade "${modalidade}"?`)) {
+                        await deleteDoc(doc(db, "modalidades", modalidade));
+                        carregarModalidades();
+                    }
+                });
+                adminModalidadesList.appendChild(div);
+            });
+            atualizarInfoModalidades();
+        }
 
         // Adicionar modalidade
-        addModalidadeBtn.addEventListener("click", async () => {
-            const nome = novaModalidade.value.trim();
-            if (!nome) return;
+        document.getElementById("addModalidade").addEventListener("click", async () => {
+            const nome = document.getElementById("novaModalidade").value.trim();
+            if (!nome) {
+                alert("Digite o nome da modalidade!");
+                return;
+            }
+            
             try {
-                const modalidadeDocRef = doc(db, `/artifacts/${appId}/public/data/modalidades`, nome);
-                await setDoc(modalidadeDocRef, { criado_em: new Date().toISOString() });
-                novaModalidade.value = "";
-                showCustomModal("Modalidade adicionada!");
+                await setDoc(doc(db, "modalidades", nome), { criado_em: new Date().toISOString() });
+                document.getElementById("novaModalidade").value = "";
                 carregarModalidades();
-            } catch (e) {
-                console.error("Error adding document: ", e);
-                showCustomModal("Erro ao adicionar modalidade.");
+                alert("Modalidade adicionada com sucesso!");
+            } catch (error) {
+                alert("Erro ao adicionar modalidade!");
             }
         });
 
-        // Salvar limite
-        salvarLimiteBtn.addEventListener("click", async () => {
-            const valor = parseInt(limiteInput.value);
+        // Limite de modalidades
+        async function carregarLimite() {
+            const snap = await getDoc(doc(db, "config", "limite"));
+            if (snap.exists()) {
+                limiteEscolha = snap.data().valor;
+                document.getElementById("limiteModalidades").value = limiteEscolha;
+            }
+            atualizarInfoModalidades();
+        }
+
+        document.getElementById("salvarLimite").addEventListener("click", async () => {
+            const valor = parseInt(document.getElementById("limiteModalidades").value);
             if (valor > 0) {
                 limiteEscolha = valor;
-                try {
-                    const configDocRef = doc(db, `/artifacts/${appId}/public/data/config`, "limite");
-                    await setDoc(configDocRef, { valor });
-                    atualizarInfo();
-                    showCustomModal("Limite atualizado!");
-                } catch (e) {
-                    console.error("Error saving limit: ", e);
-                    showCustomModal("Erro ao salvar limite.");
-                }
+                await setDoc(doc(db, "config", "limite"), { valor });
+                atualizarInfoModalidades();
+                alert("Limite atualizado com sucesso!");
+            } else {
+                alert("Digite um valor válido!");
             }
         });
 
-        // Formulário de inscrição
-        registrationForm.addEventListener("submit", async (e) => {
+        function atualizarInfoModalidades() {
+            document.getElementById("modalidadeInfo").textContent = `Você pode escolher até ${limiteEscolha} modalidade(s).`;
+        }
+
+        // Inscrições
+        document.getElementById("inscricaoForm").addEventListener("submit", async (e) => {
             e.preventDefault();
+            
             const matricula = document.getElementById("matricula").value.trim();
             const nome = document.getElementById("nome").value.trim();
             const setor = document.getElementById("setor").value.trim();
             const telefone = document.getElementById("telefone").value.trim();
-
-            const escolhidas = Array.from(modalidadesList.querySelectorAll("input:checked")).map(c => c.value);
-
+            
+            const escolhidas = Array.from(document.querySelectorAll("#modalidadesList input:checked")).map(c => c.value);
+            
             if (!matricula || !nome || !setor || !telefone) {
-                showCustomModal("Preencha todos os campos!");
+                alert("Preencha todos os campos obrigatórios!");
                 return;
             }
-
+            
             if (escolhidas.length === 0 || escolhidas.length > limiteEscolha) {
-                showCustomModal(`Escolha entre 1 e ${limiteEscolha} modalidades.`);
+                alert(`Escolha entre 1 e ${limiteEscolha} modalidades.`);
                 return;
             }
-
-            const qMatricula = query(collection(db, `/artifacts/${appId}/public/data/inscritos`), where("matricula", "==", matricula));
+            
+            // Verificar se matrícula já existe
+            const qMatricula = query(collection(db, "inscritos"), where("matricula", "==", matricula));
             const snapshot = await getDocs(qMatricula);
             if (!snapshot.empty) {
-                showCustomModal("Essa matrícula já está inscrita!");
+                alert("Essa matrícula já está inscrita!");
                 return;
             }
-
+            
             try {
-                await addDoc(collection(db, `/artifacts/${appId}/public/data/inscritos`), {
+                await addDoc(collection(db, "inscritos"), {
                     matricula,
                     nome,
                     setor,
@@ -365,370 +393,218 @@
                     modalidades: escolhidas,
                     criado_em: new Date().toISOString()
                 });
-                showCustomModal("Inscrição realizada com sucesso!");
-                registrationForm.reset();
-                carregarModalidades();
-                formSection.classList.add("hidden");
-                listSection.classList.remove("hidden");
-                toggleButton.textContent = "Nova Inscrição";
-            } catch (err) {
-                console.error("Erro:", err);
-                showCustomModal("Erro ao salvar.");
+                
+                alert("Inscrição realizada com sucesso!");
+                document.getElementById("inscricaoForm").reset();
+                carregarModalidades(); // Recarregar para limpar checkboxes
+            } catch (error) {
+                alert("Erro ao realizar inscrição!");
             }
         });
 
+        // Carregar lista pública
+        function carregarListaPublica() {
+            const participantesList = document.getElementById("participantesList");
+            participantesList.innerHTML = '<div class="text-center text-gray-500">Carregando...</div>';
+            
+            const q = query(collection(db, "inscritos"), orderBy("criado_em", "desc"));
+            onSnapshot(q, (snapshot) => {
+                participantesList.innerHTML = "";
+                inscritosCache = [];
+                
+                if (snapshot.empty) {
+                    participantesList.innerHTML = '<div class="text-center text-gray-500">Nenhum participante inscrito ainda.</div>';
+                    return;
+                }
+                
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    inscritosCache.push({ id: docSnap.id, ...data });
+                    
+                    const div = document.createElement("div");
+                    div.className = "p-3 border rounded-lg shadow-sm hover:shadow-md transition-shadow";
+                    div.innerHTML = `
+                        <h3 class="font-semibold text-lg">${data.nome}</h3>
+                        <p class="text-gray-600">${data.setor}</p>
+                        <p class="text-sm text-blue-600 mt-1">
+                            <span class="font-medium">Modalidades:</span> ${data.modalidades.join(", ")}
+                        </p>
+                    `;
+                    participantesList.appendChild(div);
+                });
+                
+                // Atualizar tabela admin se estiver na seção admin
+                if (currentSection === 'admin') {
+                    atualizarTabelaAdmin();
+                }
+            });
+        }
+
+        // Atualizar tabela admin
+        function atualizarTabelaAdmin() {
+            const tbody = document.getElementById("adminTableBody");
+            tbody.innerHTML = "";
+            
+            inscritosCache.forEach(inscrito => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td class="border p-2">${inscrito.matricula}</td>
+                    <td class="border p-2">${inscrito.nome}</td>
+                    <td class="border p-2">${inscrito.setor}</td>
+                    <td class="border p-2">${inscrito.telefone}</td>
+                    <td class="border p-2">${inscrito.modalidades.join(", ")}</td>
+                    <td class="border p-2 text-center">
+                        <button class="text-red-600 hover:text-red-800 px-2 py-1" data-id="${inscrito.id}">🗑️</button>
+                    </td>
+                `;
+                
+                tr.querySelector("button").addEventListener("click", async (e) => {
+                    const id = e.target.getAttribute('data-id');
+                    const inscrito = inscritosCache.find(i => i.id === id);
+                    
+                    if (confirm(`Tem certeza que deseja excluir ${inscrito.nome}?`)) {
+                        const senha = prompt("Digite a senha para confirmar:");
+                        if (senha === "dpsp123") {
+                            await deleteDoc(doc(db, "inscritos", id));
+                        } else if (senha !== null) {
+                            alert("Senha incorreta!");
+                        }
+                    }
+                });
+                
+                tbody.appendChild(tr);
+            });
+        }
+
         // Exportar CSV
-        exportCSVBtn.addEventListener("click", () => {
+        document.getElementById("exportCSV").addEventListener("click", () => {
             if (inscritosCache.length === 0) {
-                showCustomModal("Nenhum inscrito para exportar!");
+                alert("Nenhum inscrito para exportar!");
                 return;
             }
+            
             let csv = "Matrícula,Nome,Setor,Telefone,Modalidades\n";
-            inscritosCache.forEach(e => {
-                csv += `"${e.matricula}","${e.nome}","${e.setor}","${e.telefone}","${e.modalidades.join(" | ")}"\n`;
+            inscritosCache.forEach(inscrito => {
+                csv += `"${inscrito.matricula}","${inscrito.nome}","${inscrito.setor}","${inscrito.telefone}","${inscrito.modalidades.join(" | ")}"\n`;
             });
+            
             const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = "inscritos.csv";
+            a.download = "inscritos_campeonato.csv";
+            document.body.appendChild(a);
             a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         });
 
-        // Gerar Confrontos
-        gerarConfrontosButton.addEventListener("click", async () => {
-            const modalidadeSelecionada = selectModalidade.value;
-            if (!modalidadeSelecionada) {
-                showCustomModal("Por favor, selecione uma modalidade.");
+        // Carregar modalidades para selects
+        function carregarModalidadesSelect() {
+            const select = document.getElementById("modalidadeSelect");
+            select.innerHTML = '<option value="">Selecione uma modalidade</option>';
+            
+            modalidadesCache.forEach(modalidade => {
+                const option = document.createElement("option");
+                option.value = modalidade;
+                option.textContent = modalidade;
+                select.appendChild(option);
+            });
+        }
+
+        function carregarModalidadesPlacarSelect() {
+            const select = document.getElementById("modalidadePlacarSelect");
+            select.innerHTML = '<option value="">Selecione uma modalidade</option>';
+            
+            modalidadesCache.forEach(modalidade => {
+                const option = document.createElement("option");
+                option.value = modalidade;
+                option.textContent = modalidade;
+                select.appendChild(option);
+            });
+        }
+
+        // Gerenciamento de fases
+        document.getElementById("criarFase").addEventListener("click", async () => {
+            const modalidade = document.getElementById("modalidadeSelect").value;
+            if (!modalidade) {
+                alert("Selecione uma modalidade!");
                 return;
             }
+            
+            if (confirm(`Criar nova fase para ${modalidade}?`)) {
+                await criarNovaFase(modalidade);
+            }
+        });
 
-            const confirmar = await showCustomModal(`Deseja gerar confrontos para a modalidade "${modalidadeSelecionada}"? Isso irá apagar confrontos anteriores.`);
-            if (!confirmar) return;
-
+        async function criarNovaFase(modalidade) {
             try {
-                // Fetch participants for the selected modality
-                const inscritosRef = collection(db, `/artifacts/${appId}/public/data/inscritos`);
-                const q = query(inscritosRef, where("modalidades", "array-contains", modalidadeSelecionada));
-                const snapshot = await getDocs(q);
-                const participantes = [];
-                snapshot.forEach(doc => participantes.push(doc.data()));
-
+                // Buscar participantes da modalidade
+                const participantes = inscritosCache.filter(i => i.modalidades.includes(modalidade));
+                
                 if (participantes.length < 2) {
-                    showCustomModal("É necessário no mínimo 2 participantes para gerar confrontos.");
+                    alert("É necessário pelo menos 2 participantes para criar uma fase!");
                     return;
                 }
-
-                // Shuffle participants
-                for (let i = participantes.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [participantes[i], participantes[j]] = [participantes[j], participantes[i]];
-                }
-
-                const batch = writeBatch(db);
-                const partidasRef = collection(db, `/artifacts/${appId}/public/data/partidas`);
-
-                // Clear existing matches for this modality before adding new ones
-                const oldMatchesQuery = query(partidasRef, where("modalidade", "==", modalidadeSelecionada));
-                const oldMatchesSnapshot = await getDocs(oldMatchesQuery);
-                oldMatchesSnapshot.forEach(doc => {
-                    batch.delete(doc.ref);
-                });
-
-                // Create new matches
-                for (let i = 0; i < participantes.length; i += 2) {
-                    const p1 = participantes[i];
-                    const p2 = participantes[i + 1] || null;
-                    const partidaDocRef = doc(partidasRef);
-                    batch.set(partidaDocRef, {
-                        modalidade: modalidadeSelecionada,
-                        participante1: { nome: p1.nome, id: p1.matricula },
-                        participante2: p2 ? { nome: p2.nome, id: p2.matricula } : null,
-                        placar1: null,
-                        placar2: null,
-                        vencedor: null,
-                        status: 'pendente',
-                        criado_em: new Date().toISOString()
+                
+                // Verificar se já existe uma fase ativa
+                const fasesQuery = query(
+                    collection(db, "fases"), 
+                    where("modalidade", "==", modalidade),
+                    where("ativa", "==", true)
+                );
+                const fasesSnapshot = await getDocs(fasesQuery);
+                
+                let numeroFase = 1;
+                let participantesFase = [...participantes];
+                
+                if (!fasesSnapshot.empty) {
+                    // Existe fase ativa, buscar vencedores da fase anterior
+                    const faseAtual = fasesSnapshot.docs[0].data();
+                    numeroFase = faseAtual.numero + 1;
+                    
+                    // Buscar vencedores da fase anterior
+                    const vencedoresQuery = query(
+                        collection(db, "jogos"),
+                        where("modalidade", "==", modalidade),
+                        where("fase", "==", faseAtual.numero),
+                        where("finalizado", "==", true)
+                    );
+                    const vencedoresSnapshot = await getDocs(vencedoresQuery);
+                    
+                    const vencedores = [];
+                    vencedoresSnapshot.forEach(doc => {
+                        const jogo = doc.data();
+                        const vencedor = jogo.placar_p1 > jogo.placar_p2 ? jogo.participante1 : jogo.participante2;
+                        const dadosVencedor = inscritosCache.find(p => p.id === vencedor.id);
+                        if (dadosVencedor) vencedores.push(dadosVencedor);
                     });
-                }
-                await batch.commit();
-                showCustomModal("Confrontos gerados com sucesso!");
-            } catch (e) {
-                console.error("Error generating matches: ", e);
-                showCustomModal("Erro ao gerar confrontos.");
-            }
-        });
-
-        // Limpar tudo
-        limparTudoButton.addEventListener("click", async () => {
-            const confirmar = await showCustomModal("Deseja realmente apagar todas as fases e placares? Esta ação não pode ser desfeita.");
-            if (!confirmar) return;
-
-            try {
-                const partidasRef = collection(db, `/artifacts/${appId}/public/data/partidas`);
-                const inscritosRef = collection(db, `/artifacts/${appId}/public/data/inscritos`);
-                
-                const batch = writeBatch(db);
-                
-                // Excluir todas as partidas
-                const partidasSnapshot = await getDocs(partidasRef);
-                partidasSnapshot.forEach(doc => {
-                    batch.delete(doc.ref);
-                });
-
-                // Excluir todos os inscritos
-                const inscritosSnapshot = await getDocs(inscritosRef);
-                inscritosSnapshot.forEach(doc => {
-                    batch.delete(doc.ref);
-                });
-
-                await batch.commit();
-                showCustomModal("Todos os dados de partidas e inscritos foram apagados.");
-            } catch (e) {
-                console.error("Error cleaning up data: ", e);
-                showCustomModal("Erro ao limpar dados.");
-            }
-        });
-
-
-        // --- Firestore Listeners & UI Updates ---
-
-        // Função para configurar todos os listeners do Firestore
-        function setupFirestoreListeners() {
-            // Lista pública de inscritos
-            const inscritosRef = collection(db, `/artifacts/${appId}/public/data/inscritos`);
-            const qInscritos = query(inscritosRef); // Removed orderBy
-            onSnapshot(qInscritos, (snapshot) => {
-                loadingMessage.classList.add("hidden");
-                participantList.innerHTML = "";
-                inscritosCache = [];
-                if (snapshot.empty) {
-                    participantList.innerHTML = `<p class="text-sm text-gray-500 text-center">Nenhum participante ainda.</p>`;
-                    return;
-                }
-                
-                // Get documents and sort in-memory
-                snapshot.forEach(docSnap => {
-                    inscritosCache.push({ id: docSnap.id, ...docSnap.data() });
-                });
-                inscritosCache.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
-
-                inscritosCache.forEach(entry => {
-                    const div = document.createElement("div");
-                    div.className = "flex items-center justify-between p-3 border border-gray-200 rounded-lg shadow-sm bg-white";
-                    div.innerHTML = `
-                        <div>
-                            <p class="font-medium text-gray-800">${entry.nome}</p>
-                            <p class="text-sm text-gray-500">${entry.setor}</p>
-                            <p class="text-xs text-blue-600 font-semibold mt-1">Modalidades: ${entry.modalidades.join(", ")}</p>
-                        </div>
-                    `;
-                    participantList.appendChild(div);
-                });
-                carregarAdminTable();
-            });
-
-            // Carregar Partidas Pendentes
-            const partidasRef = collection(db, `/artifacts/${appId}/public/data/partidas`);
-            const qPendentes = query(partidasRef, where("status", "==", "pendente"));
-            onSnapshot(qPendentes, (snapshot) => {
-                partidasPendentesList.innerHTML = "";
-                if (snapshot.empty) {
-                    partidasPendentesList.innerHTML = `<p class="text-sm text-gray-500 text-center">Nenhuma partida pendente.</p>`;
-                    return;
-                }
-                snapshot.forEach(docSnap => {
-                    const partida = docSnap.data();
-                    const partidaId = docSnap.id;
-                    const div = document.createElement("div");
-                    div.className = "p-4 border border-gray-200 rounded-lg shadow-sm bg-white";
                     
-                    if (partida.participante2) {
-                        div.innerHTML = `
-                            <p class="font-bold text-lg mb-2">${partida.modalidade}</p>
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="font-semibold text-gray-800">${partida.participante1.nome}</span>
-                                <span class="text-gray-500 mx-2">VS</span>
-                                <span class="font-semibold text-gray-800">${partida.participante2.nome}</span>
-                            </div>
-                            <div class="flex gap-2">
-                                <input type="number" placeholder="Placar ${partida.participante1.nome}" id="placar1-${partidaId}" class="w-1/2 p-2 border rounded-lg">
-                                <input type="number" placeholder="Placar ${partida.participante2.nome}" id="placar2-${partidaId}" class="w-1/2 p-2 border rounded-lg">
-                            </div>
-                            <button id="salvarPlacar-${partidaId}" class="mt-2 w-full bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors">Salvar Placar</button>
-                        `;
-                    } else {
-                         div.innerHTML = `
-                            <p class="font-bold text-lg mb-2">${partida.modalidade}</p>
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="font-semibold text-gray-800">${partida.participante1.nome}</span>
-                                <span class="text-gray-500 mx-2">BYE</span>
-                                <span class="font-semibold text-gray-800"></span>
-                            </div>
-                            <button id="salvarPlacar-${partidaId}" class="mt-2 w-full bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors">Avançar Jogador</button>
-                         `;
+                    if (vencedores.length === 0) {
+                        alert("Não há vencedores da fase anterior!");
+                        return;
                     }
-
-                    partidasPendentesList.appendChild(div);
                     
-                    const salvarPlacarBtn = document.getElementById(`salvarPlacar-${partidaId}`);
-                    if(salvarPlacarBtn) {
-                        salvarPlacarBtn.addEventListener("click", async () => {
-                            if (!partida.participante2) {
-                                // Caso de BYE, o jogador avança automaticamente
-                                await updateDoc(doc(db, `/artifacts/${appId}/public/data/partidas`, partidaId), {
-                                    status: 'concluída',
-                                    vencedor: partida.participante1.nome
-                                });
-                                showCustomModal(`Participante ${partida.participante1.nome} avançou para a próxima fase!`);
-                                return;
-                            }
-
-                            const placar1Input = document.getElementById(`placar1-${partidaId}`);
-                            const placar2Input = document.getElementById(`placar2-${partidaId}`);
-                            const placar1 = parseInt(placar1Input.value);
-                            const placar2 = parseInt(placar2Input.value);
-
-                            if (isNaN(placar1) || isNaN(placar2)) {
-                                showCustomModal("Por favor, insira os placares.");
-                                return;
-                            }
-                            
-                            let vencedor = null;
-                            if (placar1 > placar2) {
-                                vencedor = partida.participante1.nome;
-                            } else if (placar2 > placar1) {
-                                vencedor = partida.participante2.nome;
-                            } else {
-                                showCustomModal("Placar não pode ser um empate.");
-                                return;
-                            }
-                            
-                            await updateDoc(doc(db, `/artifacts/${appId}/public/data/partidas`, partidaId), {
-                                placar1: placar1,
-                                placar2: placar2,
-                                vencedor: vencedor,
-                                status: 'concluída'
-                            });
-                            showCustomModal(`Placar salvo! Vencedor: ${vencedor}`);
-                        });
+                    if (vencedores.length === 1) {
+                        alert(`Parabéns! ${vencedores[0].nome} é o campeão de ${modalidade}!`);
+                        // Finalizar campeonato desta modalidade
+                        await finalizarCampeonato(modalidade, vencedores[0]);
+                        return;
                     }
-                });
-            });
-
-            // Listener para placar público (partidas concluídas)
-            const partidasConcluidasRef = collection(db, `/artifacts/${appId}/public/data/partidas`);
-            const qPlacar = query(partidasConcluidasRef, where("status", "==", "concluída")); // Removed orderBy
-            onSnapshot(qPlacar, (snapshot) => {
-                placarList.innerHTML = "";
-                if (snapshot.empty) {
-                    placarList.innerHTML = `<p class="text-sm text-gray-500 text-center">Nenhum placar registrado ainda.</p>`;
-                    return;
-                }
-                
-                // Get documents and sort in-memory
-                const sortedPartidas = [];
-                snapshot.forEach(docSnap => sortedPartidas.push(docSnap.data()));
-                sortedPartidas.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
-
-                sortedPartidas.forEach(partida => {
-                    const div = document.createElement("div");
-                    div.className = "p-4 border border-green-200 rounded-lg shadow-sm bg-green-50";
-                    div.innerHTML = `
-                        <p class="text-sm font-semibold text-green-700 mb-1">Partida Concluída - ${partida.modalidade}</p>
-                        <div class="flex justify-between items-center text-gray-800">
-                            <span class="font-bold">${partida.participante1.nome}</span>
-                            <span class="font-bold text-xl mx-4">${partida.placar1 !== null ? partida.placar1 : "BYE"} - ${partida.placar2 !== null ? partida.placar2 : "BYE"}</span>
-                            <span class="font-bold">${partida.participante2 ? partida.participante2.nome : ""}</span>
-                        </div>
-                        <p class="text-center font-bold text-purple-700 mt-2">Vencedor: ${partida.vencedor}</p>
-                    `;
-                    placarList.appendChild(div);
-                });
-            });
-        }
-        
-        // Carregar modalidades
-        async function carregarModalidades() {
-            const q = query(collection(db, `/artifacts/${appId}/public/data/modalidades`)); // Removed orderBy
-            onSnapshot(q, (snapshot) => {
-                modalidadesCache = [];
-                modalidadesList.innerHTML = "";
-                adminModalidadesList.innerHTML = "";
-                selectModalidade.innerHTML = `<option value="">Selecione a modalidade</option>`;
-                snapshot.forEach(docSnap => {
-                    const modalidade = docSnap.id;
-                    modalidadesCache.push(modalidade);
-
-                    // Para participantes
-                    const label = document.createElement("label");
-                    label.className = "flex items-center gap-2 text-gray-700";
-                    label.innerHTML = `<input type="checkbox" value="${modalidade}" class="form-checkbox h-4 w-4 text-blue-600 rounded-md"> <span class="text-sm">${modalidade}</span>`;
-                    modalidadesList.appendChild(label);
                     
-                    // Para administrador
-                    const div = document.createElement("div");
-                    div.className = "flex justify-between items-center border p-2 rounded-lg bg-white shadow-sm";
-                    div.innerHTML = `<span>${modalidade}</span>
-                        <button class="text-red-600 hover:text-red-800" data-id="${modalidade}">🗑️</button>`;
-                    div.querySelector("button").addEventListener("click", async () => {
-                        const confirmar = await showCustomModal(`Deseja realmente apagar a modalidade "${modalidade}"?`);
-                        if(confirmar){
-                            await deleteDoc(doc(db, `/artifacts/${appId}/public/data/modalidades`, modalidade));
-                            carregarModalidades();
-                        }
-                    });
-                    adminModalidadesList.appendChild(div);
-
-                    // Para o select
-                    const option = document.createElement("option");
-                    option.value = modalidade;
-                    option.textContent = modalidade;
-                    selectModalidade.appendChild(option);
-                });
-                atualizarInfo();
-            });
-        }
-
-        // Carregar limite
-        async function carregarLimite() {
-            const snap = await getDoc(doc(db, `/artifacts/${appId}/public/data/config`, "limite"));
-            if (snap.exists()) {
-                limiteEscolha = snap.data().valor;
-                limiteInput.value = limiteEscolha;
-            }
-            atualizarInfo();
-        }
-
-        function atualizarInfo() {
-            modalidadeInfo.textContent = `Você pode escolher até ${limiteEscolha} modalidade(s).`;
-        }
-
-        // Tabela do ADM
-        function carregarAdminTable() {
-            adminTableBody.innerHTML = "";
-            inscritosCache.forEach(entry => {
-                const tr = document.createElement("tr");
-                tr.className = "hover:bg-gray-50";
-                tr.innerHTML = `
-                    <td class="border p-2">${entry.matricula}</td>
-                    <td class="border p-2">${entry.nome}</td>
-                    <td class="border p-2">${entry.setor}</td>
-                    <td class="border p-2">${entry.telefone}</td>
-                    <td class="border p-2">${entry.modalidades.join(", ")}</td>
-                    <td class="border p-2 text-center">
-                        <button class="text-red-600 hover:text-red-800" data-id="${entry.id}">🗑️</button>
-                    </td>
-                `;
-                tr.querySelector("button").addEventListener("click", async () => {
-                    const confirmar = await showCustomModal(`Deseja realmente apagar a inscrição de "${entry.nome}"?`);
-                    if(confirmar) {
-                        await deleteDoc(doc(db, `/artifacts/${appId}/public/data/inscritos`, entry.id));
-                    }
-                });
-                adminTableBody.appendChild(tr);
-            });
-        }
-    </script>
-</body>
-</html>
+                    participantesFase = vencedores;
+                    
+                    // Se número ímpar, adicionar um perdedor
+                    if (participantesFase.length % 2 === 1) {
+                        const perdedoresQuery = query(
+                            collection(db, "jogos"),
+                            where("modalidade", "==", modalidade),
+                            where("fase", "==", faseAtual.numero),
+                            where("finalizado", "==", true)
+                        );
+                        const perdedoresSnapshot = await getDocs(perdedoresQuery);
+                        
+                        const perdedores = [];
+                        perdedoresSnapshot.forEach(doc => {
+                            const jogo = doc.data();
+                            const perdedor = jogo.placar_p1 < jogo.placar_p2 ? jogo

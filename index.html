@@ -120,11 +120,8 @@
   </div>
 
 <script type="module">
-/*  ---------- FIRESTORE SETUP ---------- */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-import {
-  getFirestore, collection, doc, addDoc, getDocs, deleteDoc, setDoc, updateDoc, onSnapshot, query, where, orderBy, getDoc
-} from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+import { getFirestore, collection, doc, addDoc, getDocs, deleteDoc, setDoc, updateDoc, onSnapshot, query, where, getDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBo8G3ZcWk4EepN0cHdVBtXc7tGOfcw-yg",
@@ -135,330 +132,227 @@ const firebaseConfig = {
   appId: "1:338241576305:web:288b6124384c6be4f76ad0",
   measurementId: "G-PEDG30FS2R"
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// collections / doc refs
 const inscritosCol = collection(db, "inscritos");
 const modalidadesCol = collection(db, "modalidades");
 const fasesCol = collection(db, "fases");
 const jogosCol = collection(db, "jogos");
 const configDocRef = doc(db, "config", "geral");
 
-/*  ---------- UI helpers ---------- */
-function showSection(name) {
-  document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
-  document.getElementById(name + 'Section').classList.remove('hidden');
+function showSection(name){
+  document.querySelectorAll('section').forEach(s=>s.classList.add('hidden'));
+  document.getElementById(name+'Section').classList.remove('hidden');
 }
 
-/*  ---------- NAVIGATION ---------- */
-document.getElementById('inscricaoBtn').addEventListener('click', ()=> showSection('inscricao'));
+document.getElementById('inscricaoBtn').addEventListener('click', ()=>showSection('inscricao'));
 document.getElementById('publicoBtn').addEventListener('click', carregarListaPublica);
 document.getElementById('acompanharBtn').addEventListener('click', carregarAcompanhar);
 document.getElementById('adminBtn').addEventListener('click', async ()=>{
   const senha = prompt("Senha do administrador:");
-  if(senha === 'dpsp123'){ showSection('admin'); carregarAdmin(); } else if (senha) { alert('Senha incorreta!'); }
+  if(senha === 'dpsp123'){ showSection('admin'); carregarAdmin(); } else if(senha){ alert('Senha incorreta'); }
 });
 
-/*  ---------- ADMIN TABS ---------- */
-function showAdminTab(tab) {
-  ['config','fases','placares','reset'].forEach(t => {
-    document.getElementById(t + 'Div').classList.add('hidden');
-    document.getElementById(t + 'Tab').classList.replace('bg-gray-600','bg-gray-400');
+function showAdminTab(tab){
+  ['config','fases','placares','reset'].forEach(t=>{
+    document.getElementById(t+'Div').classList.add('hidden');
+    document.getElementById(t+'Tab').classList.replace('bg-gray-600','bg-gray-400');
   });
-  document.getElementById(tab + 'Div').classList.remove('hidden');
-  document.getElementById(tab + 'Tab').classList.replace('bg-gray-400','bg-gray-600');
+  document.getElementById(tab+'Div').classList.remove('hidden');
+  document.getElementById(tab+'Tab').classList.replace('bg-gray-400','bg-gray-600');
+
+  // carregar dados ao abrir aba
+  if(tab==='fases') carregarFasesAdmin();
+  if(tab==='placares') carregarJogosAdmin();
 }
-document.getElementById('configTab').addEventListener('click', ()=> showAdminTab('config'));
-document.getElementById('fasesTab').addEventListener('click', ()=> showAdminTab('fases'));
-document.getElementById('placaresTab').addEventListener('click', ()=> showAdminTab('placares'));
-document.getElementById('resetTab').addEventListener('click', ()=> showAdminTab('reset'));
 
-/*  ---------- CONFIG: carregar + listeners ---------- */
+document.getElementById('configTab').addEventListener('click', ()=>showAdminTab('config'));
+document.getElementById('fasesTab').addEventListener('click', ()=>showAdminTab('fases'));
+document.getElementById('placaresTab').addEventListener('click', ()=>showAdminTab('placares'));
+document.getElementById('resetTab').addEventListener('click', ()=>showAdminTab('reset'));
+
+/* ---------- CONFIG ---------- */
 let limite = 2;
-
 async function carregarConfigGeral(){
   try{
     const snap = await getDoc(configDocRef);
-    if(snap && snap.exists && typeof snap.data === 'function'){
+    if(snap.exists()){
       const data = snap.data();
-      limite = data?.limite || 2;
+      limite = data?.limite||2;
     } else {
-      // criar padrão
-      await setDoc(configDocRef, { limite: 2 });
-      limite = 2;
+      await setDoc(configDocRef,{limite:2});
+      limite=2;
     }
     document.getElementById('limiteInput').value = limite;
-  } catch(e){ console.error('carregarConfigGeral', e); }
+  }catch(e){ console.error(e); }
 }
 carregarConfigGeral();
 
-/*  ---------- MODALIDADES (adicionar/remover/listeners) ---------- */
 async function carregarModalidades(){
   const snap = await getDocs(modalidadesCol);
-  const arr = snap.docs.map(d=>({ id: d.id, ...d.data() })).sort((a,b)=>a.nome.localeCompare(b.nome));
+  const arr = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.nome.localeCompare(b.nome));
   const lista = document.getElementById('modalidadesList');
   const admin = document.getElementById('adminModalidadesList');
   const faseSel = document.getElementById('faseModalidade');
   const placarSel = document.getElementById('placarModalidade');
-  lista.innerHTML = ''; admin.innerHTML = ''; faseSel.innerHTML = '<option value="">Selecione</option>'; placarSel.innerHTML = '<option value="">Selecione</option>';
+  lista.innerHTML=''; admin.innerHTML=''; faseSel.innerHTML='<option value="">Selecione</option>'; placarSel.innerHTML='<option value="">Selecione</option>';
   arr.forEach(m=>{
     lista.insertAdjacentHTML('beforeend', `<label class="flex items-center gap-2 p-2 border rounded cursor-pointer"><input type="checkbox" value="${m.nome}"> ${m.nome}</label>`);
     admin.insertAdjacentHTML('beforeend', `<div class="flex justify-between items-center p-2 border rounded"><span>${m.nome}</span><button class="text-red-600 px-2" data-id="${m.id}">🗑️</button></div>`);
     faseSel.insertAdjacentHTML('beforeend', `<option value="${m.nome}">${m.nome}</option>`);
     placarSel.insertAdjacentHTML('beforeend', `<option value="${m.nome}">${m.nome}</option>`);
   });
-
-  // attach delete handlers (since we used data-id)
   admin.querySelectorAll('button[data-id]').forEach(btn=>{
-    btn.onclick = async () => {
-      const id = btn.dataset.id;
+    btn.onclick=async ()=>{
+      const id=btn.dataset.id;
       if(!confirm('Remover modalidade?')) return;
-      await deleteDoc(doc(db, 'modalidades', id));
+      await deleteDoc(doc(db,'modalidades',id));
       carregarModalidades();
-    };
+    }
   });
-
-  // update UI info about limite
-  document.getElementById('modalidadeInfo')?.remove?.(); // safe removal if exists
-  // (if you want to show limite, you can append a small text)
 }
 carregarModalidades();
 
 document.getElementById('addModalidade').addEventListener('click', async ()=>{
-  const nome = document.getElementById('novaModalidade').value.trim();
+  const nome=document.getElementById('novaModalidade').value.trim();
   if(!nome) return alert('Digite a modalidade');
-  // simples verificação de duplicata
-  const snap = await getDocs(modalidadesCol);
-  if(snap.docs.some(d => d.data().nome.toLowerCase() === nome.toLowerCase())) return alert('Já existe');
-  await addDoc(modalidadesCol, { nome });
-  document.getElementById('novaModalidade').value = '';
+  const snap=await getDocs(modalidadesCol);
+  if(snap.docs.some(d=>d.data().nome.toLowerCase()===nome.toLowerCase())) return alert('Já existe');
+  await addDoc(modalidadesCol,{nome});
+  document.getElementById('novaModalidade').value='';
   carregarModalidades();
 });
 
-/*  ---------- LIMITE ---------- */
 document.getElementById('salvarLimite').addEventListener('click', async ()=>{
-  const novo = parseInt(document.getElementById('limiteInput').value) || 2;
-  await setDoc(configDocRef, { limite: novo }, { merge: true });
-  limite = novo;
+  const novo=parseInt(document.getElementById('limiteInput').value)||2;
+  await setDoc(configDocRef,{limite:novo},{merge:true});
+  limite=novo;
   alert('Limite salvo');
 });
 
-/*  ---------- INSCRIÇÕES ---------- */
-document.getElementById('inscricaoForm').addEventListener('submit', async (e)=>{
+/* ---------- INSCRIÇÕES ---------- */
+document.getElementById('inscricaoForm').addEventListener('submit', async e=>{
   e.preventDefault();
   try{
-    const matricula = document.getElementById('matricula').value.trim();
-    const nome = document.getElementById('nome').value.trim();
-    const setor = document.getElementById('setor').value.trim();
-    const telefone = document.getElementById('telefone').value.trim();
-    const escolhidas = Array.from(document.querySelectorAll('#modalidadesList input:checked')).map(i=>i.value);
-
+    const matricula=document.getElementById('matricula').value.trim();
+    const nome=document.getElementById('nome').value.trim();
+    const setor=document.getElementById('setor').value.trim();
+    const telefone=document.getElementById('telefone').value.trim();
+    const escolhidas=Array.from(document.querySelectorAll('#modalidadesList input:checked')).map(i=>i.value);
     if(!matricula||!nome||!setor||!telefone) return alert('Preencha tudo');
-    if(escolhidas.length === 0 || escolhidas.length > limite) return alert(`Escolha entre 1 e ${limite} modalidades`);
-
-    // prevent duplicate matricula
-    const allIns = await getDocs(inscritosCol);
-    if(allIns.docs.some(d => d.data().matricula === matricula)) return alert('Matrícula já inscrita');
-
-    await addDoc(inscritosCol, { matricula, nome, setor, telefone, modalidades: escolhidas, criado: new Date().toISOString() });
+    if(escolhidas.length===0||escolhidas.length>limite) return alert(`Escolha entre 1 e ${limite} modalidades`);
+    const allIns=await getDocs(inscritosCol);
+    if(allIns.docs.some(d=>d.data().matricula===matricula)) return alert('Matrícula já inscrita');
+    await addDoc(inscritosCol,{matricula,nome,setor,telefone,modalidades:escolhidas,criado:new Date().toISOString()});
     alert('Inscrição salva');
     e.target.reset();
   }catch(err){ console.error(err); alert('Erro ao salvar inscrição'); }
 });
 
-/*  ---------- LISTA PÚBLICA ---------- */
+/* ---------- LISTA PÚBLICA ---------- */
 async function carregarListaPublica(){
   showSection('publico');
-  const snap = await getDocs(inscritosCol);
-  const div = document.getElementById('participantesList');
-  div.innerHTML = '';
-  if(snap.empty) { div.innerHTML = '<p class="text-gray-500">Nenhum participante ainda.</p>'; return; }
-  const arr = snap.docs.map(d=>({ id: d.id, ...d.data() })).sort((a,b)=>a.nome.localeCompare(b.nome));
+  const snap=await getDocs(inscritosCol);
+  const div=document.getElementById('participantesList');
+  div.innerHTML='';
+  if(snap.empty){ div.innerHTML='<p class="text-gray-500">Nenhum participante ainda.</p>'; return; }
+  const arr=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.nome.localeCompare(b.nome));
   arr.forEach(p=>{
     div.insertAdjacentHTML('beforeend', `<div class="p-3 border rounded-lg"><h3 class="font-semibold">${p.nome}</h3><p class="text-gray-600">${p.setor}</p><p class="text-sm text-blue-600">Modalidades: ${(p.modalidades||[]).join(', ')}</p></div>`);
   });
 }
 
-/*  ---------- EXPORT CSV ---------- */
+/* ---------- EXPORT CSV ---------- */
 document.getElementById('exportBtn').addEventListener('click', async ()=>{
-  const snap = await getDocs(inscritosCol);
-  let csv = 'Nome,Setor,Telefone,Modalidades\n';
+  const snap=await getDocs(inscritosCol);
+  let csv='Nome,Setor,Telefone,Modalidades\n';
   snap.forEach(d=>{
-    const p = d.data();
-    csv += `"${p.nome}","${p.setor}","${p.telefone}","${(p.modalidades||[]).join(' | ')}"\n`;
+    const p=d.data();
+    csv+=`"${p.nome}","${p.setor}","${p.telefone}","${(p.modalidades||[]).join(' | ')}"\n`;
   });
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'inscritos.csv';
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='inscritos.csv';
   a.click();
 });
 
-/*  ---------- RESET (apaga fases, jogos, modalidades, inscritos) ---------- */
+/* ---------- RESET ---------- */
 document.getElementById('resetBtn').addEventListener('click', async ()=>{
   if(!confirm('⚠️ Isso apagará inscritos, modalidades, fases e jogos. Continuar?')) return;
-  const colls = ['inscritos','modalidades','fases','jogos'];
+  const colls=['inscritos','modalidades','fases','jogos'];
   for(const c of colls){
-    const snap = await getDocs(collection(db, c));
-    for(const d of snap.docs) await deleteDoc(doc(db, c, d.id));
+    const snap=await getDocs(collection(db,c));
+    for(const d of snap.docs) await deleteDoc(doc(db,c,d.id));
   }
   alert('Reset completo');
   carregarModalidades();
   carregarListaPublica();
 });
 
-/*  ---------- FASES: criar confrontos ---------- */
+/* ---------- FASES ---------- */
+async function carregarFasesAdmin(){
+  const snap=await getDocs(fasesCol);
+  const listaFases=document.getElementById('listaFases');
+  listaFases.innerHTML='';
+  snap.forEach(f=>{
+    listaFases.insertAdjacentHTML('beforeend', `<div class="p-2 border rounded">Modalidade: ${f.data().modalidade} — Fase: ${f.data().numero}</div>`);
+  });
+}
+
 document.getElementById('criarFaseBtn').addEventListener('click', async ()=>{
-  const modalidade = document.getElementById('faseModalidade').value;
+  const modalidade=document.getElementById('faseModalidade').value;
   if(!modalidade) return alert('Selecione modalidade');
-  // busca inscritos desta modalidade
-  const snap = await getDocs(inscritosCol);
-  let players = snap.docs.map(d=>({ id: d.id, ...d.data() })).filter(p => (p.modalidades||[]).includes(modalidade));
-  if(players.length < 2) return alert('Mínimo 2 participantes');
-  // embaralhar
-  for(let i = players.length -1; i>0; i--){ const j=Math.floor(Math.random()*(i+1)); [players[i], players[j]] = [players[j], players[i]]; }
-  // descobrir numero da fase (maior existente +1)
-  const fasesSnap = await getDocs(query(collection(db,'fases'), where('modalidade','==',modalidade)));
-  const nums = fasesSnap.docs.map(d=>d.data().numero||0);
-  const nova = nums.length ? Math.max(...nums)+1 : 1;
-  // criar fase doc
-  const faseDoc = await addDoc(fasesCol, { modalidade, numero: nova, criado: new Date().toISOString() });
-  // criar jogos em pares
-  for(let i=0;i<players.length;i+=2){
-    const p1 = players[i], p2 = players[i+1] || null;
-    await addDoc(jogosCol, { modalidade, fase: nova, jogador1: p1, jogador2: p2, placar1: 0, placar2: 0, finalizado: false, criado: new Date().toISOString() });
-  }
-  alert(`Fase ${nova} criada com ${Math.ceil(players.length/2)} jogos`);
+  const snap=await getDocs(inscritosCol);
+  let players=snap.docs.map(d=>({id:d.id,...d.data()})).filter(d=>d.modalidades.includes(modalidade));
+  if(players.length<2) return alert('Não há participantes suficientes');
+  const fasesSnap=await getDocs(fasesCol);
+  const numero=fasesSnap.docs.filter(d=>d.data().modalidade===modalidade).length+1;
+  await addDoc(fasesCol,{modalidade,numero,players:players.map(p=>p.id)});
+  alert('Fase criada');
+  carregarFasesAdmin();
 });
 
-/*  ---------- PLACARES (listar e atualizar) ---------- */
-document.getElementById('placarModalidade').addEventListener('change', carregarJogosAdmin);
-
+/* ---------- PLACARES ---------- */
 async function carregarJogosAdmin(){
-  const modalidade = document.getElementById('placarModalidade').value;
-  const snap = await getDocs(jogosCol);
-  const lista = document.getElementById('listaJogos');
-  lista.innerHTML = '';
-  const jogos = snap.docs.map(d=>({ id: d.id, ...d.data() })).filter(j=>j.modalidade === modalidade).sort((a,b)=>a.fase - b.fase);
-  if(jogos.length === 0){ lista.innerHTML = '<p class="text-gray-500">Nenhum jogo</p>'; return; }
-  jogos.forEach(j=>{
-    const j1 = typeof j.jogador1 === 'object' ? j.jogador1.nome : j.jogador1;
-    const j2 = j.jogador2 ? (typeof j.jogador2 === 'object' ? j.jogador2.nome : j.jogador2) : '---';
-    lista.insertAdjacentHTML('beforeend', `
-      <div class="p-3 border rounded mb-2">
-        <div class="flex justify-between items-center">
-          <div><strong>Fase ${j.fase}</strong> — ${j1} vs ${j2}</div>
-          <div class="flex items-center gap-2">
-            <span class="font-mono">${j.placar1} x ${j.placar2}</span>
-            <button class="bg-blue-600 text-white px-2 py-1 rounded" data-action="inc1" data-id="${j.id}">+1 ${j1}</button>
-            <button class="bg-green-600 text-white px-2 py-1 rounded" data-action="inc2" data-id="${j.id}">+1 ${j2}</button>
-            <button class="bg-red-500 text-white px-2 py-1 rounded" data-action="final" data-id="${j.id}">Finalizar</button>
-          </div>
-        </div>
+  const sel=document.getElementById('placarModalidade');
+  const val=sel.value;
+  const lista=document.getElementById('listaJogos');
+  lista.innerHTML='';
+  if(!val) return;
+  const q = query(jogosCol, where('modalidade','==',val));
+  const snap = await getDocs(q);
+  if(snap.empty){ lista.innerHTML='<p>Nenhum jogo cadastrado.</p>'; return; }
+  snap.forEach(j=>{
+    const data=j.data();
+    lista.insertAdjacentHTML('beforeend', `<div class="p-2 border rounded flex justify-between items-center">
+      <span>${data.jogador1} vs ${data.jogador2} — Placar: ${data.placar1||0} x ${data.placar2||0}</span>
+      <div class="flex gap-1">
+        <button class="bg-blue-600 text-white px-2 py-1 rounded" data-id="${j.id}" data-j="1">+1 ${data.jogador1}</button>
+        <button class="bg-blue-600 text-white px-2 py-1 rounded" data-id="${j.id}" data-j="2">+1 ${data.jogador2}</button>
       </div>
-    `);
+    </div>`);
   });
-  // attach handlers
-  lista.querySelectorAll('button[data-action]').forEach(btn=>{
-    btn.onclick = async ()=> {
-      const id = btn.dataset.id;
-      const action = btn.dataset.action;
-      const docRef = doc(db,'jogos',id);
-      const docSnap = await getDocs(query(jogosCol, where('__name__','==',id))); // fallback to read
-      // simpler: read specific doc via getDoc
-      // but for brevity, we update optimistically:
-      const current = (await getDocs(jogosCol)).docs.find(d=>d.id===id)?.data();
-      if(!current) return alert('Jogo não encontrado');
-      let p1 = current.placar1 || 0, p2 = current.placar2 || 0;
-      if(action === 'inc1') p1++;
-      if(action === 'inc2') p2++;
-      if(action === 'final'){
-        if(p1 === p2) return alert('Empate não permitido');
-        await updateDoc(doc(db,'jogos',id), { placar1: p1, placar2: p2, finalizado: true });
-        alert('Jogo finalizado');
-        carregarJogosAdmin();
-        carregarAcompanhar();
-        return;
-      }
-      await updateDoc(doc(db,'jogos',id), { placar1: p1, placar2: p2 });
+  lista.querySelectorAll('button').forEach(btn=>{
+    btn.onclick=async ()=>{
+      const id=btn.dataset.id, j=btn.dataset.j;
+      const docRef=doc(db,'jogos',id);
+      const snap=await getDoc(docRef);
+      if(!snap.exists()) return;
+      const data=snap.data();
+      const update={};
+      update['placar'+j]=(data['placar'+j]||0)+1;
+      await updateDoc(docRef,update);
       carregarJogosAdmin();
-    };
+    }
   });
 }
 
-/*  ---------- ACOMPANHAR PÚBLICO ---------- */
-async function carregarAcompanhar(){
-  showSection('acompanhar');
-  const snap = await getDocs(jogosCol);
-  const arr = snap.docs.map(d=>({ id: d.id, ...d.data() })).sort((a,b)=> (a.modalidade + a.fase) > (b.modalidade + b.fase) ? 1 : -1);
-  const div = document.getElementById('jogosAcompanhar');
-  div.innerHTML = '';
-  if(arr.length === 0){ div.innerHTML = '<p class="text-gray-500">Nenhum jogo disponível.</p>'; return; }
-  // group by modalidade and fase
-  const byMod = {};
-  arr.forEach(j=>{
-    byMod[j.modalidade] = byMod[j.modalidade] || {};
-    byMod[j.modalidade][j.fase] = byMod[j.modalidade][j.fase] || [];
-    byMod[j.modalidade][j.fase].push(j);
-  });
-  Object.keys(byMod).forEach(mod=>{
-    let html = `<div class="mb-6 p-4 border rounded-lg"><h3 class="text-lg font-bold mb-2">${mod}</h3>`;
-    Object.keys(byMod[mod]).sort((a,b)=>a-b).forEach(fase=>{
-      html += `<h4 class="font-semibold">Fase ${fase}</h4>`;
-      byMod[mod][fase].forEach(j=>{
-        const j1 = typeof j.jogador1 === 'object' ? j.jogador1.nome : j.jogador1;
-        const j2 = j.jogador2 ? (typeof j.jogador2 === 'object' ? j.jogador2.nome : j.jogador2) : '---';
-        if(j.finalizado){
-          const winner = (j.placar1 > j.placar2) ? j1 : j2;
-          html += `<div class="flex justify-between p-2 mb-1 bg-green-50 border rounded"><span>${j1} vs ${j2}</span><span class="text-green-600">${j.placar1} x ${j.placar2} — Vencedor: ${winner}</span></div>`;
-        } else {
-          html += `<div class="flex justify-between p-2 mb-1 bg-yellow-50 border rounded"><span>${j1} vs ${j2}</span><span class="text-orange-600">Aguardando resultado</span></div>`;
-        }
-      });
-    });
-    html += '</div>';
-    div.insertAdjacentHTML('beforeend', html);
-  });
-}
-
-/*  ---------- ADMIN helpers ---------- */
-async function carregarAdmin(){
+/* ---------- ADMIN LOAD ---------- */
+function carregarAdmin(){
   showAdminTab('config');
-  carregarModalidades();
-  // carregar inscritos tabela
-  const snap = await getDocs(inscritosCol);
-  const tabela = document.getElementById('tabelaInscritos');
-  tabela.innerHTML = '';
-  snap.forEach(d=>{
-    const p = d.data();
-    tabela.insertAdjacentHTML('beforeend', `<tr><td class="border p-2">${p.nome}</td><td class="border p-2">${p.setor}</td><td class="border p-2">${(p.modalidades||[]).join(', ')}</td><td class="border p-2"><button class="text-red-600" data-id="${d.id}">🗑️</button></td></tr>`);
-  });
-  tabela.querySelectorAll('button[data-id]').forEach(btn=>{
-    btn.onclick = async ()=> {
-      if(!confirm('Remover inscrito?')) return;
-      await deleteDoc(doc(db,'inscritos',btn.dataset.id));
-      carregarAdmin();
-      carregarListaPublica();
-    };
-  });
-
-  // carregar fases list (simple)
-  const fasesSnap = await getDocs(fasesCol);
-  const listaFases = document.getElementById('listaFases');
-  listaFases.innerHTML = '';
-  fasesSnap.forEach(f=> listaFases.insertAdjacentHTML('beforeend', `<div class="p-2 border rounded">Modalidade: ${f.data().modalidade} — Fase: ${f.data().numero}</div>`));
 }
-
-/*  ---------- Real-time listeners (opcionais, update UI on changes) ---------- */
-// Opcional: inscrever listeners para atualizar automaticamente
-onSnapshot(inscritosCol, ()=>{ /* atualizar tabela e público */ });
-onSnapshot(modalidadesCol, ()=> carregarModalidades());
-onSnapshot(jogosCol, ()=> { carregarJogosAdmin().catch(()=>{}); carregarAcompanhar().catch(()=>{}); });
-
-/*  ---------- Inicialização ---------- */
-window.onload = ()=> { showSection('inscricao'); showAdminTab('config'); carregarConfigGeral().catch(()=>{}); };
 </script>
 </body>
 </html>

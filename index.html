@@ -129,7 +129,7 @@
         lista.innerHTML = "";
         select.innerHTML = "<option value=''>Escolha modalidade</option>";
         snap.forEach(docSnap => {
-          const m = docSnap.data().nome; // Alterado para usar o campo 'nome'
+          const m = docSnap.data().nome;
           const mId = docSnap.id;
           const div = document.createElement("div");
           div.innerHTML = `<label><input type="checkbox" value="${mId}"> ${m}</label>`;
@@ -249,7 +249,7 @@
         // Criar confrontos
         for (let i = 0; i < participantes.length; i += 2) {
           const p1 = participantes[i];
-          const p2 = participantes[i + 1] ?? null; // Jogador 2 pode ser nulo se o número de participantes for ímpar
+          const p2 = participantes[i + 1] ?? null;
 
           await addDoc(collection(db, "confrontos"), {
             faseId,
@@ -278,10 +278,12 @@
         if (p2 >= 2) {
           vencedor = "jogador2";
         }
+        const confrontoDoc = await getDocs(doc(db, "confrontos", id));
+        const confronto = confrontoDoc.data();
         await updateDoc(doc(db, "confrontos", id), {
           pontos1: p1,
           pontos2: p2,
-          vencedor: vencedor ? { id: doc(db, 'inscritos', vencedor === 'jogador1' ? confronto.jogador1.id : confronto.jogador2.id), nome: vencedor === 'jogador1' ? confronto.jogador1.nome : confronto.jogador2.nome } : null,
+          vencedor: vencedor ? { id: confronto[vencedor].id, nome: confronto[vencedor].nome } : null,
           finalizado: vencedor !== null
         });
       }
@@ -301,6 +303,58 @@
           list.appendChild(div);
         });
       });
+      
+      onSnapshot(query(collection(db, "confrontos"), orderBy("criado_em")), async (snap) => {
+          const container = document.getElementById("publicPhases");
+          container.innerHTML = "";
+          const fases = {};
+
+          snap.forEach(docSnap => {
+              const c = docSnap.data();
+              if (!fases[c.modalidadeId]) {
+                  fases[c.modalidadeId] = { nome: c.modalidadeNome, fases: {} };
+              }
+              if (!fases[c.modalidadeId].fases[c.faseId]) {
+                  fases[c.modalidadeId].fases[c.faseId] = { numero: 0, confrontos: [] };
+              }
+              fases[c.modalidadeId].fases[c.faseId].confrontos.push({ id: docSnap.id, ...c });
+          });
+
+          for (const modalidadeId in fases) {
+              const modalidadeDiv = document.createElement("div");
+              modalidadeDiv.className = "mb-4";
+              modalidadeDiv.innerHTML = `<h3 class="text-lg font-bold">${fases[modalidadeId].nome}</h3>`;
+              
+              const sortedFases = Object.entries(fases[modalidadeId].fases).sort(([, a], [, b]) => a.numero - b.numero);
+
+              for (const [faseId, faseData] of sortedFases) {
+                  const faseDiv = document.createElement("div");
+                  faseDiv.className = "p-3 border rounded-lg mb-2";
+                  const faseNumero = (await getDocs(doc(db, "fases", faseId))).data().numero;
+                  faseDiv.innerHTML = `<h4 class="font-semibold">Fase ${faseNumero}</h4>`;
+                  
+                  const listaConfrontos = document.createElement("div");
+                  faseData.confrontos.forEach(c => {
+                      const linha = document.createElement("div");
+                      linha.className = "p-2 border rounded-lg mb-1";
+                      linha.innerHTML = `
+                          <p>
+                              <strong>${c.jogador1?.nome || "BYE"}</strong>
+                              ${c.vencedor && c.vencedor.nome === c.jogador1?.nome ? "🏆" : ""}
+                              <br>vs<br>
+                              <strong>${c.jogador2?.nome || "BYE"}</strong>
+                              ${c.vencedor && c.vencedor.nome === c.jogador2?.nome ? "🏆" : ""}
+                          </p>
+                      `;
+                      listaConfrontos.appendChild(linha);
+                  });
+                  faseDiv.appendChild(listaConfrontos);
+                  modalidadeDiv.appendChild(faseDiv);
+              }
+              container.appendChild(modalidadeDiv);
+          }
+      });
+
     </script>
   </body>
 </html>

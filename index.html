@@ -10,7 +10,6 @@
     <div class="max-w-6xl mx-auto">
         <h1 class="text-3xl font-bold text-center mb-6">Sistema de Campeonato 🏆</h1>
 
-        <!-- Navegação -->
         <div class="flex flex-wrap justify-center gap-2 mb-6">
             <button id="inscricaoBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
                 📝 Inscrições
@@ -26,7 +25,6 @@
             </button>
         </div>
 
-        <!-- Seção de Inscrições -->
         <section id="inscricaoSection" class="bg-white p-6 rounded-lg shadow mb-6">
             <h2 class="text-xl font-bold mb-4">Nova Inscrição</h2>
             <form id="inscricaoForm" class="space-y-4">
@@ -47,19 +45,16 @@
             </form>
         </section>
 
-        <!-- Lista Pública -->
         <section id="publicoSection" class="bg-white p-6 rounded-lg shadow mb-6 hidden">
             <h2 class="text-xl font-bold mb-4">Participantes Inscritos</h2>
             <div id="participantesList" class="space-y-3"></div>
         </section>
 
-        <!-- Acompanhar -->
         <section id="acompanharSection" class="bg-white p-6 rounded-lg shadow mb-6 hidden">
             <h2 class="text-xl font-bold mb-4">Acompanhar Jogos</h2>
             <div id="jogosAcompanhar" class="space-y-4"></div>
         </section>
 
-        <!-- Admin -->
         <section id="adminSection" class="bg-white p-6 rounded-lg shadow mb-6 hidden">
             <h2 class="text-xl font-bold mb-4">Área Administrativa</h2>
             
@@ -70,7 +65,6 @@
                 <button id="resetTab" class="bg-gray-400 text-white px-3 py-1 rounded">Reset</button>
             </div>
 
-            <!-- Config -->
             <div id="configDiv" class="space-y-4">
                 <div>
                     <h3 class="font-semibold mb-2">Modalidades</h3>
@@ -105,7 +99,6 @@
                 </div>
             </div>
 
-            <!-- Fases -->
             <div id="fasesDiv" class="hidden space-y-4">
                 <div class="flex gap-2">
                     <select id="modalidadeSelect" class="flex-1 p-2 border rounded">
@@ -116,7 +109,6 @@
                 <div id="faseAtual" class="mt-4"></div>
             </div>
 
-            <!-- Placares -->
             <div id="placaresDiv" class="hidden space-y-4">
                 <select id="modalidadePlacar" class="w-full p-2 border rounded mb-4">
                     <option value="">Selecione modalidade para ver jogos</option>
@@ -124,7 +116,6 @@
                 <div id="jogosPendentes"></div>
             </div>
 
-            <!-- Reset -->
             <div id="resetDiv" class="hidden">
                 <div class="bg-red-50 p-4 rounded border border-red-200">
                     <h3 class="font-semibold text-red-800 mb-2">⚠️ Reset Campeonato</h3>
@@ -164,10 +155,19 @@
             document.getElementById(section + 'Section').classList.remove('hidden');
             
             // Reset button colors
-            document.querySelectorAll('[id$="Btn"]').forEach(btn => {
-                btn.className = btn.className.replace('bg-gray-800', btn.id.includes('inscricao') ? 'bg-blue-600' : 
-                    btn.id.includes('publico') ? 'bg-green-600' : 
-                    btn.id.includes('admin') ? 'bg-purple-600' : 'bg-orange-600');
+            document.querySelectorAll('div.flex.flex-wrap.justify-center.gap-2.mb-6 button').forEach(btn => {
+                const id = btn.id;
+                let colorClass;
+                if (id === 'inscricaoBtn') {
+                    colorClass = 'bg-blue-600';
+                } else if (id === 'publicoBtn') {
+                    colorClass = 'bg-green-600';
+                } else if (id === 'adminBtn') {
+                    colorClass = 'bg-purple-600';
+                } else if (id === 'acompanharBtn') {
+                    colorClass = 'bg-orange-600';
+                }
+                btn.className = btn.className.replace('bg-gray-800', colorClass);
             });
             
             document.getElementById(section + 'Btn').className = document.getElementById(section + 'Btn').className.replace(/bg-\w+-600/, 'bg-gray-800');
@@ -188,6 +188,7 @@
             if (senha === "dpsp123") {
                 showSection('admin');
                 carregarAdmin();
+                showAdminTab('config'); // Adiciona esta linha para mostrar a aba padrão
             } else if (senha) {
                 alert("Senha incorreta!");
             }
@@ -201,7 +202,6 @@
             ['configDiv', 'fasesDiv', 'placaresDiv', 'resetDiv'].forEach(d => {
                 document.getElementById(d).classList.add('hidden');
             });
-            
             document.getElementById(tab + 'Tab').className = "bg-gray-600 text-white px-3 py-1 rounded";
             document.getElementById(tab + 'Div').classList.remove('hidden');
         }
@@ -231,7 +231,6 @@
                 label.innerHTML = `<input type="checkbox" value="${m}"> ${m}`;
                 lista.appendChild(label);
             });
-            
             // Lista admin
             const adminLista = document.getElementById('adminModalidadesList');
             adminLista.innerHTML = '';
@@ -241,7 +240,6 @@
                 div.innerHTML = `<span>${m}</span><button onclick="removerModalidade('${m}')" class="text-red-600 px-2">🗑️</button>`;
                 adminLista.appendChild(div);
             });
-            
             document.getElementById('modalidadeInfo').textContent = `Escolha até ${limite} modalidade(s)`;
             document.getElementById('limiteInput').value = limite;
         }
@@ -278,16 +276,13 @@
                 alert('Limite salvo!');
             }
         };
-
         // Inscrição
         document.getElementById('inscricaoForm').onsubmit = (e) => {
             e.preventDefault();
-            
             const matricula = document.getElementById('matricula').value.trim();
             const nome = document.getElementById('nome').value.trim();
             const setor = document.getElementById('setor').value.trim();
             const telefone = document.getElementById('telefone').value.trim();
-            
             const escolhidas = Array.from(document.querySelectorAll('#modalidadesList input:checked')).map(c => c.value);
             
             if (!matricula || !nome || !setor || !telefone) {
@@ -314,7 +309,6 @@
                 modalidades: escolhidas,
                 criado: new Date().toISOString()
             });
-            
             saveStorage();
             alert('Inscrição realizada!');
             document.getElementById('inscricaoForm').reset();
@@ -384,7 +378,6 @@
             storage.inscritos.forEach(p => {
                 csv += `"${p.nome}","${p.setor}","${p.telefone}","${p.modalidades.join(' | ')}"\n`;
             });
-            
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -423,7 +416,6 @@
 
         function criarFase(modalidade) {
             const participantes = storage.inscritos.filter(p => p.modalidades.includes(modalidade));
-            
             if (participantes.length < 2) {
                 alert('Mínimo 2 participantes!');
                 return;
@@ -507,7 +499,6 @@
                     </div>
                 `;
             });
-            
             div.innerHTML = html;
         }
 
@@ -537,7 +528,6 @@
             const jogos = storage.jogos[modalidade][ultimaFase] || [];
             
             const pendentes = jogos.filter(j => !j.finalizado);
-            
             if (pendentes.length === 0) {
                 div.innerHTML = '<p class="text-green-600">Todos os jogos da fase atual foram finalizados!</p>';
                 return;
@@ -575,7 +565,6 @@
             
             const placar1 = parseInt(placar1Input.value);
             const placar2 = parseInt(placar2Input.value);
-            
             if (placar1 < 0 || placar1 > 2 || placar2 < 0 || placar2 > 2) {
                 alert('Placar deve ser entre 0 e 2!');
                 return;
@@ -626,7 +615,6 @@
 
         function getVencedoresFase(modalidade, numeroFase) {
             if (!storage.jogos[modalidade] || !storage.jogos[modalidade][numeroFase]) return [];
-            
             return storage.jogos[modalidade][numeroFase]
                 .filter(j => j.finalizado)
                 .map(j => j.placar1 > j.placar2 ? j.jogador1 : j.jogador2);
@@ -634,7 +622,6 @@
 
         function getPerdedoresFase(modalidade, numeroFase) {
             if (!storage.jogos[modalidade] || !storage.jogos[modalidade][numeroFase]) return [];
-            
             return storage.jogos[modalidade][numeroFase]
                 .filter(j => j.finalizado)
                 .map(j => j.placar1 < j.placar2 ? j.jogador1 : j.jogador2);
@@ -716,3 +703,6 @@
             carregarModalidades();
             showSection('inscricao');
         };
+    </script>
+</body>
+</html>

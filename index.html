@@ -1,74 +1,71 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inscrições - Campeonato</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Campeonato - Final</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
-  <div class="bg-white p-6 rounded-2xl shadow-lg w-full max-w-3xl">
-    <h1 class="text-2xl font-bold text-center mb-4">Campeonato 🎮</h1>
+<body class="bg-gray-100 min-h-screen p-4">
+  <div class="max-w-5xl mx-auto bg-white rounded-2xl shadow-lg p-6">
+    <h1 class="text-2xl font-bold text-center mb-4">Campeonato - Sistema Completo 🏆</h1>
 
-    <div class="flex justify-between mb-4">
-      <button id="toggleButton" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
-        Nova Inscrição
-      </button>
-      <button id="adminButton" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">
-        Área do ADM
-      </button>
+    <div class="flex gap-2 justify-center mb-4">
+      <button id="toggleButton" class="bg-green-600 text-white px-4 py-2 rounded-lg">Nova Inscrição</button>
+      <button id="adminButton" class="bg-purple-600 text-white px-4 py-2 rounded-lg">Área do ADM</button>
+      <button id="publicButton" class="bg-sky-600 text-white px-4 py-2 rounded-lg">Painel Público</button>
     </div>
 
-    <!-- Formulário de inscrição -->
+    <!-- Formulário -->
     <section id="formSection" class="hidden">
       <form id="registrationForm" class="space-y-4">
-        <input type="text" id="matricula" placeholder="Matrícula" class="w-full p-2 border rounded-lg" required>
-        <input type="text" id="nome" placeholder="Nome completo" class="w-full p-2 border rounded-lg" required>
-        <input type="text" id="setor" placeholder="Setor" class="w-full p-2 border rounded-lg" required>
+        <div class="grid grid-cols-3 gap-2">
+          <input type="text" id="matricula" placeholder="Matrícula" class="col-span-1 p-2 border rounded-lg" required>
+          <input type="text" id="nome" placeholder="Nome completo" class="col-span-1 p-2 border rounded-lg" required>
+          <input type="text" id="setor" placeholder="Setor" class="col-span-1 p-2 border rounded-lg" required>
+        </div>
         <input type="tel" id="telefone" placeholder="Telefone (somente ADM verá)" class="w-full p-2 border rounded-lg" required>
-
         <div>
           <p class="font-semibold mb-2">Escolha suas modalidades:</p>
           <div id="modalidadesList" class="grid grid-cols-2 gap-2"></div>
           <p id="modalidadeInfo" class="text-xs text-gray-500 mt-1"></p>
         </div>
-
-        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg">
-          Enviar Inscrição
-        </button>
+        <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg">Enviar Inscrição</button>
       </form>
     </section>
 
-    <!-- Lista de participantes (sem matrícula e sem telefone) -->
+    <!-- Lista pública simples -->
     <section id="listSection">
       <h2 class="text-xl font-semibold mb-2">Participantes inscritos</h2>
       <div id="loadingMessage" class="text-gray-500 text-sm">Carregando participantes...</div>
       <div id="participantList" class="space-y-2"></div>
     </section>
 
-    <!-- Área do Administrador -->
+    <!-- Admin -->
     <section id="adminSection" class="hidden">
       <h2 class="text-xl font-bold mb-2">Área do Administrador</h2>
-      <div class="space-y-4">
-        <!-- Gerenciar modalidades -->
-        <div>
-          <h3 class="font-semibold">Gerenciar Modalidades</h3>
+      <div class="grid grid-cols-3 gap-4">
+        <div class="col-span-1 bg-gray-50 p-3 rounded-lg">
+          <h3 class="font-semibold mb-2">Gerenciar Modalidades</h3>
           <div id="adminModalidadesList" class="space-y-1 mb-2"></div>
           <div class="flex gap-2">
             <input type="text" id="novaModalidade" placeholder="Nova modalidade" class="flex-1 p-2 border rounded-lg">
-            <button id="addModalidade" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg">Adicionar</button>
+            <button id="addModalidade" class="bg-green-600 text-white px-3 py-2 rounded-lg">Adicionar</button>
           </div>
+
+          <h3 class="font-semibold mt-4 mb-2">Configurar Limite</h3>
+          <div class="flex gap-2">
+            <input type="number" id="limiteModalidades" min="1" class="p-2 border rounded-lg w-20" />
+            <button id="salvarLimite" class="bg-blue-600 text-white px-3 py-2 rounded-lg">Salvar</button>
+          </div>
+
+          <h3 class="font-semibold mt-4 mb-2">Reset / Limpar Campeonato</h3>
+          <button id="clearFases" class="w-full bg-red-600 text-white py-2 rounded-lg mb-2">Apagar fases & confrontos</button>
+          <button id="clearPlacares" class="w-full bg-orange-600 text-white py-2 rounded-lg mb-2">Apagar placares (manter fases)</button>
+          <button id="clearAll" class="w-full bg-red-800 text-white py-2 rounded-lg">RESET COMPLETO (manter inscritos/modalidades?)</button>
         </div>
 
-        <!-- Configurar limite -->
-        <div>
-          <h3 class="font-semibold">Configurar Limite</h3>
-          <input type="number" id="limiteModalidades" min="1" class="p-2 border rounded-lg w-20">
-          <button id="salvarLimite" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg">Salvar</button>
-        </div>
-
-        <!-- Lista de inscritos (ADM vê matrícula e telefone) -->
-        <div>
+        <div class="col-span-2 bg-gray-50 p-3 rounded-lg">
           <h3 class="font-semibold mb-2">Lista completa de inscritos</h3>
           <table class="w-full border text-sm" id="adminTable">
             <thead class="bg-gray-200">
@@ -83,19 +80,38 @@
             </thead>
             <tbody id="adminTableBody"></tbody>
           </table>
-          <button id="exportCSV" class="mt-3 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg">
-            📥 Exportar CSV
-          </button>
+
+          <div class="mt-3 flex gap-2">
+            <button id="exportCSV" class="bg-indigo-600 text-white px-4 py-2 rounded-lg">📥 Exportar CSV</button>
+            <button id="createPhaseBtn" class="bg-sky-600 text-white px-4 py-2 rounded-lg">➕ Criar Fase</button>
+            <select id="selectModalidadeForPhase" class="p-2 border rounded-lg">
+              <option value="">Escolha modalidade</option>
+            </select>
+            <button id="generateMatchesBtn" class="bg-red-600 text-white px-4 py-2 rounded-lg">🎲 Gerar Sorteio</button>
+            <button id="advancePhaseBtn" class="bg-green-700 text-white px-4 py-2 rounded-lg">➡️ Criar Próxima Fase (Vencedores)</button>
+          </div>
+
+          <h3 class="mt-4 font-semibold">Fases e Confrontos</h3>
+          <div id="phasesList" class="space-y-3 mt-2"></div>
         </div>
       </div>
+    </section>
+
+    <!-- Painel público detalhado -->
+    <section id="publicSection" class="hidden">
+      <h2 class="text-xl font-semibold mb-2">Painel Público - Acompanha ao vivo</h2>
+      <div id="publicPhases" class="space-y-4"></div>
     </section>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, deleteDoc, doc, getDoc, setDoc, getDocs, where } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+    import {
+      getFirestore, collection, addDoc, getDocs, query, orderBy, onSnapshot, deleteDoc, doc, setDoc,
+      getDoc, where, Timestamp, updateDoc, writeBatch
+    } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
-    // Config Firebase
+    // ---------- FIREBASE CONFIG ----------
     const firebaseConfig = {
       apiKey: "AIzaSyBo8G3ZcWk4EepN0cHdVBtXc7tGOfcw-yg",
       authDomain: "inscricaosinuca.firebaseapp.com",
@@ -109,11 +125,14 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    // ---------- UI references ----------
     const toggleButton = document.getElementById("toggleButton");
     const adminButton = document.getElementById("adminButton");
+    const publicButton = document.getElementById("publicButton");
     const formSection = document.getElementById("formSection");
     const listSection = document.getElementById("listSection");
     const adminSection = document.getElementById("adminSection");
+    const publicSection = document.getElementById("publicSection");
     const registrationForm = document.getElementById("registrationForm");
     const participantList = document.getElementById("participantList");
     const loadingMessage = document.getElementById("loadingMessage");
@@ -126,18 +145,38 @@
     const modalidadeInfo = document.getElementById("modalidadeInfo");
     const adminTableBody = document.getElementById("adminTableBody");
     const exportCSVBtn = document.getElementById("exportCSV");
+    const createPhaseBtn = document.getElementById("createPhaseBtn");
+    const selectModalidadeForPhase = document.getElementById("selectModalidadeForPhase");
+    const generateMatchesBtn = document.getElementById("generateMatchesBtn");
+    const phasesList = document.getElementById("phasesList");
+    const createPhaseModalBtn = document.getElementById("createPhaseBtn");
+    const clearFasesBtn = document.getElementById("clearFases");
+    const clearPlacaresBtn = document.getElementById("clearPlacares");
+    const clearAllBtn = document.getElementById("clearAll");
+    const advancePhaseBtn = document.getElementById("advancePhaseBtn");
+    const publicPhases = document.getElementById("publicPhases");
 
     let showForm = false;
     let showAdmin = false;
+    let showPublic = false;
     let limiteEscolha = 2;
     let inscritosCache = [];
+    let modalidadesCache = [];
 
+    // ---------- Helpers ----------
+    function uid() {
+      return Math.random().toString(36).slice(2, 9);
+    }
+
+    // ---------- UI toggle ----------
     toggleButton.addEventListener("click", () => {
       showForm = !showForm;
       formSection.classList.toggle("hidden", !showForm);
       listSection.classList.toggle("hidden", showForm);
       adminSection.classList.add("hidden");
+      publicSection.classList.add("hidden");
       showAdmin = false;
+      showPublic = false;
       toggleButton.textContent = showForm ? "Ver Participantes" : "Nova Inscrição";
     });
 
@@ -148,55 +187,80 @@
         adminSection.classList.toggle("hidden", !showAdmin);
         listSection.classList.toggle("hidden", showAdmin);
         formSection.classList.add("hidden");
+        publicSection.classList.add("hidden");
         showForm = false;
+        showPublic = false;
         carregarModalidades();
         carregarLimite();
         carregarAdminTable();
+        carregarFases();
       } else if (senha !== null) {
         alert("Senha incorreta.");
       }
     });
 
-    // Carregar modalidades
+    publicButton.addEventListener("click", () => {
+      showPublic = !showPublic;
+      publicSection.classList.toggle("hidden", !showPublic);
+      listSection.classList.toggle("hidden", showPublic);
+      formSection.classList.add("hidden");
+      adminSection.classList.add("hidden");
+      showForm = false;
+      showAdmin = false;
+      carregarPublicFases();
+    });
+
+    // ---------- Carregar modalidades ----------
     async function carregarModalidades() {
-      const snapshot = await getDocs(collection(db, "modalidades"));
+      const snap = await getDocs(collection(db, "modalidades"));
       modalidadesList.innerHTML = "";
       adminModalidadesList.innerHTML = "";
-      snapshot.forEach(docSnap => {
-        const modalidade = docSnap.id;
-        // Para participantes
+      selectModalidadeForPhase.innerHTML = `<option value="">Escolha modalidade</option>`;
+      modalidadesCache = [];
+
+      snap.forEach(s => {
+        const modalidade = s.id;
+        modalidadesCache.push(modalidade);
+
+        // checkbox para inscrições
         const label = document.createElement("label");
         label.className = "flex items-center gap-2";
         label.innerHTML = `<input type="checkbox" value="${modalidade}"> ${modalidade}`;
         modalidadesList.appendChild(label);
-        // Para administrador
+
+        // admin list
         const div = document.createElement("div");
         div.className = "flex justify-between items-center border p-1 rounded";
         div.innerHTML = `<span>${modalidade}</span>
-          <button class="text-red-600 hover:text-red-800" data-id="${modalidade}">🗑️</button>`;
+          <div class="flex gap-2">
+            <button class="text-red-600 hover:text-red-800" data-id="${modalidade}">🗑️</button>
+          </div>`;
         div.querySelector("button").addEventListener("click", async () => {
+          if (!confirm('Excluir modalidade e dados relacionados?')) return;
+          // remove modalidade doc
           await deleteDoc(doc(db, "modalidades", modalidade));
           carregarModalidades();
         });
         adminModalidadesList.appendChild(div);
+
+        // dropdown for phases
+        const opt = document.createElement("option");
+        opt.value = modalidade;
+        opt.textContent = modalidade;
+        selectModalidadeForPhase.appendChild(opt);
       });
+
       atualizarInfo();
     }
 
-    // Adicionar modalidade
-    addModalidadeBtn.addEventListener("click", async () => {
-      const nome = novaModalidade.value.trim();
-      if (!nome) return;
-      await setDoc(doc(db, "modalidades", nome), { criado_em: new Date().toISOString() });
-      novaModalidade.value = "";
-      carregarModalidades();
-    });
-
-    // Carregar limite
+    // ---------- Limite ----------
     async function carregarLimite() {
       const snap = await getDoc(doc(db, "config", "limite"));
       if (snap.exists()) {
         limiteEscolha = snap.data().valor;
+        limiteInput.value = limiteEscolha;
+      } else {
+        limiteEscolha = 2;
         limiteInput.value = limiteEscolha;
       }
       atualizarInfo();
@@ -216,7 +280,7 @@
       modalidadeInfo.textContent = `Você pode escolher até ${limiteEscolha} modalidade(s).`;
     }
 
-    // Formulário de inscrição
+    // ---------- Inscrição ----------
     registrationForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const matricula = document.getElementById("matricula").value.trim();
@@ -245,12 +309,8 @@
 
       try {
         await addDoc(collection(db, "inscritos"), {
-          matricula,
-          nome,
-          setor,
-          telefone,
-          modalidades: escolhidas,
-          criado_em: new Date().toISOString()
+          matricula, nome, setor, telefone, modalidades: escolhidas,
+          criado_em: Timestamp.now()
         });
         alert("Inscrição realizada com sucesso!");
         registrationForm.reset();
@@ -264,7 +324,7 @@
       }
     });
 
-    // Lista pública (sem matrícula e sem telefone)
+    // ---------- Lista pública sem dados sensíveis ----------
     const q = query(collection(db, "inscritos"), orderBy("criado_em", "desc"));
     onSnapshot(q, (snapshot) => {
       loadingMessage.classList.add("hidden");
@@ -291,7 +351,7 @@
       carregarAdminTable();
     });
 
-    // Tabela do ADM (com matrícula e telefone)
+    // ---------- Tabela admin ----------
     function carregarAdminTable() {
       adminTableBody.innerHTML = "";
       inscritosCache.forEach(entry => {
@@ -310,13 +370,15 @@
           const senha = prompt("Digite a senha para excluir:");
           if (senha === "dpsp123") {
             await deleteDoc(doc(db, "inscritos", entry.id));
+          } else if (senha !== null) {
+            alert("Senha incorreta.");
           }
         });
         adminTableBody.appendChild(tr);
       });
     }
 
-    // Exportar CSV
+    // ---------- Export CSV ----------
     exportCSVBtn.addEventListener("click", () => {
       if (inscritosCache.length === 0) {
         alert("Nenhum inscrito para exportar!");
@@ -334,8 +396,449 @@
       a.click();
     });
 
+    // ---------- Fases e Confrontos (estrutura no Firestore) ----------
+    // Coleções:
+    // fases -> docId: auto, fields: modalidade, numero (1,2...), criado_em
+    // confrontos -> docId: auto, fields: faseId, modalidade, jogador1 {id,nome}, jogador2 {id,nome} (pode ser null), pontos1, pontos2, vencedor {id,nome} , finalizado (bool)
+    // Observações: quando uma partida é finalizada, setamos vencedor e finalizado:true
+
+    // Criar fase (apenas cria documento de fase com número sequencial por modalidade)
+    createPhaseBtn.addEventListener("click", async () => {
+      const modalidade = selectModalidadeForPhase.value;
+      if (!modalidade) {
+        alert("Escolha a modalidade para criar a fase.");
+        return;
+      }
+      // calcular próximo número de fase para essa modalidade
+      const qf = query(collection(db, "fases"), where("modalidade", "==", modalidade));
+      const snap = await getDocs(qf);
+      let maxNum = 0;
+      snap.forEach(s => {
+        const d = s.data();
+        if (d.numero && d.numero > maxNum) maxNum = d.numero;
+      });
+      const nextNum = maxNum + 1;
+      const faseDocRef = await addDoc(collection(db, "fases"), {
+        modalidade,
+        numero: nextNum,
+        criado_em: Timestamp.now()
+      });
+      alert(`Fase ${nextNum} criada para modalidade ${modalidade}. ID: ${faseDocRef.id}`);
+      carregarFases();
+    });
+
+    // Gerar confrontos (sorteio) para uma fase escolhida (vai buscar todos os inscritos daquela modalidade)
+    generateMatchesBtn.addEventListener("click", async () => {
+      const modalidade = selectModalidadeForPhase.value;
+      if (!modalidade) {
+        alert("Escolha a modalidade para gerar o sorteio.");
+        return;
+      }
+      // buscar última fase criada dessa modalidade
+      const qf = query(collection(db, "fases"), where("modalidade", "==", modalidade), orderBy("numero", "desc"));
+      const snap = await getDocs(qf);
+      if (snap.empty) {
+        alert("Crie uma fase antes de gerar confrontos.");
+        return;
+      }
+      const faseDoc = snap.docs[0];
+      const faseId = faseDoc.id;
+      // buscar participantes inscritos na modalidade (inscritos atuais)
+      const qIns = query(collection(db, "inscritos"), where("modalidades", "array-contains", modalidade));
+      const snapIns = await getDocs(qIns);
+      if (snapIns.empty) {
+        alert("Não há inscritos nessa modalidade.");
+        return;
+      }
+      const participantes = snapIns.docs.map(d => ({ id: d.id, nome: d.data().nome }));
+      // embaralhar
+      for (let i = participantes.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [participantes[i], participantes[j]] = [participantes[j], participantes[i]];
+      }
+      // criar confrontos em pares
+      const batch = [];
+      for (let i = 0; i < participantes.length; i += 2) {
+        const p1 = participantes[i];
+        const p2 = participantes[i + 1] ?? null;
+        await addDoc(collection(db, "confrontos"), {
+          faseId,
+          modalidade,
+          jogador1: p1,
+          jogador2: p2,
+          pontos1: 0,
+          pontos2: 0,
+          vencedor: null,
+          finalizado: false,
+          criado_em: Timestamp.now()
+        });
+      }
+      alert("Confrontos gerados e salvos.");
+      carregarFases();
+    });
+
+    // Carregar fases e mostrar confrontos (admin)
+    async function carregarFases() {
+      phasesList.innerHTML = "<p class='text-sm text-gray-500'>Carregando fases...</p>";
+      const snap = await getDocs(query(collection(db, "fases"), orderBy("criado_em", "asc")));
+      phasesList.innerHTML = "";
+      if (snap.empty) {
+        phasesList.innerHTML = `<p class="text-sm text-gray-500">Nenhuma fase criada.</p>`;
+        return;
+      }
+
+      for (const s of snap.docs) {
+        const f = s.data();
+        const faseDiv = document.createElement("div");
+        faseDiv.className = "border p-3 rounded-lg bg-white shadow-sm";
+        faseDiv.innerHTML = `
+          <div class="flex justify-between items-center mb-2">
+            <div>
+              <h4 class="font-semibold">Modalidade: ${f.modalidade} — Fase ${f.numero}</h4>
+              <p class="text-xs text-gray-500">ID: ${s.id}</p>
+            </div>
+            <div class="flex gap-2">
+              <button class="bg-amber-500 text-white px-3 py-1 rounded btn-show-confrontos" data-id="${s.id}">Ver Confrontos</button>
+              <button class="bg-red-600 text-white px-3 py-1 rounded btn-delete-fase" data-id="${s.id}">Excluir Fase</button>
+            </div>
+          </div>
+          <div class="confrontos-container" id="confrontos-${s.id}"></div>
+        `;
+        phasesList.appendChild(faseDiv);
+
+        // load confrontos for this phase
+        const qCon = query(collection(db, "confrontos"), where("faseId", "==", s.id));
+        const conSnap = await getDocs(qCon);
+        const container = faseDiv.querySelector(`#confrontos-${s.id}`);
+        if (conSnap.empty) {
+          container.innerHTML = `<p class="text-sm text-gray-500">Nenhum confronto gerado para esta fase.</p>`;
+        } else {
+          container.innerHTML = "";
+          conSnap.forEach(cdoc => {
+            const c = cdoc.data();
+            const card = document.createElement("div");
+            card.className = "p-2 border rounded mb-2 flex items-center justify-between";
+            const j2 = c.jogador2 ? `<span class="font-semibold">${c.jogador2.nome}</span>` : `<span class="text-sm italic">Aguardando bye</span>`;
+            const status = c.finalizado ? `<span class="text-green-700 font-semibold">Finalizado</span>` : `<span class="text-yellow-700">Em andamento</span>`;
+            card.innerHTML = `
+              <div>
+                <div><span class="font-semibold">${c.jogador1.nome}</span> ⚔️ ${j2}</div>
+                <div class="text-sm text-gray-600">Placar: <span id="pts1-${cdoc.id}">${c.pontos1}</span> x <span id="pts2-${cdoc.id}">${c.pontos2}</span> — ${status}</div>
+              </div>
+              <div class="flex gap-2 items-center">
+                <button class="bg-sky-600 text-white px-2 py-1 rounded btn-inc1" data-id="${cdoc.id}">+1 ${c.jogador1.nome}</button>
+                <button class="bg-sky-600 text-white px-2 py-1 rounded btn-inc2" data-id="${cdoc.id}">+1 ${c.jogador2 ? c.jogador2.nome : '---'}</button>
+                <button class="bg-green-700 text-white px-2 py-1 rounded btn-save" data-id="${cdoc.id}">Salvar</button>
+                <button class="bg-red-600 text-white px-2 py-1 rounded btn-delete" data-id="${cdoc.id}">Excluir</button>
+              </div>
+            `;
+            container.appendChild(card);
+
+            // attach actions
+            const inc1 = card.querySelector(".btn-inc1");
+            const inc2 = card.querySelector(".btn-inc2");
+            const saveBtn = card.querySelector(".btn-save");
+            const delBtn = card.querySelector(".btn-delete");
+
+            inc1.addEventListener("click", async () => {
+              // increment pontos1 locally then update UI (we'll update DB on save)
+              const id = cdoc.id;
+              const current1 = parseInt(document.getElementById(`pts1-${id}`).textContent);
+              const new1 = current1 + 1;
+              document.getElementById(`pts1-${id}`).textContent = new1;
+            });
+            inc2.addEventListener("click", async () => {
+              const id = cdoc.id;
+              if (!c.jogador2) {
+                alert("Não há oponente para este confronto (bye).");
+                return;
+              }
+              const current2 = parseInt(document.getElementById(`pts2-${id}`).textContent);
+              const new2 = current2 + 1;
+              document.getElementById(`pts2-${id}`).textContent = new2;
+            });
+            saveBtn.addEventListener("click", async () => {
+              const id = cdoc.id;
+              const pontos1 = parseInt(document.getElementById(`pts1-${id}`).textContent);
+              const pontos2 = parseInt(document.getElementById(`pts2-${id}`).textContent);
+              // regra melhor de 3 -> primeiro que alcançar 2 vitórias (pontos) vence
+              let vencedor = null;
+              let finalizado = false;
+              if (pontos1 >= 2 || pontos2 >= 2 || (!c.jogador2)) {
+                finalizado = true;
+                if (!c.jogador2) {
+                  vencedor = c.jogador1;
+                } else if (pontos1 > pontos2) {
+                  vencedor = c.jogador1;
+                } else if (pontos2 > pontos1) {
+                  vencedor = c.jogador2;
+                } else {
+                  // empate (por algum motivo), desempata aleatoriamente
+                  vencedor = Math.random() > 0.5 ? c.jogador1 : c.jogador2;
+                }
+              } else {
+                // partida ainda não concluída
+                if (!confirm("Partida ainda não atingiu 2 pontos para nenhum jogador. Deseja salvar assim mesmo (não finalizar)?")) {
+                  return;
+                }
+              }
+
+              await updateDoc(doc(db, "confrontos", id), {
+                pontos1, pontos2, vencedor: vencedor ? vencedor : null, finalizado, atualizado_em: Timestamp.now()
+              });
+              alert("Placar salvo.");
+              carregarFases();
+            });
+
+            delBtn.addEventListener("click", async () => {
+              const senha = prompt("Digite a senha para excluir confronto:");
+              if (senha === "dpsp123") {
+                await deleteDoc(doc(db, "confrontos", cdoc.id));
+                carregarFases();
+              } else if (senha !== null) {
+                alert("Senha incorreta.");
+              }
+            });
+          });
+        }
+
+        // attach actions: show/hide confrontos already visible, delete phase
+        const btnShow = faseDiv.querySelector(".btn-show-confrontos");
+        btnShow.addEventListener("click", () => {
+          const cont = faseDiv.querySelector(".confrontos-container");
+          cont.classList.toggle("hidden");
+        });
+
+        const btnDeletePhase = faseDiv.querySelector(".btn-delete-fase");
+        btnDeletePhase.addEventListener("click", async () => {
+          const faseId = btnDeletePhase.dataset.id;
+          if (!confirm("Deseja excluir essa fase e todos os confrontos associados?")) return;
+          // delete confrontos onde faseId == this
+          const qDel = query(collection(db, "confrontos"), where("faseId", "==", faseId));
+          const conSnapDel = await getDocs(qDel);
+          const batch = writeBatch(db);
+          conSnapDel.forEach(docu => {
+            batch.delete(doc(db, "confrontos", docu.id));
+          });
+          await batch.commit();
+          // delete fase
+          await deleteDoc(doc(db, "fases", faseId));
+          carregarFases();
+        });
+      } // for each fase
+    }
+
+    // ---------- Criar próxima fase a partir dos vencedores ----------
+    advancePhaseBtn.addEventListener("click", async () => {
+      const modalidade = selectModalidadeForPhase.value;
+      if (!modalidade) {
+        alert("Escolha a modalidade para avançar fase.");
+        return;
+      }
+      // buscar fases dessa modalidade e pegar a última
+      const qf = query(collection(db, "fases"), where("modalidade", "==", modalidade), orderBy("numero", "desc"));
+      const snap = await getDocs(qf);
+      if (snap.empty) {
+        alert("Não há fase anterior para avançar. Crie uma fase primeiro.");
+        return;
+      }
+      const lastPhaseDoc = snap.docs[0];
+      const lastPhaseId = lastPhaseDoc.id;
+      // buscar confrontos da última fase
+      const qCon = query(collection(db, "confrontos"), where("faseId", "==", lastPhaseId));
+      const conSnap = await getDocs(qCon);
+      const vencedores = [];
+      const perdedores = [];
+      conSnap.forEach(c => {
+        const data = c.data();
+        if (data.vencedor) {
+          vencedores.push(data.vencedor);
+        } else if (data.jogador2 && !data.vencedor) {
+          // ainda não finalizada mas tem jogador2 => não contar
+        } else if (data.jogador2 === null) {
+          // bye -> jogador1 avançará
+          vencedores.push(data.jogador1);
+        } else {
+          // se não tem vencedor e jogo finalizado não? somente considerar perdedores de confrontos finalizados
+          if (data.finalizado) {
+            const loser = data.vencedor && data.jogador1.id === data.vencedor.id ? data.jogador2 : data.jogador1;
+            if (loser) perdedores.push(loser);
+          } else {
+            // parte não finalizada - ignorar
+          }
+        }
+        // se finalizado e houve vencedor, também identificar perdedor
+        if (data.finalizado && data.vencedor) {
+          const loser = (data.jogador1.id === data.vencedor.id) ? data.jogador2 : data.jogador1;
+          if (loser) perdedores.push(loser);
+        }
+      });
+
+      // filtrar vencedores únicos
+      const map = {};
+      const uniqueVenc = [];
+      vencedores.forEach(v => {
+        if (!map[v.id]) { map[v.id] = true; uniqueVenc.push(v); }
+      });
+
+      // se número ímpar -> realizar repescagem: escolher 1 perdedor aleatório (somente dentre perdedores válidos)
+      const participantesParaProxima = [...uniqueVenc];
+      if (participantesParaProxima.length % 2 === 1) {
+        // escolher um perdedor aleatório que não esteja já nos vencedores
+        const candidatos = perdedores.filter(p => !map[p.id]);
+        if (candidatos.length === 0) {
+          // não há candidatos, vamos pegar qualquer inscrito da modalidade que não esteja entre vencedores
+          const qIns = query(collection(db, "inscritos"), where("modalidades", "array-contains", modalidade));
+          const insSnap = await getDocs(qIns);
+          const possiveis = insSnap.docs.map(d => ({ id: d.id, nome: d.data().nome }))
+            .filter(x => !map[x.id]);
+          if (possiveis.length > 0) {
+            const escolhido = possiveis[Math.floor(Math.random() * possiveis.length)];
+            participantesParaProxima.push(escolhido);
+            alert(`Repescagem: ${escolhido.nome} foi sorteado para completar a próxima fase.`);
+          } else {
+            alert("Não foi possível completar repescagem (sem candidatos).");
+          }
+        } else {
+          const escolhido = candidatos[Math.floor(Math.random() * candidatos.length)];
+          participantesParaProxima.push(escolhido);
+          alert(`Repescagem: ${escolhido.nome} foi sorteado para completar a próxima fase.`);
+        }
+      }
+
+      if (participantesParaProxima.length < 2) {
+        alert("Não há participantes suficientes para criar próxima fase.");
+        return;
+      }
+
+      // criar nova fase (numero +1)
+      const existing = await getDocs(query(collection(db, "fases"), where("modalidade", "==", modalidade)));
+      let maxNum = 0;
+      existing.forEach(f => { if (f.data().numero && f.data().numero > maxNum) maxNum = f.data().numero; });
+      const nextNum = maxNum + 1;
+      const newFaseRef = await addDoc(collection(db, "fases"), { modalidade, numero: nextNum, criado_em: Timestamp.now() });
+
+      // embaralhar participantes e criar confrontos
+      for (let i = participantesParaProxima.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [participantesParaProxima[i], participantesParaProxima[j]] = [participantesParaProxima[j], participantesParaProxima[i]];
+      }
+      for (let i = 0; i < participantesParaProxima.length; i += 2) {
+        const p1 = participantesParaProxima[i];
+        const p2 = participantesParaProxima[i+1] ?? null;
+        await addDoc(collection(db, "confrontos"), {
+          faseId: newFaseRef.id,
+          modalidade,
+          jogador1: p1,
+          jogador2: p2,
+          pontos1: 0,
+          pontos2: 0,
+          vencedor: null,
+          finalizado: false,
+          criado_em: Timestamp.now()
+        });
+      }
+      alert(`Próxima fase (${nextNum}) criada com ${participantesParaProxima.length} participantes.`);
+      carregarFases();
+    });
+
+    // ---------- Apagar fases / placares ----------
+    // Apaga todas as fases e confrontos
+    document.getElementById("clearFases").addEventListener("click", async () => {
+      const senha = prompt("Senha para apagar fases e confrontos:");
+      if (senha !== "dpsp123") { if (senha !== null) alert("Senha incorreta."); return; }
+      if (!confirm("Confirma apagar todas as fases e todos os confrontos? Esta ação não afeta inscritos ou modalidades.")) return;
+      // deletar todos confrontos
+      const conSnap = await getDocs(collection(db, "confrontos"));
+      for (const c of conSnap.docs) await deleteDoc(doc(db, "confrontos", c.id));
+      // deletar todas fases
+      const fSnap = await getDocs(collection(db, "fases"));
+      for (const f of fSnap.docs) await deleteDoc(doc(db, "fases", f.id));
+      alert("Todas as fases e confrontos apagados.");
+      carregarFases();
+      carregarPublicFases();
+    });
+
+    // Apaga apenas placares (mantendo confrontos/fases)
+    document.getElementById("clearPlacares").addEventListener("click", async () => {
+      const senha = prompt("Senha para apagar placares:");
+      if (senha !== "dpsp123") { if (senha !== null) alert("Senha incorreta."); return; }
+      if (!confirm("Confirma apagar apenas os placares e vencedores (conservando confrontos)?")) return;
+      const conSnap = await getDocs(collection(db, "confrontos"));
+      for (const c of conSnap.docs) {
+        await updateDoc(doc(db, "confrontos", c.id), {
+          pontos1: 0, pontos2: 0, vencedor: null, finalizado: false, atualizado_em: Timestamp.now()
+        });
+      }
+      alert("Placar removido de todos os confrontos.");
+      carregarFases();
+      carregarPublicFases();
+    });
+
+    // Reset completo: apagar fases, confrontos e inscritos? (pergunta ao admin)
+    document.getElementById("clearAll").addEventListener("click", async () => {
+      const senha = prompt("Senha para RESET completo:");
+      if (senha !== "dpsp123") { if (senha !== null) alert("Senha incorreta."); return; }
+      const opc = confirm("Deseja apagar também os INSCRITOS e MODALIDADES? (OK = apagar inscritos+modalidades, Cancel = apagar apenas fases/confrontos)");
+      if (!confirm("Confirma AÇÃO IRREVERSÍVEL?")) return;
+      if (opc) {
+        // apagar inscritos
+        const insSnap = await getDocs(collection(db, "inscritos"));
+        for (const d of insSnap.docs) await deleteDoc(doc(db, "inscritos", d.id));
+        // apagar modalidades
+        const modSnap = await getDocs(collection(db, "modalidades"));
+        for (const d of modSnap.docs) await deleteDoc(doc(db, "modalidades", d.id));
+      }
+      // apagar confrontos e fases
+      const conSnap = await getDocs(collection(db, "confrontos"));
+      for (const c of conSnap.docs) await deleteDoc(doc(db, "confrontos", c.id));
+      const fSnap = await getDocs(collection(db, "fases"));
+      for (const f of fSnap.docs) await deleteDoc(doc(db, "fases", f.id));
+      alert("Reset completo executado.");
+      carregarModalidades();
+      carregarFases();
+      carregarAdminTable();
+      carregarPublicFases();
+    });
+
+    // ---------- Painel público ----------
+    async function carregarPublicFases() {
+      publicPhases.innerHTML = "<p class='text-sm text-gray-500'>Carregando...</p>";
+      const snap = await getDocs(query(collection(db, "fases"), orderBy("criado_em", "asc")));
+      publicPhases.innerHTML = "";
+      if (snap.empty) { publicPhases.innerHTML = "<p class='text-sm text-gray-500'>Nenhuma fase criada.</p>"; return; }
+      for (const s of snap.docs) {
+        const f = s.data();
+        const div = document.createElement("div");
+        div.className = "border p-3 rounded-lg bg-white";
+        div.innerHTML = `<h4 class="font-semibold">Modalidade: ${f.modalidade} — Fase ${f.numero}</h4>`;
+        const conSnap = await getDocs(query(collection(db, "confrontos"), where("faseId", "==", s.id)));
+        if (conSnap.empty) {
+          div.innerHTML += `<p class="text-sm text-gray-500">Sem confrontos.</p>`;
+        } else {
+          const ul = document.createElement("div");
+          ul.className = "mt-2 space-y-2";
+          conSnap.forEach(c => {
+            const data = c.data();
+            const j2 = data.jogador2 ? data.jogador2.nome : "— (bye)";
+            const status = data.finalizado ? `Finalizado — Vencedor: ${data.vencedor ? data.vencedor.nome : '—'}` : "Em andamento";
+            ul.innerHTML += `<div class="p-2 border rounded flex justify-between">
+              <div><strong>${data.jogador1.nome}</strong> ⚔️ <strong>${j2}</strong><div class="text-xs text-gray-600">Placar: ${data.pontos1} x ${data.pontos2}</div></div>
+              <div class="text-sm text-gray-700">${status}</div>
+            </div>`;
+          });
+          div.appendChild(ul);
+        }
+        publicPhases.appendChild(div);
+      }
+    }
+
+    // ---------- Inicialização ----------
     carregarModalidades();
     carregarLimite();
+    carregarFases();
+    carregarPublicFases();
+
   </script>
 </body>
 </html>

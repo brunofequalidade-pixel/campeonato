@@ -1,223 +1,306 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>Campeonato</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 min-h-screen p-4">
-  <div class="max-w-5xl mx-auto bg-white rounded-2xl shadow-lg p-6">
-    <h1 class="text-2xl font-bold text-center mb-4">Campeonato 🏆</h1>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Campeonato</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100 min-h-screen p-4">
+    <div class="max-w-5xl mx-auto bg-white rounded-2xl shadow-lg p-6">
+      <h1 class="text-2xl font-bold text-center mb-4">Campeonato 🏆</h1>
 
-    <div class="flex gap-2 justify-center mb-6">
-      <button id="toggleButton" class="bg-green-600 text-white px-4 py-2 rounded-lg">Nova Inscrição</button>
-      <button id="adminButton" class="bg-purple-600 text-white px-4 py-2 rounded-lg">Área do ADM</button>
-      <button id="publicButton" class="bg-sky-600 text-white px-4 py-2 rounded-lg">Painel Público</button>
+      <div class="flex gap-2 justify-center mb-6">
+        <button id="toggleButton" class="bg-green-600 text-white px-4 py-2 rounded-lg">Nova Inscrição</button>
+        <button id="adminButton" class="bg-purple-600 text-white px-4 py-2 rounded-lg">Área do ADM</button>
+        <button id="publicButton" class="bg-sky-600 text-white px-4 py-2 rounded-lg">Painel Público</button>
+      </div>
+
+      <section id="formSection" class="hidden">
+        <form id="registrationForm" class="space-y-4">
+          <input type="text" id="matricula" placeholder="Matrícula" class="w-full p-2 border rounded-lg" required>
+          <input type="text" id="nome" placeholder="Nome completo" class="w-full p-2 border rounded-lg" required>
+          <input type="text" id="setor" placeholder="Setor" class="w-full p-2 border rounded-lg" required>
+          <input type="tel" id="telefone" placeholder="Telefone (somente ADM verá)" class="w-full p-2 border rounded-lg" required>
+
+          <div>
+            <p class="font-semibold mb-2">Escolha suas modalidades:</p>
+            <div id="modalidadesList" class="grid grid-cols-2 gap-2"></div>
+            <p id="modalidadeInfo" class="text-xs text-gray-500 mt-1"></p>
+          </div>
+
+          <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg">Enviar Inscrição</button>
+        </form>
+      </section>
+
+      <section id="listSection">
+        <h2 class="text-xl font-semibold mb-2">Participantes inscritos</h2>
+        <div id="loadingMessage" class="text-gray-500 text-sm">Carregando participantes...</div>
+        <div id="participantList" class="space-y-2"></div>
+      </section>
+
+      <section id="adminSection" class="hidden">
+        <h2 class="text-xl font-bold mb-2">Área do Administrador</h2>
+
+        <div class="bg-gray-50 p-3 rounded-lg mb-4">
+          <h3 class="font-semibold mb-2">Gerenciar Modalidades</h3>
+          <div id="adminModalidadesList" class="space-y-1 mb-2"></div>
+          <div class="flex gap-2">
+            <input type="text" id="novaModalidade" placeholder="Nova modalidade" class="flex-1 p-2 border rounded-lg">
+            <button id="addModalidade" class="bg-green-600 text-white px-3 py-2 rounded-lg">Adicionar</button>
+          </div>
+        </div>
+
+        <div class="bg-gray-50 p-3 rounded-lg">
+          <h3 class="font-semibold mb-2">Gerenciar Fases</h3>
+          <div class="flex gap-2 mb-2">
+            <select id="selectModalidadeForPhase" class="p-2 border rounded-lg flex-1">
+              <option value="">Escolha modalidade</option>
+            </select>
+            <button id="createPhaseBtn" class="bg-sky-600 text-white px-4 py-2 rounded-lg">➕ Criar Fase</button>
+            <button id="generateMatchesBtn" class="bg-red-600 text-white px-4 py-2 rounded-lg">🎲 Gerar Sorteio</button>
+          </div>
+          <div id="phasesList" class="space-y-3"></div>
+        </div>
+      </section>
+
+      <section id="publicSection" class="hidden">
+        <h2 class="text-xl font-semibold mb-2">Painel Público</h2>
+        <div id="publicPhases" class="space-y-4"></div>
+      </section>
     </div>
 
-    <!-- Formulário -->
-    <section id="formSection" class="hidden">
-      <form id="registrationForm" class="space-y-4">
-        <input type="text" id="matricula" placeholder="Matrícula" class="w-full p-2 border rounded-lg" required>
-        <input type="text" id="nome" placeholder="Nome completo" class="w-full p-2 border rounded-lg" required>
-        <input type="text" id="setor" placeholder="Setor" class="w-full p-2 border rounded-lg" required>
-        <input type="tel" id="telefone" placeholder="Telefone (somente ADM verá)" class="w-full p-2 border rounded-lg" required>
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+      import { getFirestore, collection, addDoc, getDocs, query, orderBy, onSnapshot, doc, updateDoc, where, Timestamp, deleteDoc }
+        from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-analytics.js";
 
-        <div>
-          <p class="font-semibold mb-2">Escolha suas modalidades:</p>
-          <div id="modalidadesList" class="grid grid-cols-2 gap-2"></div>
-          <p id="modalidadeInfo" class="text-xs text-gray-500 mt-1"></p>
-        </div>
+      const firebaseConfig = {
+        apiKey: "AIzaSyBo8G3ZcWk4EepN0cHdVBtXc7tGOfcw-yg",
+        authDomain: "inscricaosinuca.firebaseapp.com",
+        projectId: "inscricaosinuca",
+        storageBucket: "inscricaosinuca.firebasestorage.app",
+        messagingSenderId: "338241576305",
+        appId: "1:338241576305:web:288b6124384c6be4f76ad0",
+        measurementId: "G-PEDG30FS2R"
+      };
 
-        <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg">Enviar Inscrição</button>
-      </form>
-    </section>
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      const analytics = getAnalytics(app);
 
-    <!-- Lista pública -->
-    <section id="listSection">
-      <h2 class="text-xl font-semibold mb-2">Participantes inscritos</h2>
-      <div id="loadingMessage" class="text-gray-500 text-sm">Carregando participantes...</div>
-      <div id="participantList" class="space-y-2"></div>
-    </section>
-
-    <!-- Admin -->
-    <section id="adminSection" class="hidden">
-      <h2 class="text-xl font-bold mb-2">Área do Administrador</h2>
-
-      <div class="bg-gray-50 p-3 rounded-lg mb-4">
-        <h3 class="font-semibold mb-2">Gerenciar Modalidades</h3>
-        <div id="adminModalidadesList" class="space-y-1 mb-2"></div>
-        <div class="flex gap-2">
-          <input type="text" id="novaModalidade" placeholder="Nova modalidade" class="flex-1 p-2 border rounded-lg">
-          <button id="addModalidade" class="bg-green-600 text-white px-3 py-2 rounded-lg">Adicionar</button>
-        </div>
-      </div>
-
-      <div class="bg-gray-50 p-3 rounded-lg">
-        <h3 class="font-semibold mb-2">Gerenciar Fases</h3>
-        <div class="flex gap-2 mb-2">
-          <select id="selectModalidadeForPhase" class="p-2 border rounded-lg flex-1">
-            <option value="">Escolha modalidade</option>
-          </select>
-          <button id="createPhaseBtn" class="bg-sky-600 text-white px-4 py-2 rounded-lg">➕ Criar Fase</button>
-          <button id="generateMatchesBtn" class="bg-red-600 text-white px-4 py-2 rounded-lg">🎲 Gerar Sorteio</button>
-        </div>
-        <div id="phasesList" class="space-y-3"></div>
-      </div>
-    </section>
-
-    <!-- Painel público -->
-    <section id="publicSection" class="hidden">
-      <h2 class="text-xl font-semibold mb-2">Painel Público</h2>
-      <div id="publicPhases" class="space-y-4"></div>
-    </section>
-  </div>
-
-  <!-- Firebase + Lógica -->
-  <script type="module">
-    // Import Firebase da CDN
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, query, orderBy, onSnapshot, doc, updateDoc, where, Timestamp }
-      from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-analytics.js";
-
-    // Config Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyBo8G3ZcWk4EepN0cHdVBtXc7tGOfcw-yg",
-      authDomain: "inscricaosinuca.firebaseapp.com",
-      projectId: "inscricaosinuca",
-      storageBucket: "inscricaosinuca.firebasestorage.app",
-      messagingSenderId: "338241576305",
-      appId: "1:338241576305:web:288b6124384c6be4f76ad0",
-      measurementId: "G-PEDG30FS2R"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const analytics = getAnalytics(app);
-
-    // -------------------------------
-    // Carregar Modalidades
-    // -------------------------------
-    async function carregarModalidades() {
-      const snap = await getDocs(collection(db, "modalidades"));
-      const lista = document.getElementById("modalidadesList");
-      const select = document.getElementById("selectModalidadeForPhase");
-      lista.innerHTML = "";
-      select.innerHTML = "<option value=''>Escolha modalidade</option>";
-      snap.forEach(docSnap => {
-        const m = docSnap.id;
-        const div = document.createElement("div");
-        div.innerHTML = `<label><input type="checkbox" value="${m}"> ${m}</label>`;
-        lista.appendChild(div);
-        const opt = document.createElement("option");
-        opt.value = m;
-        opt.textContent = m;
-        select.appendChild(opt);
-      });
-    }
-
-    // -------------------------------
-    // Inscrição
-    // -------------------------------
-    document.getElementById("registrationForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const matricula = document.getElementById("matricula").value;
-      const nome = document.getElementById("nome").value;
-      const setor = document.getElementById("setor").value;
-      const telefone = document.getElementById("telefone").value;
-      const modalidades = [...document.querySelectorAll("#modalidadesList input:checked")].map(c => c.value);
-
-      await addDoc(collection(db, "inscritos"), {
-        matricula, nome, setor, telefone, modalidades, criado_em: Timestamp.now()
-      });
-      alert("Inscrição realizada com sucesso!");
-      e.target.reset();
-    });
-
-    // -------------------------------
-    // Criar fase
-    // -------------------------------
-    document.getElementById("createPhaseBtn").addEventListener("click", async () => {
-      const modalidade = document.getElementById("selectModalidadeForPhase").value;
-      if (!modalidade) return alert("Escolha modalidade.");
-      const snap = await getDocs(query(collection(db, "fases"), where("modalidade", "==", modalidade)));
-      let maxNum = 0;
-      snap.forEach(s => { if (s.data().numero > maxNum) maxNum = s.data().numero; });
-      await addDoc(collection(db, "fases"), { modalidade, numero: maxNum + 1, criado_em: Timestamp.now() });
-      alert("Fase criada.");
-    });
-
-    // -------------------------------
-    // Gerar Sorteio
-    // -------------------------------
-    document.getElementById("generateMatchesBtn").addEventListener("click", async () => {
-      const modalidade = document.getElementById("selectModalidadeForPhase").value;
-      if (!modalidade) return alert("Escolha modalidade.");
-
-      const snapF = await getDocs(query(collection(db, "fases"), where("modalidade", "==", modalidade), orderBy("numero", "desc")));
-      if (snapF.empty) return alert("Crie uma fase antes.");
-      const faseDoc = snapF.docs[0];
-      const faseId = faseDoc.id;
-      const faseNumero = faseDoc.data().numero;
-
-      let participantes = [];
-
-      if (faseNumero === 1) {
-        const snap = await getDocs(query(collection(db, "inscritos"), where("modalidades", "array-contains", modalidade)));
-        participantes = snap.docs.map(d => ({ id: d.id, nome: d.data().nome }));
-      } else {
-        const anterior = snapF.docs[1];
-        const snapCon = await getDocs(query(collection(db, "confrontos"), where("faseId", "==", anterior.id)));
-        snapCon.forEach(c => { if (c.data().vencedor) participantes.push(c.data().vencedor); });
+      // -------------------------------
+      // Lógica de Navegação
+      // -------------------------------
+      function hideAllSections() {
+        document.getElementById("formSection").classList.add("hidden");
+        document.getElementById("adminSection").classList.add("hidden");
+        document.getElementById("publicSection").classList.add("hidden");
+        document.getElementById("listSection").classList.add("hidden");
       }
 
-      if (participantes.length < 2) return alert("Participantes insuficientes.");
-
-      // embaralhar
-      for (let i = participantes.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [participantes[i], participantes[j]] = [participantes[j], participantes[i]];
+      function showSection(sectionId) {
+        hideAllSections();
+        document.getElementById(sectionId).classList.remove("hidden");
       }
 
-      // criar confrontos
-      for (let i = 0; i < participantes.length; i += 2) {
-        const p1 = participantes[i];
-        const p2 = participantes[i + 1] ?? null;
-        await addDoc(collection(db, "confrontos"), {
-          faseId, modalidade, jogador1: p1, jogador2: p2,
-          pontos1: 0, pontos2: 0, vencedor: null, finalizado: false, criado_em: Timestamp.now()
+      document.getElementById("toggleButton").addEventListener("click", () => {
+        showSection("formSection");
+      });
+
+      document.getElementById("adminButton").addEventListener("click", () => {
+        showSection("adminSection");
+      });
+
+      document.getElementById("publicButton").addEventListener("click", () => {
+        showSection("publicSection");
+      });
+      
+      showSection("listSection");
+
+      // -------------------------------
+      // Carregar Modalidades
+      // -------------------------------
+      async function carregarModalidades() {
+        const snap = await getDocs(collection(db, "modalidades"));
+        const lista = document.getElementById("modalidadesList");
+        const select = document.getElementById("selectModalidadeForPhase");
+        lista.innerHTML = "";
+        select.innerHTML = "<option value=''>Escolha modalidade</option>";
+        snap.forEach(docSnap => {
+          const m = docSnap.data().nome; // Alterado para usar o campo 'nome'
+          const mId = docSnap.id;
+          const div = document.createElement("div");
+          div.innerHTML = `<label><input type="checkbox" value="${mId}"> ${m}</label>`;
+          lista.appendChild(div);
+          const opt = document.createElement("option");
+          opt.value = mId;
+          opt.textContent = m;
+          select.appendChild(opt);
         });
       }
-      alert("Confrontos criados.");
-    });
 
-    // -------------------------------
-    // Atualizar placar
-    // -------------------------------
-    async function atualizarPlacar(id, p1, p2) {
-      let vencedor = null;
-      if (p1 >= 2) vencedor = "jogador1";
-      if (p2 >= 2) vencedor = "jogador2";
-      await updateDoc(doc(db, "confrontos", id), { pontos1: p1, pontos2: p2, vencedor, finalizado: vencedor !== null });
-    }
+      // -------------------------------
+      // Inscrição
+      // -------------------------------
+      document.getElementById("registrationForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const matricula = document.getElementById("matricula").value;
+        const nome = document.getElementById("nome").value;
+        const setor = document.getElementById("setor").value;
+        const telefone = document.getElementById("telefone").value;
+        const modalidades = [...document.querySelectorAll("#modalidadesList input:checked")].map(c => c.value);
 
-    // -------------------------------
-    // Listeners
-    // -------------------------------
-    carregarModalidades();
-    onSnapshot(query(collection(db, "inscritos"), orderBy("criado_em", "desc")), (snap) => {
-      const list = document.getElementById("participantList");
-      list.innerHTML = "";
-      snap.forEach(docSnap => {
-        const d = docSnap.data();
-        const div = document.createElement("div");
-        div.className = "p-2 border rounded-lg";
-        div.innerHTML = `<p><strong>${d.nome}</strong> (${d.setor})</p>`;
-        list.appendChild(div);
+        await addDoc(collection(db, "inscritos"), {
+          matricula, nome, setor, telefone, modalidades, criado_em: Timestamp.now()
+        });
+        alert("Inscrição realizada com sucesso!");
+        e.target.reset();
       });
-    });
-  </script>
-</body>
+
+      // -------------------------------
+      // Gerenciar Modalidades (ADM)
+      // -------------------------------
+      document.getElementById("addModalidade").addEventListener("click", async () => {
+        const novaModalidade = document.getElementById("novaModalidade").value.trim();
+        if (novaModalidade) {
+          await addDoc(collection(db, "modalidades"), { nome: novaModalidade });
+          document.getElementById("novaModalidade").value = "";
+          alert("Modalidade adicionada!");
+        }
+      });
+      
+      onSnapshot(collection(db, "modalidades"), (snap) => {
+          const adminList = document.getElementById("adminModalidadesList");
+          adminList.innerHTML = "";
+          snap.forEach(docSnap => {
+              const div = document.createElement("div");
+              div.className = "flex justify-between items-center";
+              div.innerHTML = `<span>${docSnap.data().nome}</span> <button class="text-red-500" data-id="${docSnap.id}">Remover</button>`;
+              adminList.appendChild(div);
+          });
+
+          adminList.querySelectorAll("button").forEach(btn => {
+              btn.addEventListener("click", async (e) => {
+                  const id = e.target.dataset.id;
+                  if (confirm("Tem certeza que quer remover esta modalidade?")) {
+                      await deleteDoc(doc(db, "modalidades", id));
+                      alert("Modalidade removida!");
+                  }
+              });
+          });
+      });
+
+      // -------------------------------
+      // Criar fase
+      // -------------------------------
+      document.getElementById("createPhaseBtn").addEventListener("click", async () => {
+        const modalidadeId = document.getElementById("selectModalidadeForPhase").value;
+        if (!modalidadeId) return alert("Escolha uma modalidade.");
+
+        const snapF = await getDocs(query(collection(db, "fases"), where("modalidadeId", "==", modalidadeId)));
+        let maxNum = 0;
+        snapF.forEach(s => { if (s.data().numero > maxNum) maxNum = s.data().numero; });
+        await addDoc(collection(db, "fases"), { modalidadeId, numero: maxNum + 1, criado_em: Timestamp.now() });
+        alert("Fase criada.");
+      });
+
+      // -------------------------------
+      // Gerar Sorteio
+      // -------------------------------
+      document.getElementById("generateMatchesBtn").addEventListener("click", async () => {
+        const modalidadeId = document.getElementById("selectModalidadeForPhase").value;
+        if (!modalidadeId) return alert("Escolha uma modalidade.");
+
+        const snapF = await getDocs(query(collection(db, "fases"), where("modalidadeId", "==", modalidadeId), orderBy("numero", "desc")));
+        if (snapF.empty) return alert("Crie uma fase antes.");
+        const faseDoc = snapF.docs[0];
+        const faseId = faseDoc.id;
+        const faseNumero = faseDoc.data().numero;
+        const modalidadeSnap = await getDocs(doc(db, "modalidades", modalidadeId));
+        const modalidadeNome = modalidadeSnap.data().nome;
+
+        let participantes = [];
+
+        if (faseNumero === 1) {
+          const snap = await getDocs(query(collection(db, "inscritos"), where("modalidades", "array-contains", modalidadeId)));
+          participantes = snap.docs.map(d => ({ id: d.id, nome: d.data().nome }));
+        } else {
+          const anteriorSnap = snapF.docs[1];
+          const snapCon = await getDocs(query(collection(db, "confrontos"), where("faseId", "==", anteriorSnap.id)));
+          snapCon.forEach(c => {
+            if (c.data().vencedor) {
+              participantes.push(c.data().vencedor);
+            }
+          });
+        }
+
+        if (participantes.length < 2) {
+          return alert("Participantes insuficientes para gerar os confrontos.");
+        }
+
+        // Embaralhar a lista de participantes
+        for (let i = participantes.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [participantes[i], participantes[j]] = [participantes[j], participantes[i]];
+        }
+
+        // Criar confrontos
+        for (let i = 0; i < participantes.length; i += 2) {
+          const p1 = participantes[i];
+          const p2 = participantes[i + 1] ?? null; // Jogador 2 pode ser nulo se o número de participantes for ímpar
+
+          await addDoc(collection(db, "confrontos"), {
+            faseId,
+            modalidadeId,
+            modalidadeNome,
+            jogador1: p1,
+            jogador2: p2,
+            pontos1: 0,
+            pontos2: 0,
+            vencedor: null,
+            finalizado: false,
+            criado_em: Timestamp.now()
+          });
+        }
+        alert("Confrontos gerados com sucesso!");
+      });
+
+      // -------------------------------
+      // Atualizar placar
+      // -------------------------------
+      async function atualizarPlacar(id, p1, p2) {
+        let vencedor = null;
+        if (p1 >= 2) {
+          vencedor = "jogador1";
+        }
+        if (p2 >= 2) {
+          vencedor = "jogador2";
+        }
+        await updateDoc(doc(db, "confrontos", id), {
+          pontos1: p1,
+          pontos2: p2,
+          vencedor: vencedor ? { id: doc(db, 'inscritos', vencedor === 'jogador1' ? confronto.jogador1.id : confronto.jogador2.id), nome: vencedor === 'jogador1' ? confronto.jogador1.nome : confronto.jogador2.nome } : null,
+          finalizado: vencedor !== null
+        });
+      }
+
+      // -------------------------------
+      // Listeners
+      // -------------------------------
+      carregarModalidades();
+      onSnapshot(query(collection(db, "inscritos"), orderBy("criado_em", "desc")), (snap) => {
+        const list = document.getElementById("participantList");
+        list.innerHTML = "";
+        snap.forEach(docSnap => {
+          const d = docSnap.data();
+          const div = document.createElement("div");
+          div.className = "p-2 border rounded-lg";
+          div.innerHTML = `<p><strong>${d.nome}</strong> (${d.setor})</p>`;
+          list.appendChild(div);
+        });
+      });
+    </script>
+  </body>
 </html>

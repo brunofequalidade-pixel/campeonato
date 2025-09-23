@@ -10,7 +10,6 @@
   <div class="max-w-6xl mx-auto">
     <h1 class="text-3xl font-bold text-center mb-6">Sistema de Campeonato 🏆</h1>
 
-    <!-- MENU -->
     <div class="flex flex-wrap justify-center gap-2 mb-6">
       <button id="inscricaoBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">📝 Inscrições</button>
       <button id="publicoBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">👥 Lista Pública</button>
@@ -18,7 +17,6 @@
       <button id="adminBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">⚙️ Admin</button>
     </div>
 
-    <!-- INSCRIÇÃO -->
     <section id="inscricaoSection" class="bg-white p-6 rounded-lg shadow mb-6">
       <h2 class="text-xl font-bold mb-4">Nova Inscrição</h2>
       <form id="inscricaoForm" class="space-y-4">
@@ -30,25 +28,22 @@
         </div>
         <div>
           <p class="font-semibold mb-2">Escolha suas modalidades:</p>
-          <div id="modalidadesList" class="grid grid-cols-2 gap-2"></div>
+          <div id="modalidadesList" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2"></div>
         </div>
         <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg">Enviar Inscrição</button>
       </form>
     </section>
 
-    <!-- LISTA PÚBLICA -->
     <section id="publicoSection" class="bg-white p-6 rounded-lg shadow mb-6 hidden">
       <h2 class="text-xl font-bold mb-4">Participantes Inscritos</h2>
       <div id="participantesList" class="space-y-3"></div>
     </section>
 
-    <!-- ACOMPANHAR -->
     <section id="acompanharSection" class="bg-white p-6 rounded-lg shadow mb-6 hidden">
       <h2 class="text-xl font-bold mb-4">Acompanhar Jogos</h2>
       <div id="jogosAcompanhar" class="space-y-4"></div>
     </section>
 
-    <!-- ADMIN -->
     <section id="adminSection" class="bg-white p-6 rounded-lg shadow mb-6 hidden">
       <h2 class="text-xl font-bold mb-4">Área Administrativa</h2>
       <div class="flex flex-wrap gap-2 mb-4">
@@ -58,7 +53,6 @@
         <button id="resetTab" class="bg-gray-400 text-white px-3 py-1 rounded">Reset</button>
       </div>
 
-      <!-- CONFIG -->
       <div id="configDiv" class="space-y-4">
         <div>
           <h3 class="font-semibold mb-2">Modalidades</h3>
@@ -93,22 +87,19 @@
         </div>
       </div>
 
-      <!-- FASES -->
       <div id="fasesDiv" class="hidden">
         <h3 class="font-semibold mb-2">Gerenciar Fases</h3>
-        <select id="faseModalidade" class="p-2 border rounded mb-2"></select>
+        <select id="faseModalidade" class="p-2 border rounded mb-2 w-full md:w-auto"></select>
         <button id="criarFaseBtn" class="bg-green-600 text-white px-3 py-2 rounded">Criar Fase</button>
         <div id="listaFases" class="mt-4 space-y-2"></div>
       </div>
 
-      <!-- PLACARES -->
       <div id="placaresDiv" class="hidden">
         <h3 class="font-semibold mb-2">Atualizar Placares</h3>
-        <select id="placarModalidade" class="p-2 border rounded mb-2"></select>
+        <select id="placarModalidade" class="p-2 border rounded mb-2 w-full md:w-auto"></select>
         <div id="listaJogos" class="space-y-2"></div>
       </div>
 
-      <!-- RESET -->
       <div id="resetDiv" class="hidden">
         <div class="bg-red-50 p-4 rounded border border-red-200">
           <h3 class="font-semibold text-red-800 mb-2">⚠️ Reset Campeonato</h3>
@@ -121,7 +112,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-import { getFirestore, collection, doc, addDoc, getDocs, deleteDoc, setDoc, updateDoc, onSnapshot, query, where, getDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+import { getFirestore, collection, doc, addDoc, getDocs, deleteDoc, setDoc, updateDoc, onSnapshot, query, where, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBo8G3ZcWk4EepN0cHdVBtXc7tGOfcw-yg",
@@ -141,6 +132,7 @@ const fasesCol = collection(db, "fases");
 const jogosCol = collection(db, "jogos");
 const configDocRef = doc(db, "config", "geral");
 
+// --- NAVEGAÇÃO ---
 function showSection(name){
   document.querySelectorAll('section').forEach(s=>s.classList.add('hidden'));
   document.getElementById(name+'Section').classList.remove('hidden');
@@ -151,7 +143,12 @@ document.getElementById('publicoBtn').addEventListener('click', carregarListaPub
 document.getElementById('acompanharBtn').addEventListener('click', carregarAcompanhar);
 document.getElementById('adminBtn').addEventListener('click', async ()=>{
   const senha = prompt("Senha do administrador:");
-  if(senha === 'dpsp123'){ showSection('admin'); carregarAdmin(); } else if(senha){ alert('Senha incorreta'); }
+  if(senha === 'dpsp123'){ 
+    showSection('admin'); 
+    carregarAdmin();
+  } else if(senha){ 
+    alert('Senha incorreta'); 
+  }
 });
 
 function showAdminTab(tab){
@@ -162,7 +159,7 @@ function showAdminTab(tab){
   document.getElementById(tab+'Div').classList.remove('hidden');
   document.getElementById(tab+'Tab').classList.replace('bg-gray-400','bg-gray-600');
 
-  // carregar dados ao abrir aba
+  // Carrega dados da aba específica ao ser aberta
   if(tab==='fases') carregarFasesAdmin();
   if(tab==='placares') carregarJogosAdmin();
 }
@@ -172,7 +169,8 @@ document.getElementById('fasesTab').addEventListener('click', ()=>showAdminTab('
 document.getElementById('placaresTab').addEventListener('click', ()=>showAdminTab('placares'));
 document.getElementById('resetTab').addEventListener('click', ()=>showAdminTab('reset'));
 
-/* ---------- CONFIG ---------- */
+
+// --- CONFIG GERAL (MODALIDADES E LIMITE) ---
 let limite = 2;
 async function carregarConfigGeral(){
   try{
@@ -185,174 +183,323 @@ async function carregarConfigGeral(){
       limite=2;
     }
     document.getElementById('limiteInput').value = limite;
-  }catch(e){ console.error(e); }
+  }catch(e){ console.error("Erro ao carregar config:", e); }
 }
-carregarConfigGeral();
 
 async function carregarModalidades(){
   const snap = await getDocs(modalidadesCol);
   const arr = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.nome.localeCompare(b.nome));
-  const lista = document.getElementById('modalidadesList');
-  const admin = document.getElementById('adminModalidadesList');
-  const faseSel = document.getElementById('faseModalidade');
-  const placarSel = document.getElementById('placarModalidade');
-  lista.innerHTML=''; admin.innerHTML=''; faseSel.innerHTML='<option value="">Selecione</option>'; placarSel.innerHTML='<option value="">Selecione</option>';
+  
+  const listaInscricao = document.getElementById('modalidadesList');
+  const listaAdmin = document.getElementById('adminModalidadesList');
+  const selectFase = document.getElementById('faseModalidade');
+  const selectPlacar = document.getElementById('placarModalidade');
+  
+  listaInscricao.innerHTML=''; 
+  listaAdmin.innerHTML=''; 
+  selectFase.innerHTML='<option value="">Todas as Modalidades</option>'; 
+  selectPlacar.innerHTML='<option value="">Selecione a Modalidade</option>';
+  
   arr.forEach(m=>{
-    lista.insertAdjacentHTML('beforeend', `<label class="flex items-center gap-2 p-2 border rounded cursor-pointer"><input type="checkbox" value="${m.nome}"> ${m.nome}</label>`);
-    admin.insertAdjacentHTML('beforeend', `<div class="flex justify-between items-center p-2 border rounded"><span>${m.nome}</span><button class="text-red-600 px-2" data-id="${m.id}">🗑️</button></div>`);
-    faseSel.insertAdjacentHTML('beforeend', `<option value="${m.nome}">${m.nome}</option>`);
-    placarSel.insertAdjacentHTML('beforeend', `<option value="${m.nome}">${m.nome}</option>`);
+    listaInscricao.insertAdjacentHTML('beforeend', `<label class="flex items-center gap-2 p-2 border rounded cursor-pointer"><input type="checkbox" value="${m.nome}"> ${m.nome}</label>`);
+    listaAdmin.insertAdjacentHTML('beforeend', `<div class="flex justify-between items-center p-2 border rounded"><span>${m.nome}</span><button class="text-red-600 px-2" data-id="${m.id}">🗑️</button></div>`);
+    selectFase.insertAdjacentHTML('beforeend', `<option value="${m.nome}">${m.nome}</option>`);
+    selectPlacar.insertAdjacentHTML('beforeend', `<option value="${m.nome}">${m.nome}</option>`);
   });
-  admin.querySelectorAll('button[data-id]').forEach(btn=>{
-    btn.onclick=async ()=>{
-      const id=btn.dataset.id;
-      if(!confirm('Remover modalidade?')) return;
-      await deleteDoc(doc(db,'modalidades',id));
-      carregarModalidades();
+
+  listaAdmin.querySelectorAll('button[data-id]').forEach(btn=>{
+    btn.onclick = async ()=>{
+      if(!confirm('Remover esta modalidade?')) return;
+      await deleteDoc(doc(db,'modalidades',btn.dataset.id));
+      carregarModalidades(); // Recarrega a lista
     }
   });
 }
-carregarModalidades();
 
 document.getElementById('addModalidade').addEventListener('click', async ()=>{
-  const nome=document.getElementById('novaModalidade').value.trim();
-  if(!nome) return alert('Digite a modalidade');
-  const snap=await getDocs(modalidadesCol);
-  if(snap.docs.some(d=>d.data().nome.toLowerCase()===nome.toLowerCase())) return alert('Já existe');
+  const nomeInput = document.getElementById('novaModalidade');
+  const nome = nomeInput.value.trim();
+  if(!nome) return alert('Digite o nome da modalidade.');
+  const snap = await getDocs(query(modalidadesCol, where("nome", "==", nome)));
+  if(!snap.empty) return alert('Essa modalidade já existe.');
   await addDoc(modalidadesCol,{nome});
-  document.getElementById('novaModalidade').value='';
+  nomeInput.value='';
   carregarModalidades();
 });
 
 document.getElementById('salvarLimite').addEventListener('click', async ()=>{
-  const novo=parseInt(document.getElementById('limiteInput').value)||2;
-  await setDoc(configDocRef,{limite:novo},{merge:true});
-  limite=novo;
-  alert('Limite salvo');
+  const novoLimite = parseInt(document.getElementById('limiteInput').value) || 2;
+  await setDoc(configDocRef,{limite: novoLimite},{merge:true});
+  limite = novoLimite;
+  alert('Limite salvo com sucesso!');
 });
 
-/* ---------- INSCRIÇÕES ---------- */
+
+// --- INSCRIÇÕES ---
 document.getElementById('inscricaoForm').addEventListener('submit', async e=>{
   e.preventDefault();
   try{
-    const matricula=document.getElementById('matricula').value.trim();
-    const nome=document.getElementById('nome').value.trim();
-    const setor=document.getElementById('setor').value.trim();
-    const telefone=document.getElementById('telefone').value.trim();
-    const escolhidas=Array.from(document.querySelectorAll('#modalidadesList input:checked')).map(i=>i.value);
-    if(!matricula||!nome||!setor||!telefone) return alert('Preencha tudo');
-    if(escolhidas.length===0||escolhidas.length>limite) return alert(`Escolha entre 1 e ${limite} modalidades`);
-    const allIns=await getDocs(inscritosCol);
-    if(allIns.docs.some(d=>d.data().matricula===matricula)) return alert('Matrícula já inscrita');
-    await addDoc(inscritosCol,{matricula,nome,setor,telefone,modalidades:escolhidas,criado:new Date().toISOString()});
-    alert('Inscrição salva');
+    const matricula = document.getElementById('matricula').value.trim();
+    const nome = document.getElementById('nome').value.trim();
+    const setor = document.getElementById('setor').value.trim();
+    const telefone = document.getElementById('telefone').value.trim();
+    const escolhidas = Array.from(document.querySelectorAll('#modalidadesList input:checked')).map(i=>i.value);
+    
+    if(!matricula||!nome||!setor||!telefone) return alert('Por favor, preencha todos os campos.');
+    if(escolhidas.length === 0 || escolhidas.length > limite) return alert(`Escolha entre 1 e ${limite} modalidades.`);
+    
+    const q = query(inscritosCol, where("matricula", "==", matricula));
+    const userSnap = await getDocs(q);
+    if(!userSnap.empty) return alert('Esta matrícula já está inscrita.');
+
+    await addDoc(inscritosCol, {matricula, nome, setor, telefone, modalidades: escolhidas, criado: new Date().toISOString()});
+    alert('Inscrição realizada com sucesso!');
     e.target.reset();
-  }catch(err){ console.error(err); alert('Erro ao salvar inscrição'); }
+  }catch(err){ 
+    console.error("Erro ao salvar inscrição:", err); 
+    alert('Ocorreu um erro ao salvar a inscrição.'); 
+  }
 });
 
-/* ---------- LISTA PÚBLICA ---------- */
+
+// --- LISTA PÚBLICA & ACOMPANHAMENTO ---
 async function carregarListaPublica(){
   showSection('publico');
-  const snap=await getDocs(inscritosCol);
-  const div=document.getElementById('participantesList');
+  const snap = await getDocs(inscritosCol);
+  const div = document.getElementById('participantesList');
   div.innerHTML='';
-  if(snap.empty){ div.innerHTML='<p class="text-gray-500">Nenhum participante ainda.</p>'; return; }
-  const arr=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.nome.localeCompare(b.nome));
+  if(snap.empty){ 
+    div.innerHTML='<p class="text-gray-500">Nenhum participante inscrito ainda.</p>'; 
+    return; 
+  }
+  const arr = snap.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>a.nome.localeCompare(b.nome));
   arr.forEach(p=>{
-    div.insertAdjacentHTML('beforeend', `<div class="p-3 border rounded-lg"><h3 class="font-semibold">${p.nome}</h3><p class="text-gray-600">${p.setor}</p><p class="text-sm text-blue-600">Modalidades: ${(p.modalidades||[]).join(', ')}</p></div>`);
+    div.insertAdjacentHTML('beforeend', `<div class="p-3 border rounded-lg bg-white"><h3 class="font-semibold">${p.nome}</h3><p class="text-gray-600 text-sm">${p.setor}</p><p class="text-sm text-blue-600 mt-1">Modalidades: ${(p.modalidades||[]).join(', ')}</p></div>`);
   });
 }
 
-/* ---------- EXPORT CSV ---------- */
-document.getElementById('exportBtn').addEventListener('click', async ()=>{
-  const snap=await getDocs(inscritosCol);
-  let csv='Nome,Setor,Telefone,Modalidades\n';
-  snap.forEach(d=>{
-    const p=d.data();
-    csv+=`"${p.nome}","${p.setor}","${p.telefone}","${(p.modalidades||[]).join(' | ')}"\n`;
-  });
-  const blob=new Blob([csv],{type:'text/csv'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='inscritos.csv';
-  a.click();
-});
+// ✅ FUNÇÃO CRIADA
+async function carregarAcompanhar() {
+    showSection('acompanhar');
+    const jogosDiv = document.getElementById('jogosAcompanhar');
+    jogosDiv.innerHTML = '<p class="text-gray-500">Carregando jogos...</p>';
+    
+    try {
+        const snap = await getDocs(jogosCol);
+        if (snap.empty) {
+            jogosDiv.innerHTML = '<p class="text-gray-500">Ainda não há jogos definidos.</p>';
+            return;
+        }
 
-/* ---------- RESET ---------- */
-document.getElementById('resetBtn').addEventListener('click', async ()=>{
-  if(!confirm('⚠️ Isso apagará inscritos, modalidades, fases e jogos. Continuar?')) return;
-  const colls=['inscritos','modalidades','fases','jogos'];
-  for(const c of colls){
-    const snap=await getDocs(collection(db,c));
-    for(const d of snap.docs) await deleteDoc(doc(db,c,d.id));
-  }
-  alert('Reset completo');
-  carregarModalidades();
-  carregarListaPublica();
-});
+        const jogosPorModalidade = {};
+        snap.forEach(doc => {
+            const jogo = doc.data();
+            if (!jogosPorModalidade[jogo.modalidade]) {
+                jogosPorModalidade[jogo.modalidade] = [];
+            }
+            jogosPorModalidade[jogo.modalidade].push(jogo);
+        });
 
-/* ---------- FASES ---------- */
+        let html = '';
+        for (const modalidade in jogosPorModalidade) {
+            html += `<h3 class="text-lg font-bold mt-4 border-b pb-1">${modalidade}</h3>`;
+            jogosPorModalidade[modalidade].forEach(j => {
+                html += `<div class="p-3 border rounded-lg flex justify-between items-center">
+                    <span>${j.jogador1} vs ${j.jogador2}</span>
+                    <span class="font-bold text-lg">${j.placar1 || 0} x ${j.placar2 || 0}</span>
+                </div>`;
+            });
+        }
+        jogosDiv.innerHTML = html;
+    } catch (e) {
+        console.error("Erro ao carregar jogos para acompanhamento:", e);
+        jogosDiv.innerHTML = '<p class="text-red-500">Erro ao carregar os jogos.</p>';
+    }
+}
+
+
+// --- ADMIN ---
+function carregarAdmin(){
+  showAdminTab('config');
+  // Aqui você pode carregar outras coisas que a área admin precisa
+}
+
+/* ---------- ADMIN: FASES ---------- */
+// ✅ CORRIGIDO: Agora filtra dinamicamente
 async function carregarFasesAdmin(){
-  const snap=await getDocs(fasesCol);
-  const listaFases=document.getElementById('listaFases');
-  listaFases.innerHTML='';
-  snap.forEach(f=>{
-    listaFases.insertAdjacentHTML('beforeend', `<div class="p-2 border rounded">Modalidade: ${f.data().modalidade} — Fase: ${f.data().numero}</div>`);
+  const modalidadeSelecionada = document.getElementById('faseModalidade').value;
+  const listaFases = document.getElementById('listaFases');
+  listaFases.innerHTML = '<p>Carregando...</p>';
+
+  const snap = await getDocs(fasesCol);
+  
+  const fasesFiltradas = snap.docs
+    .map(doc => ({id: doc.id, ...doc.data()}))
+    .filter(f => !modalidadeSelecionada || f.modalidade === modalidadeSelecionada)
+    .sort((a,b) => `${a.modalidade}-${a.numero}`.localeCompare(`${b.modalidade}-${b.numero}`));
+
+  if (fasesFiltradas.length === 0) {
+    listaFases.innerHTML = '<p class="text-gray-500">Nenhuma fase criada para esta modalidade.</p>';
+    return;
+  }
+
+  listaFases.innerHTML = '';
+  fasesFiltradas.forEach(f=>{
+    listaFases.insertAdjacentHTML('beforeend', `<div class="p-2 border rounded">Modalidade: <strong>${f.modalidade}</strong> — Fase: <strong>${f.numero}</strong> — Jogadores: <strong>${f.players.length}</strong></div>`);
   });
 }
 
 document.getElementById('criarFaseBtn').addEventListener('click', async ()=>{
-  const modalidade=document.getElementById('faseModalidade').value;
-  if(!modalidade) return alert('Selecione modalidade');
-  const snap=await getDocs(inscritosCol);
-  let players=snap.docs.map(d=>({id:d.id,...d.data()})).filter(d=>d.modalidades.includes(modalidade));
-  if(players.length<2) return alert('Não há participantes suficientes');
-  const fasesSnap=await getDocs(fasesCol);
-  const numero=fasesSnap.docs.filter(d=>d.data().modalidade===modalidade).length+1;
-  await addDoc(fasesCol,{modalidade,numero,players:players.map(p=>p.id)});
-  alert('Fase criada');
+  const modalidade = document.getElementById('faseModalidade').value;
+  if(!modalidade) return alert('Selecione uma modalidade para criar a fase.');
+  
+  const inscritosSnap = await getDocs(query(inscritosCol, where("modalidades", "array-contains", modalidade)));
+  let players = inscritosSnap.docs.map(d=>({id:d.id, nome: d.data().nome}));
+  
+  if(players.length < 2) return alert('Não há participantes suficientes nesta modalidade para criar uma fase.');
+
+  const fasesSnap = await getDocs(query(fasesCol, where("modalidade", "==", modalidade)));
+  const numero = fasesSnap.docs.length + 1;
+
+  // Embaralhar jogadores para confrontos aleatórios
+  players.sort(() => Math.random() - 0.5);
+
+  // Criar confrontos
+  const batch = writeBatch(db);
+  for (let i = 0; i < players.length; i += 2) {
+      if (players[i+1]) { // Garante que há um oponente
+          const jogoRef = doc(jogosCol); // Cria uma referência para um novo documento de jogo
+          batch.set(jogoRef, {
+              modalidade: modalidade,
+              fase: numero,
+              jogador1: players[i].nome,
+              jogador2: players[i+1].nome,
+              placar1: 0,
+              placar2: 0,
+              finalizado: false
+          });
+      }
+  }
+
+  await batch.commit(); // Envia todos os jogos de uma vez
+  await addDoc(fasesCol, {modalidade, numero, players: players.map(p => p.nome)}); // Salva a fase
+  
+  alert(`Fase ${numero} para ${modalidade} criada com sucesso e jogos gerados!`);
   carregarFasesAdmin();
+  carregarJogosAdmin(); // Atualiza a lista de jogos
 });
 
-/* ---------- PLACARES ---------- */
+// ✅ ADICIONADO: Event listener para o select de fases
+document.getElementById('faseModalidade').addEventListener('change', carregarFasesAdmin);
+
+/* ---------- ADMIN: PLACARES ---------- */
+// ✅ CORRIGIDO: Lógica da função está OK, o problema era a falta do gatilho 'change'
 async function carregarJogosAdmin(){
-  const sel=document.getElementById('placarModalidade');
-  const val=sel.value;
-  const lista=document.getElementById('listaJogos');
+  const modalidade = document.getElementById('placarModalidade').value;
+  const lista = document.getElementById('listaJogos');
   lista.innerHTML='';
-  if(!val) return;
-  const q = query(jogosCol, where('modalidade','==',val));
+  
+  if(!modalidade) {
+    lista.innerHTML = '<p class="text-gray-500">Selecione uma modalidade para ver os jogos.</p>';
+    return;
+  }
+
+  lista.innerHTML = '<p>Carregando jogos...</p>';
+  const q = query(jogosCol, where('modalidade','==', modalidade));
   const snap = await getDocs(q);
-  if(snap.empty){ lista.innerHTML='<p>Nenhum jogo cadastrado.</p>'; return; }
-  snap.forEach(j=>{
-    const data=j.data();
-    lista.insertAdjacentHTML('beforeend', `<div class="p-2 border rounded flex justify-between items-center">
-      <span>${data.jogador1} vs ${data.jogador2} — Placar: ${data.placar1||0} x ${data.placar2||0}</span>
-      <div class="flex gap-1">
-        <button class="bg-blue-600 text-white px-2 py-1 rounded" data-id="${j.id}" data-j="1">+1 ${data.jogador1}</button>
-        <button class="bg-blue-600 text-white px-2 py-1 rounded" data-id="${j.id}" data-j="2">+1 ${data.jogador2}</button>
+  
+  if(snap.empty){ 
+    lista.innerHTML='<p class="text-gray-500">Nenhum jogo cadastrado para esta modalidade.</p>'; 
+    return; 
+  }
+
+  lista.innerHTML = ''; // Limpa o "carregando"
+  const jogos = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+  
+  jogos.forEach(j=>{
+    lista.insertAdjacentHTML('beforeend', `<div class="p-3 border rounded flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+      <div class="font-medium">${j.jogador1} <span class="text-gray-500">vs</span> ${j.jogador2} <br> <span class="font-bold text-xl">${j.placar1||0} x ${j.placar2||0}</span></div>
+      <div class="flex gap-2 flex-wrap">
+        <button class="bg-blue-500 text-white px-2 py-1 text-sm rounded" data-id="${j.id}" data-p="1" data-op="inc">+1 ${j.jogador1}</button>
+        <button class="bg-gray-400 text-white px-2 py-1 text-sm rounded" data-id="${j.id}" data-p="1" data-op="dec">-1</button>
+        <button class="bg-blue-500 text-white px-2 py-1 text-sm rounded" data-id="${j.id}" data-p="2" data-op="inc">+1 ${j.jogador2}</button>
+        <button class="bg-gray-400 text-white px-2 py-1 text-sm rounded" data-id="${j.id}" data-p="2" data-op="dec">-1</button>
       </div>
     </div>`);
   });
+  
   lista.querySelectorAll('button').forEach(btn=>{
-    btn.onclick=async ()=>{
-      const id=btn.dataset.id, j=btn.dataset.j;
-      const docRef=doc(db,'jogos',id);
-      const snap=await getDoc(docRef);
-      if(!snap.exists()) return;
-      const data=snap.data();
-      const update={};
-      update['placar'+j]=(data['placar'+j]||0)+1;
-      await updateDoc(docRef,update);
-      carregarJogosAdmin();
+    btn.onclick = async ()=>{
+      const id = btn.dataset.id;
+      const player = btn.dataset.p;
+      const operation = btn.dataset.op;
+      const docRef = doc(db,'jogos',id);
+      const docSnap = await getDoc(docRef);
+
+      if(!docSnap.exists()) return;
+      const data = docSnap.data();
+      const placarAtual = data['placar'+player] || 0;
+      
+      const update = {};
+      if (operation === 'inc') {
+          update['placar'+player] = placarAtual + 1;
+      } else if (operation === 'dec' && placarAtual > 0) {
+          update['placar'+player] = placarAtual - 1;
+      }
+      
+      await updateDoc(docRef, update);
+      carregarJogosAdmin(); // Recarrega a lista para mostrar a atualização
     }
   });
 }
 
-/* ---------- ADMIN LOAD ---------- */
-function carregarAdmin(){
-  showAdminTab('config');
-}
+// ✅ ADICIONADO: Event listener para o select de placares
+document.getElementById('placarModalidade').addEventListener('change', carregarJogosAdmin);
+
+/* ---------- ADMIN: EXPORTAR E RESET ---------- */
+document.getElementById('exportBtn').addEventListener('click', async ()=>{
+  const snap = await getDocs(inscritosCol);
+  let csv = 'Nome,Setor,Telefone,Modalidades\n';
+  snap.forEach(d=>{
+    const p = d.data();
+    csv += `"${p.nome}","${p.setor}","${p.telefone}","${(p.modalidades||[]).join(' | ')}"\n`;
+  });
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'inscritos_campeonato.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+document.getElementById('resetBtn').addEventListener('click', async ()=>{
+  if(!confirm('⚠️ ATENÇÃO! ⚠️\n\nIsso apagará TODOS os inscritos, modalidades, fases e jogos.\n\nEsta ação não pode ser desfeita. Deseja continuar?')) return;
+  
+  const colls=['inscritos','modalidades','fases','jogos'];
+  try {
+    for(const c of colls){
+      const snap=await getDocs(collection(db,c));
+      for(const d of snap.docs) await deleteDoc(doc(db,c,d.id));
+    }
+    // Deleta também o documento de config
+    await deleteDoc(configDocRef);
+    alert('Reset completo do campeonato realizado com sucesso.');
+    // Recarrega tudo para refletir o estado vazio
+    carregarConfigGeral();
+    carregarModalidades();
+    carregarListaPublica();
+    carregarFasesAdmin();
+  } catch(e) {
+    console.error("Erro no reset:", e);
+    alert("Ocorreu um erro durante o reset.");
+  }
+});
+
+
+// --- INICIALIZAÇÃO ---
+carregarConfigGeral();
+carregarModalidades();
+
 </script>
 </body>
 </html>

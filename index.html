@@ -500,7 +500,7 @@ async function carregarJogosAdmin(){
   if(!modalidade) return lista.innerHTML = '<p class="text-gray-500">Selecione uma modalidade para ver os jogos.</p>';
 
   lista.innerHTML = '<p>Carregando jogos...</p>';
-  const q = query(jogosCol, where('modalidade','==', modalidade));
+  const q = query(jogosCol, where('modalidade','==', modalidade), where('finalizado', '==', false));
   const snap = await getDocs(q);
   
   if(snap.empty) return lista.innerHTML='<p class="text-gray-500">Nenhum jogo cadastrado para esta modalidade.</p>'; 
@@ -613,6 +613,7 @@ carregarModalidades();
 </script>
 </body>
 </html>
+
 
 
 

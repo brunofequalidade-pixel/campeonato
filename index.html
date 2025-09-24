@@ -402,30 +402,85 @@ document.getElementById('faseModalidade').addEventListener('change', carregarFas
 document.getElementById('criarFaseBtn').addEventListener('click', async ()=>{
   const modalidade = document.getElementById('faseModalidade').value;
   if(!modalidade) return alert('Selecione uma modalidade para criar a fase.');
-  
-  const q = query(inscritosCol, where("modalidades", "array-contains", modalidade));
-  const inscritosSnap = await getDocs(q);
-  let players = inscritosSnap.docs.map(d=>({id:d.id, nome: d.data().nome}));
-  
-  if(players.length < 2) return alert('Não há participantes suficientes nesta modalidade.');
 
+  // Buscar todas as fases dessa modalidade
   const fasesSnap = await getDocs(query(fasesCol, where("modalidade", "==", modalidade)));
   const numero = fasesSnap.size + 1;
 
-  players.sort(() => Math.random() - 0.5); // Embaralhar
+  let players = [];
 
+  if (numero === 1) {
+    // Primeira fase: pega todos os inscritos
+    const q = query(inscritosCol, where("modalidades", "array-contains", modalidade));
+    const inscritosSnap = await getDocs(q);
+    players = inscritosSnap.docs.map(d=>({id:d.id, nome: d.data().nome}));
+  } else {
+    // Fases seguintes: pega vencedores da fase anterior
+    const faseAnterior = numero - 1;
+    const jogosSnap = await getDocs(query(jogosCol, where("modalidade","==",modalidade), where("fase","==",faseAnterior)));
+
+    if (jogosSnap.empty) return alert('Não há jogos na fase anterior para gerar a próxima.');
+
+    let vencedores = [];
+    let perdedores = [];
+
+    jogosSnap.docs.forEach(docu=>{
+      const j = docu.data();
+      if (j.placar1 > j.placar2) {
+        vencedores.push(j.jogador1);
+        perdedores.push(j.jogador2);
+      } else if (j.placar2 > j.placar1) {
+        vencedores.push(j.jogador2);
+        perdedores.push(j.jogador1);
+      } else {
+        // Empate → sorteio
+        if (Math.random() < 0.5) {
+          vencedores.push(j.jogador1);
+          perdedores.push(j.jogador2);
+        } else {
+          vencedores.push(j.jogador2);
+          perdedores.push(j.jogador1);
+        }
+      }
+    });
+
+    // Se número de vencedores for ímpar → adiciona 1 perdedor aleatório
+    if (vencedores.length % 2 !== 0 && perdedores.length > 0) {
+      const sorteado = perdedores[Math.floor(Math.random() * perdedores.length)];
+      vencedores.push(sorteado);
+    }
+
+    players = vencedores.map(nome=>({nome}));
+  }
+
+  if(players.length < 2) return alert('Não há jogadores suficientes para criar a fase.');
+
+  // Embaralhar jogadores
+  players.sort(() => Math.random() - 0.5);
+
+  // Criar jogos em pares
   const batch = writeBatch(db);
   for (let i = 0; i < players.length; i += 2) {
-      if (!players[i+1]) continue; // Ignora jogador sem par
-      const jogoRef = doc(collection(db, "jogos"));
-      batch.set(jogoRef, { modalidade, fase: numero, jogador1: players[i].nome, jogador2: players[i+1].nome, placar1: 0, placar2: 0, finalizado: false });
+    if (!players[i+1]) continue;
+    const jogoRef = doc(collection(db, "jogos"));
+    batch.set(jogoRef, { 
+      modalidade, 
+      fase: numero, 
+      jogador1: players[i].nome, 
+      jogador2: players[i+1].nome, 
+      placar1: 0, 
+      placar2: 0, 
+      finalizado: false 
+    });
   }
 
   await batch.commit();
   await addDoc(fasesCol, {modalidade, numero, players: players.map(p => p.nome)});
-  
-  alert(`Fase ${numero} para ${modalidade} criada e jogos gerados!`);
+
+  alert(`Fase ${numero} para ${modalidade} criada com sucesso!`);
   carregarFasesAdmin();
+});
+
 });
 
 /* ---------- ADMIN: PLACARES ---------- */
@@ -550,3 +605,4 @@ carregarModalidades();
 </script>
 </body>
 </html>
+

@@ -106,6 +106,17 @@
         </div>
     </div>
 
+    <!-- Modal de Confirmação -->
+    <div id="confirmation-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm mx-4 text-center border border-yellow-500/50">
+            <p id="confirmation-message" class="text-lg mb-6"></p>
+            <div class="flex justify-center space-x-4">
+                <button id="confirm-delete-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300">Sim, Excluir</button>
+                <button id="cancel-delete-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
 
     <script type="module">
         // Importações do Firebase SDK
@@ -120,7 +131,7 @@
             projectId: "inscricaosinuca",
             storageBucket: "inscricaosinuca.firebasestorage.app",
             messagingSenderId: "338241576305",
-            appId: "1:338241576305:web:288b6124384c6be4f76ad1",
+            appId: "1:338241576305:web:288b6124384c6be4f76ad0",
             measurementId: "G-PEDG30FS2R"
         };
         
@@ -149,12 +160,19 @@
         const adminButton = document.getElementById('admin-button');
         const adminArea = document.getElementById('admin-area');
         
-        // --- Modal de Notificação ---
+        // --- Modais ---
         const notificationModal = document.getElementById('notification-modal');
         const notificationMessage = document.getElementById('notification-message');
         const closeNotificationButton = document.getElementById('close-notification');
+        const confirmationModal = document.getElementById('confirmation-modal');
+        const confirmationMessage = document.getElementById('confirmation-message');
+        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+        const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
         
+        // --- Variáveis de Estado ---
         let isAdminAuthenticated = false; // Estado de autenticação do ADM
+        let localParticipants = []; // Cache local da lista de participantes
+        let participantIdToDelete = null; // ID do participante a ser excluído
 
         // --- Funções ---
         
@@ -163,9 +181,16 @@
             notificationModal.classList.remove('hidden');
         }
 
-        closeNotificationButton.addEventListener('click', () => {
-            notificationModal.classList.add('hidden');
-        });
+        function showConfirmation(message, id) {
+            participantIdToDelete = id;
+            confirmationMessage.textContent = message;
+            confirmationModal.classList.remove('hidden');
+        }
+
+        function hideConfirmation() {
+            participantIdToDelete = null;
+            confirmationModal.classList.add('hidden');
+        }
 
         // Adicionar participante
         async function addParticipant(event) {
@@ -238,7 +263,6 @@
 
         // Deletar um participante
         async function deleteParticipant(id) {
-            // A senha não é mais solicitada aqui
             try {
                 await deleteDoc(doc(db, "participants", id));
                 showNotification("Participante excluído com sucesso.");
@@ -250,7 +274,6 @@
 
         // Exibir a área do administrador
         function showAdminArea() {
-            // A senha agora só é pedida uma vez para entrar na área
             if (!isAdminAuthenticated) {
                 const password = prompt("Digite a senha de administrador:");
                 // Defina sua senha aqui. Altere 'sinuca123' para o que desejar.
@@ -258,8 +281,9 @@
                     isAdminAuthenticated = true;
                     adminArea.classList.remove('hidden');
                     adminButton.textContent = 'Ocultar Painel ADM';
+                    renderAdminTable(localParticipants); // Renderiza a tabela imediatamente
                 } else if(password !== null) { // Evita alerta se o usuário cancelar o prompt
-                    alert("Senha incorreta!");
+                    showNotification("Senha incorreta!");
                 }
             } else {
                 isAdminAuthenticated = false;
@@ -273,30 +297,36 @@
         
         form.addEventListener('submit', addParticipant);
         adminButton.addEventListener('click', showAdminArea);
+        closeNotificationButton.addEventListener('click', () => notificationModal.classList.add('hidden'));
+        
+        cancelDeleteBtn.addEventListener('click', hideConfirmation);
+        
+        confirmDeleteBtn.addEventListener('click', () => {
+            if (participantIdToDelete) {
+                deleteParticipant(participantIdToDelete);
+            }
+            hideConfirmation();
+        });
 
         // Delegação de evento para os botões de exclusão
         adminParticipantsList.addEventListener('click', (e) => {
             if (e.target.classList.contains('delete-btn')) {
                 const id = e.target.getAttribute('data-id');
-                if (confirm('Tem certeza que deseja excluir este participante?')) {
-                     deleteParticipant(id);
-                }
+                showConfirmation('Tem certeza que deseja excluir este participante?', id);
             }
         });
 
         // --- Listener em tempo real do Firestore ---
-        // Escuta por mudanças na coleção e atualiza a UI automaticamente
         const q = query(participantsCollection, orderBy("createdAt", "asc"));
         onSnapshot(q, (snapshot) => {
-            const participants = snapshot.docs.map(doc => ({
+            localParticipants = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
             
-            // Atualiza ambas as listas
-            renderParticipants(participants);
+            renderParticipants(localParticipants);
             if (isAdminAuthenticated) {
-                renderAdminTable(participants);
+                renderAdminTable(localParticipants);
             }
         }, (error) => {
             console.error("Erro ao buscar participantes: ", error);
@@ -306,3 +336,4 @@
     </script>
 </body>
 </html>
+

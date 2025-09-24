@@ -447,6 +447,10 @@ document.getElementById('criarFaseBtn').addEventListener('click', async ()=>{
     // Se número de vencedores for ímpar → adiciona 1 perdedor aleatório
     if (vencedores.length % 2 !== 0 && perdedores.length > 0) {
       const sorteado = perdedores[Math.floor(Math.random() * perdedores.length)];
+      // --- INÍCIO DA ALTERAÇÃO ---
+      // Exibe um alerta com o nome do participante sorteado
+      alert(`Para completar a chave da competição, o participante "${sorteado}" foi sorteado para a próxima fase!`);
+      // --- FIM DA ALTERAÇÃO ---
       vencedores.push(sorteado);
     }
 
@@ -605,5 +609,6 @@ carregarModalidades();
 </script>
 </body>
 </html>
+
 
 

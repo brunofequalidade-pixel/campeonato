@@ -424,25 +424,29 @@ document.getElementById('criarFaseBtn').addEventListener('click', async ()=>{
     let vencedores = [];
     let perdedores = [];
 
-    jogosSnap.docs.forEach(docu=>{
+   // --- INÍCIO DA ALTERAÇÃO ---
+    // Itera sobre os jogos para validar e extrair vencedores
+    for (const docu of jogosSnap.docs) {
       const j = docu.data();
-      if (j.placar1 > j.placar2) {
+
+      // Verifica se a partida foi finalizada (alguém fez 2 pontos)
+      const partidaFinalizada = (j.placar1 === 2 && j.placar2 < 2) || (j.placar2 === 2 && j.placar1 < 2);
+
+      if (!partidaFinalizada) {
+        // Se UMA partida não estiver finalizada, interrompe a criação da fase
+        return alert('Não é possível criar a próxima fase. Todos os jogos da fase anterior devem estar finalizados com um vencedor (placar 2x0 ou 2x1).');
+      }
+
+      // Adiciona o vencedor e o perdedor às suas respectivas listas
+      if (j.placar1 === 2) {
         vencedores.push(j.jogador1);
         perdedores.push(j.jogador2);
-      } else if (j.placar2 > j.placar1) {
+      } else {
         vencedores.push(j.jogador2);
         perdedores.push(j.jogador1);
-      } else {
-        // Empate → sorteio
-        if (Math.random() < 0.5) {
-          vencedores.push(j.jogador1);
-          perdedores.push(j.jogador2);
-        } else {
-          vencedores.push(j.jogador2);
-          perdedores.push(j.jogador1);
-        }
       }
-    });
+    }
+    // --- FIM DA ALTERAÇÃO ---
 
     // Se número de vencedores for ímpar → adiciona 1 perdedor aleatório
     if (vencedores.length % 2 !== 0 && perdedores.length > 0) {
@@ -609,6 +613,7 @@ carregarModalidades();
 </script>
 </body>
 </html>
+
 
 
 

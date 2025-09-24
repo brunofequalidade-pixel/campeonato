@@ -27,8 +27,35 @@
             </button>
         </div>
 
-        <!-- seções (sem mudanças) -->
-        <!-- ... [inscrições, público, acompanhar, admin, reset iguais ao seu código anterior] ... -->
+        <section id="inscricaoSection" class="bg-white p-6 rounded-lg shadow mb-6 hidden">
+            <h2 class="text-xl font-bold mb-4">Nova Inscrição</h2>
+            <form id="inscricaoForm" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="text" id="matricula" placeholder="Matrícula" class="p-2 border rounded-lg" required>
+                    <input type="text" id="nome" placeholder="Nome completo" class="p-2 border rounded-lg" required>
+                    <input type="text" id="setor" placeholder="Setor" class="p-2 border rounded-lg" required>
+                    <input type="tel" id="telefone" placeholder="Telefone" class="p-2 border rounded-lg" required>
+                </div>
+                <div>
+                    <p class="font-semibold mb-2">Escolha suas modalidades:</p>
+                    <div id="modalidadesList" class="grid grid-cols-2 gap-2"></div>
+                    <p id="modalidadeInfo" class="text-sm text-gray-500 mt-2"></p>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg">
+                    Enviar Inscrição
+                </button>
+            </form>
+        </section>
+
+        <section id="publicoSection" class="bg-white p-6 rounded-lg shadow mb-6 hidden">
+            <h2 class="text-xl font-bold mb-4">Participantes Inscritos</h2>
+            <div id="participantesList" class="space-y-3"></div>
+        </section>
+
+        <section id="acompanharSection" class="bg-white p-6 rounded-lg shadow mb-6 hidden">
+            <h2 class="text-xl font-bold mb-4">Acompanhar Jogos</h2>
+            <div id="jogosAcompanhar" class="space-y-4"></div>
+        </section>
 
         <section id="adminSection" class="bg-white p-6 rounded-lg shadow mb-6 hidden">
             <h2 class="text-xl font-bold mb-4">Área Administrativa</h2>
@@ -40,7 +67,50 @@
                 <button id="resetTab" class="bg-gray-400 text-white px-3 py-1 rounded">Reset</button>
             </div>
 
-            <!-- ... resto igual ... -->
+            <div id="configDiv" class="space-y-4">
+                <div>
+                    <h3 class="font-semibold mb-2">Modalidades</h3>
+                    <div id="adminModalidadesList" class="space-y-2 mb-3"></div>
+                    <div class="flex gap-2">
+                        <input type="text" id="novaModalidade" placeholder="Nova modalidade" class="flex-1 p-2 border rounded">
+                        <button id="addModalidade" class="bg-green-600 text-white px-3 py-2 rounded">Add</button>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-semibold mb-2">Limite por Participante</h3>
+                    <div class="flex gap-2">
+                        <input type="number" id="limiteInput" min="1" class="p-2 border rounded w-20">
+                        <button id="salvarLimite" class="bg-blue-600 text-white px-3 py-2 rounded">Salvar</button>
+                    </div>
+                </div>
+                <div>
+                    <button id="exportBtn" class="bg-indigo-600 text-white px-4 py-2 rounded mr-2">Exportar CSV</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full border text-sm">
+                        <thead class="bg-gray-200">
+                            <tr>
+                                <th class="border p-2">Nome</th>
+                                <th class="border p-2">Setor</th>
+                                <th class="border p-2">Telefone</th>
+                                <th class="border p-2">Modalidades</th>
+                                <th class="border p-2">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaInscritos"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="fasesDiv" class="hidden space-y-4">
+                <div class="flex gap-2">
+                    <select id="modalidadeSelect" class="flex-1 p-2 border rounded">
+                        <option value="">Selecione modalidade</option>
+                    </select>
+                    <button id="criarFaseBtn" class="bg-green-600 text-white px-4 py-2 rounded">Criar Fase</button>
+                </div>
+                <div id="faseAtual" class="mt-4"></div>
+            </div>
 
             <div id="placaresDiv" class="hidden space-y-4">
                 <select id="modalidadePlacar" class="w-full p-2 border rounded mb-4">
@@ -49,13 +119,19 @@
                 <div id="jogosPendentes"></div>
             </div>
 
-            <!-- ... resto igual ... -->
+            <div id="resetDiv" class="hidden">
+                <div class="bg-red-50 p-4 rounded border border-red-200">
+                    <h3 class="font-semibold text-red-800 mb-2">⚠️ Reset Campeonato</h3>
+                    <p class="text-red-700 mb-4">Apaga todas as fases e placares. Mantém participantes.</p>
+                    <button id="resetBtn" class="bg-red-600 text-white px-4 py-2 rounded">Reset Completo</button>
+                </div>
+            </div>
         </section>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Firebase config
+            // Config Firebase
             const firebaseConfig = {
                 apiKey: "AIzaSyBo8G3ZcWk4EepN0cHdVBtXc7tGOfcw-yg",
                 authDomain: "inscricaosinuca.firebaseapp.com",
@@ -65,12 +141,571 @@
                 appId: "1:338241576305:web:288b6124384c6be4f76ad0",
                 measurementId: "G-PEDG30FS2R"
             };
-            firebase.initializeApp(firebaseConfig);
-            const db = firebase.firestore();
+            
+            // Inicializar Firebase (com proteção caso a lib não carregue)
+            let db = null;
+            try {
+                if (typeof firebase === 'undefined' || !firebase || !firebase.initializeApp) {
+                    console.warn('Firebase não está disponível. Funções de banco ficarão limitadas.');
+                    db = null;
+                } else {
+                    firebase.initializeApp(firebaseConfig);
+                    db = firebase.firestore();
+                }
+            } catch (err) {
+                console.error('Erro ao inicializar Firebase:', err);
+                db = null;
+            }
+            
+            // Variáveis globais
+            let inscritos = [];
+            let modalidades = [];
+            let limite = 2;
 
-            // ... [todo o código igual ao original que você enviou] ...
+            // Funções Firebase
+            async function carregarDados() {
+                try {
+                    // Carregar inscritos
+                    const inscritosSnap = await db.collection('inscritos').get();
+                    inscritos = inscritosSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-            // 🔹 Correção na função mostrarJogosPendentes
+                    // Carregar modalidades
+                    const modalidadesSnap = await db.collection('config').doc('modalidades').get();
+                    if (modalidadesSnap.exists) {
+                        modalidades = modalidadesSnap.data().lista || ["Sinuca", "Dominó", "Dama"];
+                    } else {
+                        modalidades = ["Sinuca", "Dominó", "Dama"];
+                        await db.collection('config').doc('modalidades').set({ lista: modalidades });
+                    }
+
+                    // Carregar configurações
+                    const configSnap = await db.collection('config').doc('geral').get();
+                    if (configSnap.exists) {
+                        limite = configSnap.data().limite || 2;
+                    } else {
+                        limite = 2;
+                        await db.collection('config').doc('geral').set({ limite: limite });
+                    }
+
+                    carregarModalidades();
+                } catch (error) {
+                    console.error('Erro ao carregar dados:', error);
+                    alert('Erro ao carregar dados do Firebase');
+                }
+            }
+
+            async function salvarModalidades() {
+                try {
+                    await db.collection('config').doc('modalidades').set({ lista: modalidades });
+                } catch (error) {
+                    console.error('Erro ao salvar modalidades:', error);
+                }
+            }
+
+            async function salvarConfig() {
+                try {
+                    await db.collection('config').doc('geral').set({ limite: limite });
+                } catch (error) {
+                    console.error('Erro ao salvar config:', error);
+                }
+            }
+
+            async function carregarFases() {
+                try {
+                    const fasesSnap = await db.collection('fases').get();
+                    const fases = {};
+                    fasesSnap.docs.forEach(doc => {
+                        fases[doc.id] = doc.data();
+                    });
+                    return fases;
+                } catch (error) {
+                    console.error('Erro ao carregar fases:', error);
+                    return {};
+                }
+            }
+
+            async function salvarFase(modalidade, numeroFase, confrontos) {
+                try {
+                    const faseKey = `${modalidade}_fase`;
+                    await db.collection('fases').doc(faseKey).set({
+                        numero: numeroFase,
+                        confrontos: confrontos
+                    });
+                    await db.collection('jogos').doc(modalidade).collection('fases').doc(numeroFase.toString()).set({
+                        jogos: confrontos
+                    });
+                } catch (error) {
+                    console.error('Erro ao salvar fase:', error);
+                }
+            }
+
+            async function carregarJogos() {
+                try {
+                    const jogos = {};
+                    const modalidadesJogos = await db.collection('jogos').get();
+                    
+                    for (const modalidadeDoc of modalidadesJogos.docs) {
+                        const modalidade = modalidadeDoc.id;
+                        const fasesSnap = await db.collection('jogos').doc(modalidade).collection('fases').get();
+                        
+                        jogos[modalidade] = {};
+                        fasesSnap.docs.forEach(faseDoc => {
+                            jogos[modalidade][faseDoc.id] = faseDoc.data().jogos || [];
+                        });
+                    }
+                    
+                    return jogos;
+                } catch (error) {
+                    console.error('Erro ao carregar jogos:', error);
+                    return {};
+                }
+            }
+
+            async function atualizarJogo(modalidade, numeroFase, jogoId, placar1, placar2) {
+                try {
+                    const jogosSnap = await db.collection('jogos').doc(modalidade).collection('fases').doc(numeroFase.toString()).get();
+                    if (jogosSnap.exists) {
+                        const jogos = jogosSnap.data().jogos || [];
+                        const jogoIndex = jogos.findIndex(j => j.id === jogoId);
+                        
+                        if (jogoIndex !== -1) {
+                            jogos[jogoIndex].placar1 = placar1;
+                            jogos[jogoIndex].placar2 = placar2;
+                            jogos[jogoIndex].finalizado = true;
+                            
+                            await db.collection('jogos').doc(modalidade).collection('fases').doc(numeroFase.toString()).set({
+                                jogos: jogos
+                            });
+                            // Atualizar também nas fases
+                            const faseKey = `${modalidade}_fase`;
+                            const faseSnap = await db.collection('fases').doc(faseKey).get();
+                            
+                            if (faseSnap.exists) {
+                                const faseData = faseSnap.data();
+                                const confrontoIndex = faseData.confrontos.findIndex(c => c.id === jogoId);
+                                
+                                if (confrontoIndex !== -1) {
+                                    faseData.confrontos[confrontoIndex].placar1 = placar1;
+                                    faseData.confronto[confrontoIndex] = faseData.confronto ? faseData.confronto : faseData.confrontos;
+                                    faseData.confrontos[confrontoIndex].placar2 = placar2;
+                                    faseData.confrontos[confrontoIndex].finalizado = true;
+                                    
+                                    await db.collection('fases').doc(faseKey).set(faseData);
+                                }
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Erro ao atualizar jogo:', error);
+                }
+            }
+
+            async function resetCampeonato() {
+                try {
+                    // Deletar todas as fases
+                    const fasesSnap = await db.collection('fases').get();
+                    const batch = db.batch();
+                    
+                    fasesSnap.docs.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    // Deletar todos os jogos
+                    const jogosSnap = await db.collection('jogos').get();
+                    for (const modalidadeDoc of jogosSnap.docs) {
+                        const fasesSnap = await db.collection('jogos').doc(modalidadeDoc.id).collection('fases').get();
+                        fasesSnap.docs.forEach(faseDoc => {
+                            batch.delete(faseDoc.ref);
+                        });
+                        batch.delete(modalidadeDoc.ref);
+                    }
+                    
+                    await batch.commit();
+                } catch (error) {
+                    console.error('Erro ao resetar campeonato:', error);
+                }
+            }
+
+            // Navegação
+            function showSection(section) {
+                document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+                const target = document.getElementById(section + 'Section');
+                if (target) target.classList.remove('hidden');
+
+                // Reset button colors (reduzido e mais robusto)
+                const headerBtns = document.querySelectorAll('div.flex.flex-wrap.justify-center.gap-2.mb-6 button');
+                headerBtns.forEach(btn => {
+                    btn.className = btn.className.replace(/bg-\w+-600/, (match) => match);
+                });
+                const activeBtn = document.getElementById(section + 'Btn');
+                if (activeBtn) {
+                    // transformar a cor atual em cinza escuro
+                    activeBtn.className = activeBtn.className.replace(/bg-\w+-600/, 'bg-gray-800');
+                }
+            }
+
+            // Event listeners navegação
+            document.getElementById('inscricaoBtn').onclick = () => showSection('inscricao');
+            document.getElementById('publicoBtn').onclick = () => {
+                showSection('publico');
+                carregarListaPublica();
+            };
+            document.getElementById('acompanharBtn').onclick = () => {
+                showSection('acompanhar');
+                carregarAcompanhamento();
+            };
+            document.getElementById('adminBtn').onclick = () => {
+                const senha = prompt("Senha do administrador:");
+                if (senha === "dpsp123") {
+                    showSection('admin');
+                    carregarAdmin();
+                    showAdminTab('config');
+                } else if (senha) {
+                    alert("Senha incorreta!");
+                }
+            };
+
+            // Tabs Admin
+            function showAdminTab(tab) {
+                ['configTab', 'fasesTab', 'placaresTab', 'resetTab'].forEach(t => {
+                    const el = document.getElementById(t);
+                    if (el) el.className = "bg-gray-400 text-white px-3 py-1 rounded";
+                });
+                ['configDiv', 'fasesDiv', 'placaresDiv', 'resetDiv'].forEach(d => {
+                    const el = document.getElementById(d);
+                    if (el) el.classList.add('hidden');
+                });
+                const activeTab = document.getElementById(tab + 'Tab');
+                const activeDiv = document.getElementById(tab + 'Div');
+                if (activeTab) activeTab.className = "bg-gray-600 text-white px-3 py-1 rounded";
+                if (activeDiv) activeDiv.classList.remove('hidden');
+            }
+
+            document.getElementById('configTab').onclick = () => showAdminTab('config');
+            document.getElementById('fasesTab').onclick = () => {
+                showAdminTab('fases');
+                carregarModalidadesSelect();
+            };
+            document.getElementById('placaresTab').onclick = () => {
+                showAdminTab('placares');
+                carregarPlacarSelect();
+            };
+            document.getElementById('resetTab').onclick = () => showAdminTab('reset');
+
+            // Modalidades
+            function carregarModalidades() {
+                // Lista para inscrição
+                const lista = document.getElementById('modalidadesList');
+                lista.innerHTML = '';
+                modalidades.forEach(m => {
+                    const label = document.createElement('label');
+                    label.className = 'flex items-center gap-2 p-2 border rounded cursor-pointer';
+                    label.innerHTML = `<input type="checkbox" value="${m}"> ${m}`;
+                    lista.appendChild(label);
+                });
+                // Lista admin
+                const adminLista = document.getElementById('adminModalidadesList');
+                adminLista.innerHTML = '';
+                modalidades.forEach(m => {
+                    const div = document.createElement('div');
+                    div.className = 'flex justify-between items-center p-2 border rounded';
+                    div.innerHTML = `<span>${m}</span><button onclick="removerModalidade('${m}')" class="text-red-600 px-2">🗑️</button>`;
+                    adminLista.appendChild(div);
+                });
+                document.getElementById('modalidadeInfo').textContent = `Escolha até ${limite} modalidade(s)`;
+                document.getElementById('limiteInput').value = limite;
+            }
+
+            window.removerModalidade = async function(modalidade) {
+                if (confirm(`Remover ${modalidade}?`)) {
+                    modalidades = modalidades.filter(m => m !== modalidade);
+                    try {
+                        await salvarModalidades();
+                    } catch (e) {
+                        console.error(e);
+                    }
+                    carregarModalidades();
+                }
+            }
+
+            // Adicionar modalidade
+            document.getElementById('addModalidade').onclick = async () => {
+                const nome = document.getElementById('novaModalidade').value.trim();
+                if (nome && !modalidades.includes(nome)) {
+                    modalidades.push(nome);
+                    await salvarModalidades();
+                    document.getElementById('novaModalidade').value = '';
+                    carregarModalidades();
+                    alert('Modalidade adicionada!');
+                } else {
+                    alert('Nome inválido ou já existe!');
+                }
+            };
+
+            // Salvar limite
+            document.getElementById('salvarLimite').onclick = async () => {
+                const novoLimite = parseInt(document.getElementById('limiteInput').value);
+                if (novoLimite > 0) {
+                    limite = novoLimite;
+                    await salvarConfig();
+                    carregarModalidades();
+                    alert('Limite salvo!');
+                }
+            };
+            // Inscrição
+            document.getElementById('inscricaoForm').onsubmit = async (e) => {
+                e.preventDefault();
+                const matricula = document.getElementById('matricula').value.trim();
+                const nome = document.getElementById('nome').value.trim();
+                const setor = document.getElementById('setor').value.trim();
+                const telefone = document.getElementById('telefone').value.trim();
+                const escolhidas = Array.from(document.querySelectorAll('#modalidadesList input:checked')).map(c => c.value);
+
+                if (!matricula || !nome || !setor || !telefone) {
+                    alert('Preencha todos os campos!');
+                    return;
+                }
+
+                if (escolhidas.length === 0 || escolhidas.length > limite) {
+                    alert(`Escolha entre 1 e ${limite} modalidades!`);
+                    return;
+                }
+
+                if (inscritos.find(i => i.matricula === matricula)) {
+                    alert('Matrícula já inscrita!');
+                    return;
+                }
+
+                try {
+                    const novoInscrito = {
+                        matricula,
+                        nome,
+                        setor,
+                        telefone,
+                        modalidades: escolhidas,
+                        criado: new Date().toISOString()
+                    };
+                    const docRef = await db.collection('inscritos').add(novoInscrito);
+                    inscritos.push({ id: docRef.id, ...novoInscrito });
+                    
+                    alert('Inscrição realizada!');
+                    document.getElementById('inscricaoForm').reset();
+                    carregarModalidades();
+                } catch (error) {
+                    console.error('Erro ao salvar inscrição:', error);
+                    alert('Erro ao salvar inscrição');
+                }
+            };
+            // Lista pública
+            function carregarListaPublica() {
+                const lista = document.getElementById('participantesList');
+                lista.innerHTML = '';
+
+                if (inscritos.length === 0) {
+                    lista.innerHTML = '<p class="text-gray-500">Nenhum participante ainda.</p>';
+                    return;
+                }
+
+                inscritos.forEach(p => {
+                    const div = document.createElement('div');
+                    div.className = 'p-3 border rounded-lg';
+                    div.innerHTML = `
+                        <h3 class="font-semibold">${p.nome}</h3>
+                        <p class="text-gray-600">${p.setor}</p>
+                        <p class="text-sm text-blue-600">Modalidades: ${p.modalidades.join(', ')}</p>
+                    `;
+                    lista.appendChild(div);
+                });
+            }
+
+            // Admin
+            function carregarAdmin() {
+                const tabela = document.getElementById('tabelaInscritos');
+                tabela.innerHTML = '';
+
+                inscritos.forEach(p => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="border p-2">${p.nome}</td>
+                        <td class="border p-2">${p.setor}</td>
+                        <td class="border p-2">${p.telefone}</td>
+                        <td class="border p-2">${p.modalidades.join(', ')}</td>
+                        <td class="border p-2">
+                            <button onclick="removerInscrito('${p.id}')" class="text-red-600 px-2">🗑️</button>
+                        </td>
+                    `;
+                    tabela.appendChild(tr);
+                });
+            }
+
+            window.removerInscrito = async function(id) {
+                if (confirm('Remover participante?')) {
+                    const senha = prompt('Confirme a senha:');
+                    if (senha === 'dpsp123') {
+                        try {
+                            await db.collection('inscritos').doc(id).delete();
+                            inscritos = inscritos.filter(i => i.id !== id);
+                            carregarAdmin();
+                        } catch (error) {
+                            console.error('Erro ao remover inscrito:', error);
+                            alert('Erro ao remover inscrito');
+                        }
+                    }
+                }
+            }
+
+            // Export CSV
+            document.getElementById('exportBtn').onclick = () => {
+                if (inscritos.length === 0) {
+                    alert('Nenhum inscrito!');
+                    return;
+                }
+
+                let csv = 'Nome,Setor,Telefone,Modalidades\n';
+                inscritos.forEach(p => {
+                    csv += `"${p.nome}","${p.setor}","${p.telefone}","${p.modalidades.join(' | ')}"\n`;
+                });
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'inscritos.csv';
+                a.click();
+            };
+
+            // Selects modalidades
+            function carregarModalidadesSelect() {
+                const select = document.getElementById('modalidadeSelect');
+                select.innerHTML = '<option value="">Selecione modalidade</option>';
+                modalidades.forEach(m => {
+                    select.innerHTML += `<option value="${m}">${m}</option>`;
+                });
+            }
+
+            function carregarPlacarSelect() {
+                const select = document.getElementById('modalidadePlacar');
+                select.innerHTML = '<option value="">Selecione modalidade</option>';
+                modalidades.forEach(m => {
+                    select.innerHTML += `<option value="${m}">${m}</option>`;
+                });
+            }
+
+            // Criar fase
+            document.getElementById('criarFaseBtn').onclick = () => {
+                const modalidade = document.getElementById('modalidadeSelect').value;
+                if (!modalidade) {
+                    alert('Selecione uma modalidade!');
+                    return;
+                }
+
+                criarFase(modalidade);
+            };
+            async function criarFase(modalidade) {
+                const participantes = inscritos.filter(p => p.modalidades.includes(modalidade));
+                if (participantes.length < 2) {
+                    alert('Mínimo 2 participantes!');
+                    return;
+                }
+
+                try {
+                    const fases = await carregarFases();
+                    const faseKey = `${modalidade}_fase`;
+                    let numeroFase = 1;
+                    let jogadores = [...participantes];
+                    // Verificar se já existe fase
+                    if (fases[faseKey]) {
+                        const jogos = await carregarJogos();
+                        const vencedores = getVencedoresFase(modalidade, fases[faseKey].numero, jogos);
+                        
+                        if (vencedores.length === 1) {
+                            alert(`${vencedores[0].nome} é o campeão!`);
+                            return;
+                        }
+
+                        numeroFase = fases[faseKey].numero + 1;
+                        jogadores = vencedores;
+
+                        // Se ímpar, sortear um perdedor
+                        if (jogadores.length % 2 === 1) {
+                            const perdedores = getPerdedoresFase(modalidade, fases[faseKey].numero, jogos);
+                            if (perdedores.length > 0) {
+                                const sorteado = perdedores[Math.floor(Math.random() * perdedores.length)];
+                                jogadores.push(sorteado);
+                                alert(`${sorteado.nome} foi sorteado para completar a fase!`);
+                            }
+                        }
+                    }
+
+                    // Embaralhar jogadores
+                    for (let i = jogadores.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [jogadores[i], jogadores[j]] = [jogadores[j], jogadores[i]];
+                    }
+
+                    // Criar confrontos
+                    const confrontos = [];
+                    for (let i = 0; i < jogadores.length; i += 2) {
+                        if (jogadores[i + 1]) {
+                            confrontos.push({
+                                id: `${modalidade}_${numeroFase}_${Date.now()}_${i}`,
+                                jogador1: jogadores[i],
+                                jogador2: jogadores[i + 1],
+                                placar1: 0,
+                                placar2: 0,
+                                finalizado: false
+                            });
+                        }
+                    }
+
+                    await salvarFase(modalidade, numeroFase, confrontos);
+                    mostrarFaseAtual(modalidade);
+                    alert(`Fase ${numeroFase} criada com ${confrontos.length} confrontos!`);
+                } catch (error) {
+                    console.error('Erro ao criar fase:', error);
+                    alert('Erro ao criar fase');
+                }
+            }
+
+            async function mostrarFaseAtual(modalidade) {
+                try {
+                    const fases = await carregarFases();
+                    const div = document.getElementById('faseAtual');
+                    const faseKey = `${modalidade}_fase`;
+                    
+                    if (!fases[faseKey]) {
+                        div.innerHTML = '<p class="text-gray-500">Nenhuma fase criada ainda.</p>';
+                        return;
+                    }
+                    
+                    const fase = fases[faseKey];
+                    let html = `<h3 class="font-bold mb-3">Fase ${fase.numero} - ${modalidade}</h3>`;
+                    fase.confrontos.forEach(c => {
+                        html += `
+                            <div class="flex justify-between items-center p-3 border rounded mb-2 ${c.finalizado ? 'bg-green-50' : 'bg-yellow-50'}">
+                                <span>${c.jogador1.nome} vs ${c.jogador2.nome}</span>
+                                <span class="${c.finalizado ? 'text-green-600' : 'text-orange-600'}">
+                                    ${c.finalizado ? `${c.placar1} x ${c.placar2}` : 'Pendente'}
+                                </span>
+                            </div>
+                        `;
+                    });
+                    div.innerHTML = html;
+                } catch (error) {
+                    console.error('Erro ao mostrar fase atual:', error);
+                }
+            }
+
+            // Event listener para select de modalidade nas fases
+            document.getElementById('modalidadeSelect').onchange = (e) => {
+                if (e.target.value) {
+                    mostrarFaseAtual(e.target.value);
+                }
+            };
+
+            // Placares
+            document.getElementById('modalidadePlacar').onchange = (e) => {
+                mostrarJogosPendentes(e.target.value);
+            };
+
             async function mostrarJogosPendentes(modalidade) {
                 const div = document.getElementById('jogosPendentes');
                 div.innerHTML = '';
@@ -87,16 +722,15 @@
                         return;
                     }
 
-                    const fases = Object.keys(jogos[modalidade])
-                        .map(f => parseInt(f))
-                        .filter(n => !isNaN(n));
-
-                    if(fases.length === 0) {
+                    // Obter as keys das fases e garantir que sejam números válidos
+                    const fasesRaw = Object.keys(jogos[modalidade] || {});
+                    const fasesNum = fasesRaw.map(f => parseInt(f)).filter(n => !isNaN(n));
+                    if (fasesNum.length === 0) {
                         div.innerHTML = '<p class="text-gray-500">Nenhuma fase criada para esta modalidade.</p>';
                         return;
                     }
 
-                    const ultimaFase = Math.max(...fases);
+                    const ultimaFase = Math.max(...fasesNum);
                     const jogosUltimaFase = jogos[modalidade][ultimaFase.toString()] || [];
                     const pendentes = jogosUltimaFase.filter(j => !j.finalizado);
 
@@ -113,11 +747,11 @@
                             <div class="grid grid-cols-2 gap-4 mb-3">
                                 <div>
                                     <label class="block text-sm font-medium">${jogo.jogador1.nome}</label>
-                                    <input type="number" min="0" max="2" value="${jogo.placar1}" class="w-full p-2 border rounded" data-jogador="1" data-jogo="${jogo.id}">
+                                    <input type="number" min="0" max="2" value="${jogo.placar1 || 0}" class="w-full p-2 border rounded" data-jogador="1" data-jogo="${jogo.id}">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium">${jogo.jogador2.nome}</label>
-                                    <input type="number" min="0" max="2" value="${jogo.placar2}" class="w-full p-2 border rounded" data-jogador="2" data-jogo="${jogo.id}">
+                                    <input type="number" min="0" max="2" value="${jogo.placar2 || 0}" class="w-full p-2 border rounded" data-jogador="2" data-jogo="${jogo.id}">
                                 </div>
                             </div>
                             <button onclick="salvarPlacar('${modalidade}', '${jogo.id}', ${ultimaFase})" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
@@ -128,11 +762,130 @@
                     });
                 } catch (error) {
                     console.error('Erro ao mostrar jogos pendentes:', error);
+                    div.innerHTML = '<p class="text-red-500">Erro ao carregar jogos. Veja console para detalhes.</p>';
                 }
             }
 
-            // ... [resto do código igual ao seu original] ...
+            window.salvarPlacar = async function(modalidade, jogoId, numeroFase) {
+                const placar1Input = document.querySelector(`input[data-jogo="${jogoId}"][data-jogador="1"]`);
+                const placar2Input = document.querySelector(`input[data-jogo="${jogoId}"][data-jogador="2"]`);
+                const placar1 = parseInt(placar1Input.value);
+                const placar2 = parseInt(placar2Input.value);
+                if (placar1 < 0 || placar1 > 2 || placar2 < 0 || placar2 > 2) {
+                    alert('Placar deve ser entre 0 e 2!');
+                    return;
+                }
 
+                if (placar1 === placar2) {
+                    alert('Deve haver um vencedor! (2x0, 2x1, 1x2 ou 0x2)');
+                    return;
+                }
+
+                if (placar1 < 2 && placar2 < 2) {
+                    alert('Alguém deve fazer 2 pontos para vencer!');
+                    return;
+                }
+
+                try {
+                    await atualizarJogo(modalidade, numeroFase, jogoId, placar1, placar2);
+                    alert('Placar salvo!');
+                    mostrarJogosPendentes(modalidade);
+
+                    // Verificar se todos os jogos da fase terminaram
+                    const jogos = await carregarJogos();
+                    const todosFinalizado = jogos[modalidade][numeroFase].every(j => j.finalizado);
+                    if (todosFinalizado) {
+                        alert('Todos os jogos da fase foram finalizados! Crie a próxima fase.');
+                    }
+                } catch (error) {
+                    console.error('Erro ao salvar placar:', error);
+                    alert('Erro ao salvar placar');
+                }
+            }
+
+            function getVencedoresFase(modalidade, numeroFase, jogos) {
+                const jogosData = jogos[modalidade][numeroFase];
+                return jogosData.map(j => (j.placar1 > j.placar2 ? j.jogador1 : j.jogador2));
+            }
+
+            function getPerdedoresFase(modalidade, numeroFase, jogos) {
+                const jogosData = jogos[modalidade][numeroFase];
+                return jogosData.map(j => (j.placar1 < j.placar2 ? j.jogador1 : j.jogador2));
+            }
+
+            // Acompanhar jogos
+            async function carregarAcompanhamento() {
+                const div = document.getElementById('jogosAcompanhar');
+                div.innerHTML = '';
+
+                try {
+                    const jogos = await carregarJogos();
+                    if (Object.keys(jogos).length === 0) {
+                        div.innerHTML = '<p class="text-gray-500">Nenhum jogo ainda. Crie uma fase na área de Admin.</p>';
+                        return;
+                    }
+
+                    // Novo código para mostrar todas as fases
+                    Object.keys(jogos).forEach(modalidade => {
+                        const modalidadeDiv = document.createElement('div');
+                        modalidadeDiv.className = 'p-4 border rounded-lg bg-white mb-4';
+                        let html = `<h3 class="font-bold text-lg mb-2">🏆 ${modalidade}</h3>`;
+
+                        const fases = Object.keys(jogos[modalidade]).map(f => parseInt(f)).sort((a, b) => b - a);
+                        
+                        fases.forEach(faseNumero => {
+                            const jogosData = jogos[modalidade][faseNumero];
+                            html += `<h4 class="font-semibold text-base mt-4 mb-2">Fase ${faseNumero}</h4>`;
+                            
+                            jogosData.forEach(jogo => {
+                                if (jogo.finalizado) {
+                                    html += `
+                                        <div class="flex items-center justify-between p-2 rounded bg-green-50 text-sm mb-1">
+                                            <span>${jogo.jogador1.nome} vs ${jogo.jogador2.nome}</span>
+                                            <span class="text-green-700 font-semibold">${jogo.placar1} x ${jogo.placar2}</span>
+                                        </div>
+                                    `;
+                                } else {
+                                    html += `
+                                        <div class="flex items-center justify-between p-2 rounded bg-yellow-50 text-sm mb-1">
+                                            <span>${jogo.jogador1.nome} vs ${jogo.jogador2.nome}</span>
+                                            <span class="text-orange-600 text-sm">Aguardando resultado</span>
+                                        </div>
+                                    `;
+                                }
+                            });
+                        });
+                        modalidadeDiv.innerHTML = html;
+                        div.appendChild(modalidadeDiv);
+                    });
+                } catch (error) {
+                    console.error('Erro ao carregar acompanhamento:', error);
+                }
+            }
+
+            // Reset campeonato
+            document.getElementById('resetBtn').onclick = async () => {
+                if (confirm('⚠️ ATENÇÃO: Isto apagará todas as fases, confrontos e placares!\n\nOs participantes inscritos serão mantidos.\n\nDeseja continuar?')) {
+                    const senha = prompt('Digite a senha para confirmar:');
+                    if (senha === 'dpsp123') {
+                        try {
+                            await resetCampeonato();
+                            alert('✅ Campeonato resetado com sucesso!');
+
+                            // Limpar interfaces
+                            document.getElementById('faseAtual').innerHTML = '';
+                            document.getElementById('jogosPendentes').innerHTML = '';
+                            document.getElementById('jogosAcompanhar').innerHTML = '';
+                        } catch (error) {
+                            console.error('Erro ao resetar campeonato:', error);
+                            alert('Erro ao resetar campeonato');
+                        }
+                    } else if (senha) {
+                        alert('Senha incorreta!');
+                    }
+                }
+            };
+            
             // Inicialização
             (async () => {
                 await carregarDados();

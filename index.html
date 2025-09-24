@@ -104,9 +104,7 @@ async function carregarAcompanhar() {
     let html = '';
     for (const modalidade in jogosPorModalidade) {
         html += `<h2 class="text-xl font-bold mt-6">${modalidade}</h2>`;
-        // 🔥 Ordena as fases em ordem crescente
-        const fasesOrdenadas = Object.keys(jogosPorModalidade[modalidade]).sort((a,b)=>parseInt(a)-parseInt(b));
-        fasesOrdenadas.forEach(fase => {
+        for (const fase in jogosPorModalidade[modalidade]) {
             html += `<h3 class="text-lg font-semibold mt-2 border-b pb-1">Fase ${fase}</h3>`;
             jogosPorModalidade[modalidade][fase].forEach(j => {
                 const statusClass = j.finalizado ? 'bg-green-50 text-green-800' : '';
@@ -115,7 +113,7 @@ async function carregarAcompanhar() {
                     <span class="font-bold text-lg">${j.placar1 || 0} x ${j.placar2 || 0}</span>
                 </div>`;
             });
-        });
+        }
     }
     jogosDiv.innerHTML = html;
 }

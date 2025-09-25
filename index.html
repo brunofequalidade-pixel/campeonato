@@ -525,27 +525,40 @@ async function carregarJogosAdmin(){
     </div>`);
   });
   
-  lista.querySelectorAll('button[data-id]').forEach(btn => {
-    btn.onclick = async () => {
-      const { id, p, op } = btn.dataset;
-      const docRef = doc(db, 'jogos', id);
+  // --- INÍCIO DA ALTERAÇÃO ---
+  lista.querySelectorAll('button[data-id]').forEach(btn => {
+    btn.onclick = async () => {
+      const { id, p, op } = btn.dataset;
+      const docRef = doc(db, 'jogos', id);
 
-      if (btn.classList.contains('btn-finalizar')) {
-          if (confirm('Deseja finalizar esta partida? O placar não poderá mais ser alterado.')) {
-              await updateDoc(docRef, { finalizado: true });
-          }
-      } else {
-          const docSnap = await getDoc(docRef);
-          if (!docSnap.exists()) return;
-          const placarAtual = docSnap.data()['placar' + p] || 0;
-          let novoPlacar = placarAtual;
-          if (op === 'inc') novoPlacar++;
-          else if (op === 'dec' && placarAtual > 0) novoPlacar--;
-          await updateDoc(docRef, { ['placar' + p]: novoPlacar });
-      }
-      carregarJogosAdmin(); // Recarrega para refletir a mudança
-    };
-  });
+      if (btn.classList.contains('btn-finalizar')) {
+        // Se for o botão de finalizar
+        if (confirm('Deseja finalizar esta partida? O placar não poderá mais ser alterado.')) {
+          await updateDoc(docRef, { finalizado: true });
+          // Apenas aqui a lista é recarregada, fazendo o item sumir.
+          carregarJogosAdmin();
+        }
+      } else {
+        // Se for um botão de placar (+1 ou -1)
+        const docSnap = await getDoc(docRef);
+        if (!docSnap.exists()) return;
+        const placarAtual = docSnap.data()['placar' + p] || 0;
+        let novoPlacar = placarAtual;
+        if (op === 'inc') novoPlacar++;
+        else if (op === 'dec' && placarAtual > 0) novoPlacar--;
+        
+        await updateDoc(docRef, { ['placar' + p]: novoPlacar });
+
+        // Apenas atualiza o número na tela, sem recarregar tudo
+        const gameDiv = btn.closest('.p-3.border.rounded');
+        if(gameDiv){
+          const placarSpans = gameDiv.querySelectorAll('.font-bold.text-xl');
+          if(p === '1' && placarSpans.length > 0) placarSpans[0].innerText = novoPlacar;
+          if(p === '2' && placarSpans.length > 1) placarSpans[1].innerText = novoPlacar;
+        }
+      }
+    };
+  });
 }
 document.getElementById('placarModalidade').addEventListener('change', carregarJogosAdmin);
 
@@ -613,6 +626,7 @@ carregarModalidades();
 </script>
 </body>
 </html>
+
 
 
 

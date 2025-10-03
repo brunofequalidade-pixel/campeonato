@@ -168,7 +168,6 @@
             document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
             document.getElementById(name + 'Section').classList.remove('hidden');
             
-            // Verificar status das inscrições ao mostrar seção de inscrição
             if (name === 'inscricao') {
                 verificarStatusInscricao();
             }
@@ -206,7 +205,7 @@
         document.getElementById('placaresTab').addEventListener('click', () => showAdminTab('placares'));
         document.getElementById('resetTab').addEventListener('click', () => showAdminTab('reset'));
 
-        // --- CONFIG GERAL (MODALIDADES, LIMITE E CONTROLE DE INSCRIÇÕES) ---
+        // --- CONFIG GERAL ---
         let limite = 2;
         let inscricoesHabilitadas = true;
 
@@ -263,7 +262,6 @@
                 const statusText = inscricoesHabilitadas ? 'habilitadas' : 'desabilitadas';
                 alert(`Inscrições ${statusText} com sucesso!`);
                 
-                // Atualizar a tela de inscrições se estiver visível
                 if (!document.getElementById('inscricaoSection').classList.contains('hidden')) {
                     verificarStatusInscricao();
                 }
@@ -326,7 +324,6 @@
         document.getElementById('inscricaoForm').addEventListener('submit', async e => {
             e.preventDefault();
             
-            // Verificar se inscrições estão habilitadas
             if (!inscricoesHabilitadas) {
                 alert('As inscrições estão desabilitadas no momento.');
                 return;
@@ -402,7 +399,7 @@
                     jogosPorModalidade[modalidade][fase].forEach(j => {
                         const statusClass = j.finalizado ? 'bg-green-50 text-green-800' : '';
                         html += `<div class="p-3 border rounded-lg flex justify-between items-center ${statusClass}">
-                            <span>${j.jogador1} vs ${j.jogador2}</span>
+                            <span>${j.dupla1} vs ${j.dupla2}</span>
                             <span class="font-bold text-lg">${j.placar1 || 0} x ${j.placar2 || 0}</span>
                         </div>`;
                     });
@@ -465,7 +462,7 @@
                 .map(d => d.data())
                 .sort((a, b) => `${a.modalidade}-${a.numero}`.localeCompare(`${b.modalidade}-${b.numero}`))
                 .forEach(f => {
-                    lista.insertAdjacentHTML('beforeend', `<div class="p-2 border rounded">Modalidade: <strong>${f.modalidade}</strong> — Fase: <strong>${f.numero}</strong> — Jogadores: <strong>${f.players.length}</strong></div>`);
+                    lista.insertAdjacentHTML('beforeend', `<div class="p-2 border rounded">Modalidade: <strong>${f.modalidade}</strong> – Fase: <strong>${f.numero}</strong> – Jogadores: <strong>${f.players.length}</strong></div>`);
                 });
         }
 
@@ -485,10 +482,20 @@
             } else {
                 const faseAnterior = numero - 1;
                 const jogosSnap = await getDocs(query(jogosCol, where("modalidade", "==", modalidade), where("fase", "==", faseAnterior)));
-                if (jogosSnap.empty) return alert('Não há jogos na fase anterior para gerar a próxima.');
+                
+                // Buscar jogadores com BYE da fase anterior
+                const faseAnteriorSnap = await getDocs(query(fasesCol, where("modalidade", "==", modalidade), where("numero", "==", faseAnterior)));
+                let jogadoresComByeAnterior = [];
+                if (!faseAnteriorSnap.empty) {
+                    const faseData = faseAnteriorSnap.docs[0].data();
+                    jogadoresComByeAnterior = faseData.jogadoresComBye || [];
+                }
 
-                let vencedores = [];
-                let perdedores = [];
+                if (jogosSnap.empty && jogadoresComByeAnterior.length === 0) {
+                    return alert('Não há jogos na fase anterior para gerar a próxima.');
+                }
+
+                let vencedores = [...jogadoresComByeAnterior]; // Jogadores com BYE já avançam
 
                 for (const docu of jogosSnap.docs) {
                     const j = docu.data();
@@ -497,43 +504,66 @@
                         return alert('Não é possível criar a próxima fase. Todos os jogos da fase anterior devem estar finalizados com um vencedor (placar 2x0 ou 2x1).');
                     }
                     if (j.placar1 === 2) {
-                        vencedores.push(j.jogador1);
-                        perdedores.push(j.jogador2);
+                        const duplaVencedora = j.dupla1.split(' + ');
+                        vencedores.push(...duplaVencedora);
                     } else {
-                        vencedores.push(j.jogador2);
-                        perdedores.push(j.jogador1);
+                        const duplaVencedora = j.dupla2.split(' + ');
+                        vencedores.push(...duplaVencedora);
                     }
                 }
 
-                if (vencedores.length % 2 !== 0 && perdedores.length > 0) {
-                    const sorteado = perdedores[Math.floor(Math.random() * perdedores.length)];
-                    alert(`Para completar a chave da competição, o participante "${sorteado}" foi sorteado para a próxima fase!`);
-                    vencedores.push(sorteado);
-                }
                 players = vencedores.map(nome => ({ nome }));
             }
 
-            if (players.length < 2) return alert('Não há jogadores suficientes para criar a fase.');
+            if (players.length < 2) return alert('Não há jogadores suficientes para criar a fase (mínimo 2 jogadores).');
 
+            // Embaralhar jogadores
             players.sort(() => Math.random() - 0.5);
 
+            // Separar jogadores que receberão BYE (passagem automática)
+            let jogadoresComBye = [];
+            const sobra = players.length % 4;
+            
+            if (sobra !== 0) {
+                jogadoresComBye = players.splice(players.length - sobra, sobra);
+                if (jogadoresComBye.length > 0) {
+                    alert(`✅ Atenção: ${jogadoresComBye.length} jogador(es) receberá(ão) BYE (passagem automática para a próxima fase):\n${jogadoresComBye.map(p => p.nome).join(', ')}\n\nEles não jogarão nesta fase mas avançarão automaticamente.`);
+                }
+            }
+
+            // Criar jogos com duplas
             const batch = writeBatch(db);
-            for (let i = 0; i < players.length; i += 2) {
-                if (!players[i + 1]) continue;
+            const todosJogadoresFase = [...players.map(p => p.nome), ...jogadoresComBye.map(p => p.nome)];
+            
+            for (let i = 0; i < players.length; i += 4) {
+                if (i + 3 >= players.length) continue;
+                
+                const dupla1 = `${players[i].nome} + ${players[i + 1].nome}`;
+                const dupla2 = `${players[i + 2].nome} + ${players[i + 3].nome}`;
+                
                 const jogoRef = doc(collection(db, "jogos"));
                 batch.set(jogoRef, {
                     modalidade,
                     fase: numero,
-                    jogador1: players[i].nome,
-                    jogador2: players[i + 1].nome,
+                    dupla1: dupla1,
+                    dupla2: dupla2,
                     placar1: 0,
                     placar2: 0,
                     finalizado: false
                 });
             }
+            
             await batch.commit();
-            await addDoc(fasesCol, { modalidade, numero, players: players.map(p => p.nome) });
-            alert(`Fase ${numero} para ${modalidade} criada com sucesso!`);
+            await addDoc(fasesCol, { 
+                modalidade, 
+                numero, 
+                players: todosJogadoresFase,
+                jogadoresComBye: jogadoresComBye.map(p => p.nome)
+            });
+            
+            const msgJogos = players.length / 4;
+            const msgBye = jogadoresComBye.length > 0 ? `\n${jogadoresComBye.length} jogador(es) com BYE.` : '';
+            alert(`Fase ${numero} para ${modalidade} criada com sucesso!\n${msgJogos} jogo(s) criado(s).${msgBye}`);
             carregarFasesAdmin();
         });
 
@@ -553,14 +583,14 @@
                 const botoesDesabilitados = j.finalizado ? 'disabled' : '';
                 lista.insertAdjacentHTML('beforeend', `<div class="p-3 border rounded ${finalizadoClass}">
                     <div class="flex justify-between items-center mb-2">
-                        <div class="font-medium">${j.jogador1} <span class="font-bold text-xl">${j.placar1 || 0}</span> x <span class="font-bold text-xl">${j.placar2 || 0}</span> ${j.jogador2}</div>
+                        <div class="font-medium">${j.dupla1} <span class="font-bold text-xl">${j.placar1 || 0}</span> x <span class="font-bold text-xl">${j.placar2 || 0}</span> ${j.dupla2}</div>
                         ${j.finalizado ? '<span class="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded-full">FINALIZADO</span>' : `<button class="bg-green-500 text-white px-2 py-1 text-sm rounded btn-finalizar" data-id="${j.id}">Finalizar</button>`}
                     </div>
                     <div class="flex gap-2 flex-wrap items-center border-t pt-2 mt-2">
-                        <button class="bg-blue-500 text-white px-2 py-1 text-xs rounded" data-id="${j.id}" data-p="1" data-op="inc" ${botoesDesabilitados}>+1 ${j.jogador1}</button>
+                        <button class="bg-blue-500 text-white px-2 py-1 text-xs rounded" data-id="${j.id}" data-p="1" data-op="inc" ${botoesDesabilitados}>+1 ${j.dupla1}</button>
                         <button class="bg-gray-400 text-white px-2 py-1 text-xs rounded" data-id="${j.id}" data-p="1" data-op="dec" ${botoesDesabilitados}>-1</button>
                         <span class="mx-2 text-gray-300">|</span>
-                        <button class="bg-blue-500 text-white px-2 py-1 text-xs rounded" data-id="${j.id}" data-p="2" data-op="inc" ${botoesDesabilitados}>+1 ${j.jogador2}</button>
+                        <button class="bg-blue-500 text-white px-2 py-1 text-xs rounded" data-id="${j.id}" data-p="2" data-op="inc" ${botoesDesabilitados}>+1 ${j.dupla2}</button>
                         <button class="bg-gray-400 text-white px-2 py-1 text-xs rounded" data-id="${j.id}" data-p="2" data-op="dec" ${botoesDesabilitados}>-1</button>
                     </div>
                 </div>`);

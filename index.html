@@ -147,23 +147,31 @@ document.getElementById("fileInput").addEventListener("change", async e => {
 
         let count = 0;
 
-        rows.forEach(row => {
-            const name = row[0]?.toString().trim();
-            if (!name) return;
+        rows.forEach((row, index) => {
+    if (index === 0) return; // pula cabeçalho
 
-            const nums = parseNumbers(row);
-            let bets = [];
+    const name = String(row[0] || "").trim();
+    const cartela1 = String(row[1] || "");
+    const cartela2 = String(row[2] || "");
 
-            for (let i = 0; i < nums.length; i += 6) {
-                const bet = nums.slice(i, i + 6);
-                if (bet.length === 6) bets.push(bet.sort((a,b)=>a-b));
-            }
+    if (!name) return;
 
-            if (bets.length) {
-                batch.set(doc(collection(db, "participants")), { name, bets });
-                count++;
-            }
-        });
+    const extract = txt =>
+        txt.match(/\d+/g)?.map(n => parseInt(n)).filter(n => n >= 1 && n <= 60) || [];
+
+    const nums1 = extract(cartela1);
+    const nums2 = extract(cartela2);
+
+    let bets = [];
+
+    if (nums1.length === 6) bets.push(nums1.sort((a,b)=>a-b));
+    if (nums2.length === 6) bets.push(nums2.sort((a,b)=>a-b));
+
+    if (bets.length > 0) {
+        batch.set(doc(collection(db, "participants")), { name, bets });
+        count++;
+    }
+});
 
         await batch.commit();
         alert(`✅ ${count} participantes importados`);
@@ -259,3 +267,4 @@ document.getElementById("searchInput").addEventListener("input", render);
 
 </body>
 </html>
+

@@ -11,7 +11,7 @@
         .sena-bg { background-color: #dcfce7; border: 2px solid #16a34a; }
         .quina-bg { background-color: #fef9c3; border: 2px solid #ca8a04; }
         .quadra-bg { background-color: #dbeafe; border: 2px solid #2563eb; }
-        .hit-number { background-color: #16a34a; color: white; font-weight: bold; }
+        .hit-number { background-color: #16a34a; color: white; font-weight: bold; border-color: #16a34a; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen pb-20">
@@ -19,37 +19,37 @@
     <nav class="bg-green-700 text-white p-4 shadow-lg sticky top-0 z-50">
         <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <h1 class="text-2xl font-bold flex items-center gap-2"><i class="fas fa-clover"></i> Bolão</h1>
-            <input type="text" id="searchInput" placeholder="Filtrar dezenas..." class="w-full md:w-1/2 p-2 rounded text-gray-800 focus:outline-none">
-            <button onclick="document.getElementById('adminPanel').classList.toggle('hidden')" class="bg-green-800 px-3 py-1 rounded text-xs">Admin</button>
+            <input type="text" id="searchInput" placeholder="Pesquisar por nome ou dezena..." class="w-full md:w-1/2 p-2 rounded text-gray-800 focus:outline-none">
+            <button onclick="document.getElementById('adminPanel').classList.toggle('hidden')" class="bg-green-800 px-3 py-1 rounded text-xs border border-green-600">Admin</button>
         </div>
     </nav>
 
     <div class="container mx-auto mt-6 px-4">
         <div class="bg-white p-4 rounded-lg shadow-md grid grid-cols-3 gap-2 text-center font-bold">
-            <div class="bg-green-100 p-2 rounded border border-green-500 text-green-700">Sena: <span id="countSena">0</span></div>
-            <div class="bg-yellow-100 p-2 rounded border border-yellow-500 text-yellow-700">Quina: <span id="countQuina">0</span></div>
-            <div class="bg-blue-100 p-2 rounded border border-blue-500 text-blue-700">Quadra: <span id="countQuadra">0</span></div>
+            <div class="bg-green-50 p-2 rounded border border-green-500 text-green-700"><div class="text-[10px] uppercase">Sena</div><span id="countSena">0</span></div>
+            <div class="bg-yellow-50 p-2 rounded border border-yellow-500 text-yellow-700"><div class="text-[10px] uppercase">Quina</div><span id="countQuina">0</span></div>
+            <div class="bg-blue-50 p-2 rounded border border-blue-500 text-blue-700"><div class="text-[10px] uppercase">Quadra</div><span id="countQuadra">0</span></div>
         </div>
     </div>
 
     <div id="adminPanel" class="hidden container mx-auto mt-6 px-4">
-        <div class="bg-gray-200 p-4 rounded-lg border border-gray-300">
-            <div class="mb-4">
-                <label class="block font-bold mb-1">Resultado:</label>
+        <div class="bg-gray-200 p-4 rounded-lg border border-gray-300 shadow-inner">
+            <div class="mb-4 bg-white p-3 rounded shadow-sm">
+                <label class="block font-bold mb-1 text-sm text-gray-700">Resultado do Sorteio:</label>
                 <div class="flex gap-2">
-                    <input type="text" id="drawInput" class="flex-1 p-2 rounded border">
-                    <button onclick="saveDrawResult()" class="bg-blue-600 text-white px-4 py-2 rounded">Salvar</button>
+                    <input type="text" id="drawInput" placeholder="Ex: 01 02 03 04 05 06" class="flex-1 p-2 rounded border border-gray-300">
+                    <button onclick="saveDrawResult()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Salvar</button>
                 </div>
             </div>
-            <div>
-                <label class="block font-bold mb-1">Upload Planilha:</label>
-                <input type="file" id="fileInput" accept=".xlsx" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-green-50 file:text-green-700 hover:file:bg-green-100"/>
+            <div class="bg-white p-3 rounded shadow-sm">
+                <label class="block font-bold mb-1 text-sm text-gray-700">Importar Excel:</label>
+                <input type="file" id="fileInput" accept=".xlsx, .csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-green-50 file:text-green-700 hover:file:bg-green-100"/>
             </div>
         </div>
     </div>
 
     <div class="container mx-auto mt-6 px-4">
-        <div id="loading" class="text-center py-10 text-gray-500"><i class="fas fa-spinner fa-spin"></i></div>
+        <div id="loading" class="text-center py-10 text-gray-500"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">Carregando bolão...</p></div>
         <div id="betsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
     </div>
 
@@ -71,58 +71,62 @@
         let allParticipants = [];
         let currentDraw = [];
 
-        function parseNumbers(input) {
-            if (!input) return [];
-            // Pega tudo que é número, ignorando letras e símbolos
-            const matches = input.toString().match(/\d+/g);
+        function parseNumbersFromLine(row) {
+            // Pega todos os números de todas as células da linha (exceto a primeira que é o nome)
+            let lineData = row.slice(1).join(" ");
+            const matches = lineData.match(/\d+/g);
             if (!matches) return [];
-            return matches.map(n => parseInt(n, 10))
-                          .filter(n => n > 0 && n <= 60)
-                          .sort((a, b) => a - b);
+            return matches.map(n => parseInt(n, 10)).filter(n => n > 0 && n <= 60);
         }
 
         document.getElementById('fileInput').addEventListener('change', (e) => {
             const file = e.target.files[0];
             const reader = new FileReader();
             reader.onload = async (evt) => {
-                const workbook = XLSX.read(evt.target.result, { type: 'array' });
-                const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
-                
-                const snap = await getDocs(collection(db, "participants"));
-                const batch = writeBatch(db);
-                snap.forEach(d => batch.delete(d.ref));
-
-                let count = 0;
-                rows.forEach((row, index) => {
-                    if (index === 0 && isNaN(parseInt(row[1]))) return; // Pula cabeçalho
-                    if (!row[0]) return;
-
-                    // Tenta ler Coluna B (row[1]) e Coluna C (row[2])
-                    let c1 = parseNumbers(row[1]);
-                    let c2 = parseNumbers(row[2]);
+                try {
+                    const data = new Uint8Array(evt.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
                     
-                    let validBets = [];
-                    if (c1.length >= 6) validBets.push(c1.slice(0, 6));
-                    if (c2.length >= 6) validBets.push(c2.slice(0, 6));
+                    const snap = await getDocs(collection(db, "participants"));
+                    const batch = writeBatch(db);
+                    snap.forEach(d => batch.delete(d.ref));
 
-                    if (validBets.length > 0) {
-                        batch.set(doc(collection(db, "participants")), { name: row[0], bets: validBets });
-                        count++;
-                    }
-                });
+                    let count = 0;
+                    rows.forEach((row, index) => {
+                        const nome = row[0] ? row[0].toString().trim() : "";
+                        if (!nome || nome.toLowerCase().includes("nome")) return;
 
-                await batch.commit();
-                alert(count + " participantes carregados!");
-                location.reload();
+                        const todosNumeros = parseNumbersFromLine(row);
+                        
+                        let validBets = [];
+                        // Agrupa de 6 em 6
+                        for (let i = 0; i < todosNumeros.length; i += 6) {
+                            const grupo = todosNumeros.slice(i, i + 6);
+                            if (grupo.length === 6) validBets.push(grupo.sort((a, b) => a - b));
+                        }
+
+                        if (validBets.length > 0) {
+                            batch.set(doc(collection(db, "participants")), { name: nome, bets: validBets });
+                            count++;
+                        }
+                    });
+
+                    await batch.commit();
+                    alert(`✅ ${count} participantes carregados com sucesso!`);
+                    location.reload();
+                } catch (err) { alert("Erro: " + err.message); }
             };
             reader.readAsArrayBuffer(file);
         });
 
         window.saveDrawResult = async () => {
-            const nums = parseNumbers(document.getElementById('drawInput').value);
-            if (nums.length < 6) return alert("Insira 6 números!");
-            await setDoc(doc(db, "settings", "drawResult"), { numbers: nums.slice(0, 6) });
-            alert("Sorteio atualizado!");
+            const input = document.getElementById('drawInput').value;
+            const nums = input.match(/\d+/g);
+            if (!nums || nums.length < 6) return alert("Insira os 6 números do sorteio!");
+            const sorted = nums.map(n => parseInt(n)).slice(0, 6).sort((a,b)=>a-b);
+            await setDoc(doc(db, "settings", "drawResult"), { numbers: sorted });
+            alert("Resultado salvo!");
         };
 
         onSnapshot(doc(db, "settings", "drawResult"), (s) => {
@@ -140,28 +144,39 @@
         function render() {
             const container = document.getElementById('betsList');
             container.innerHTML = '';
-            const search = parseNumbers(document.getElementById('searchInput').value);
+            const search = document.getElementById('searchInput').value.toLowerCase();
             let stats = { sena: 0, quina: 0, quadra: 0 };
 
-            allParticipants.forEach(p => {
-                if (search.length > 0 && !p.bets.some(b => search.every(n => b.includes(n)))) return;
+            // Ordenação: quem tem mais acertos primeiro
+            const sortedList = [...allParticipants].sort((a, b) => {
+                const maxA = Math.max(...a.bets.map(bet => bet.filter(n => currentDraw.includes(n)).length));
+                const maxB = Math.max(...b.bets.map(bet => bet.filter(n => currentDraw.includes(n)).length));
+                return maxB - maxA;
+            });
+
+            sortedList.forEach(p => {
+                const matchesSearch = p.name.toLowerCase().includes(search) || 
+                                    p.bets.some(b => b.some(n => n.toString() == search));
+                if (search && !matchesSearch) return;
 
                 const card = document.createElement('div');
-                card.className = "bg-white p-4 rounded-lg shadow";
-                let betsHtml = p.bets.map(bet => {
+                card.className = "bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition border border-gray-200";
+                
+                let betsHtml = p.bets.map((bet, idx) => {
                     const hits = bet.filter(n => currentDraw.includes(n)).length;
                     if (hits === 6) stats.sena++; else if (hits === 5) stats.quina++; else if (hits === 4) stats.quadra++;
                     
                     let bg = hits === 6 ? 'sena-bg' : hits === 5 ? 'quina-bg' : hits === 4 ? 'quadra-bg' : 'bg-gray-50';
-                    return `<div class="p-2 rounded mb-2 ${bg} border border-gray-100">
-                        <div class="flex flex-wrap gap-2 justify-center">
-                            ${bet.map(n => `<span class="w-8 h-8 flex items-center justify-center rounded-full border ${currentDraw.includes(n) ? 'hit-number' : 'bg-white'}">${n.toString().padStart(2,'0')}</span>`).join('')}
-                        </div>
-                        <div class="text-center text-xs mt-1 font-bold">${hits} acertos</div>
-                    </div>`;
+                    return `
+                        <div class="p-2 rounded mb-2 ${bg} transition-colors">
+                            <div class="text-[10px] text-gray-400 mb-1 font-bold uppercase">Jogo ${idx+1} • ${hits} acertos</div>
+                            <div class="flex flex-wrap gap-1.5 justify-center">
+                                ${bet.map(n => `<span class="w-7 h-7 flex items-center justify-center rounded-full text-xs border ${currentDraw.includes(n) ? 'hit-number' : 'bg-white border-gray-200'}">${n.toString().padStart(2,'0')}</span>`).join('')}
+                            </div>
+                        </div>`;
                 }).join('');
 
-                card.innerHTML = `<h3 class="font-bold border-b mb-2">${p.name}</h3>${betsHtml}`;
+                card.innerHTML = `<h3 class="font-bold text-gray-700 border-b mb-3 pb-1 truncate">${p.name}</h3>${betsHtml}`;
                 container.appendChild(card);
             });
 

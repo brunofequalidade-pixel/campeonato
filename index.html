@@ -4,364 +4,173 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bolão Mega da Virada 2025</title>
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
     <style>
-        /* Estilos visuais dos destaques */
-        .sena-bg { background-color: #dcfce7; border: 2px solid #16a34a; } /* Verde */
-        .quina-bg { background-color: #fef9c3; border: 2px solid #ca8a04; } /* Amarelo */
-        .quadra-bg { background-color: #dbeafe; border: 2px solid #2563eb; } /* Azul */
-        .hit-number { background-color: #16a34a; color: white; font-weight: bold; border-color: #16a34a; }
+        .sena-bg { background-color: #dcfce7; border: 2px solid #16a34a; }
+        .quina-bg { background-color: #fef9c3; border: 2px solid #ca8a04; }
+        .quadra-bg { background-color: #dbeafe; border: 2px solid #2563eb; }
+        .hit-number { background-color: #16a34a; color: white; font-weight: bold; }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen text-gray-800 pb-20">
+<body class="bg-gray-100 min-h-screen pb-20">
 
     <nav class="bg-green-700 text-white p-4 shadow-lg sticky top-0 z-50">
         <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-            <h1 class="text-2xl font-bold flex items-center gap-2">
-                <i class="fas fa-clover"></i> Bolão da Virada
-            </h1>
-            
-            <div class="relative w-full md:w-1/2">
-                <input type="text" id="searchInput" placeholder="Pesquisar dezenas (ex: 05 12)..." 
-                    class="w-full p-2 pl-10 rounded text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-400">
-                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-            </div>
-
-            <button onclick="toggleAdminPanel()" class="text-xs bg-green-800 hover:bg-green-600 px-3 py-1 rounded border border-green-600">
-                Admin
-            </button>
+            <h1 class="text-2xl font-bold flex items-center gap-2"><i class="fas fa-clover"></i> Bolão</h1>
+            <input type="text" id="searchInput" placeholder="Filtrar dezenas..." class="w-full md:w-1/2 p-2 rounded text-gray-800 focus:outline-none">
+            <button onclick="document.getElementById('adminPanel').classList.toggle('hidden')" class="bg-green-800 px-3 py-1 rounded text-xs">Admin</button>
         </div>
     </nav>
 
     <div class="container mx-auto mt-6 px-4">
-        <div class="bg-white p-4 rounded-lg shadow-md grid grid-cols-3 gap-2 text-center">
-            <div class="p-2 bg-green-100 rounded border border-green-500">
-                <div class="text-xs text-green-800 font-bold uppercase">Sena (6)</div>
-                <div id="countSena" class="text-2xl font-bold text-green-700">0</div>
-            </div>
-            <div class="p-2 bg-yellow-100 rounded border border-yellow-500">
-                <div class="text-xs text-yellow-800 font-bold uppercase">Quina (5)</div>
-                <div id="countQuina" class="text-2xl font-bold text-yellow-700">0</div>
-            </div>
-            <div class="p-2 bg-blue-100 rounded border border-blue-500">
-                <div class="text-xs text-blue-800 font-bold uppercase">Quadra (4)</div>
-                <div id="countQuadra" class="text-2xl font-bold text-blue-700">0</div>
-            </div>
+        <div class="bg-white p-4 rounded-lg shadow-md grid grid-cols-3 gap-2 text-center font-bold">
+            <div class="bg-green-100 p-2 rounded border border-green-500 text-green-700">Sena: <span id="countSena">0</span></div>
+            <div class="bg-yellow-100 p-2 rounded border border-yellow-500 text-yellow-700">Quina: <span id="countQuina">0</span></div>
+            <div class="bg-blue-100 p-2 rounded border border-blue-500 text-blue-700">Quadra: <span id="countQuadra">0</span></div>
         </div>
     </div>
 
     <div id="adminPanel" class="hidden container mx-auto mt-6 px-4">
-        <div class="bg-gray-200 p-6 rounded-lg shadow-inner border border-gray-300">
-            <h2 class="text-lg font-bold mb-4 flex items-center gap-2"><i class="fas fa-cog"></i> Painel do Organizador</h2>
-            
-            <div class="mb-6 bg-white p-4 rounded shadow-sm">
-                <label class="block text-sm font-bold mb-2">Resultado do Sorteio:</label>
+        <div class="bg-gray-200 p-4 rounded-lg border border-gray-300">
+            <div class="mb-4">
+                <label class="block font-bold mb-1">Resultado:</label>
                 <div class="flex gap-2">
-                    <input type="text" id="drawInput" placeholder="Ex: 04 15 22 35 48 59" class="flex-1 p-2 rounded border border-gray-300">
-                    <button onclick="saveDrawResult()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 font-bold">
-                        Salvar
-                    </button>
+                    <input type="text" id="drawInput" class="flex-1 p-2 rounded border">
+                    <button onclick="saveDrawResult()" class="bg-blue-600 text-white px-4 py-2 rounded">Salvar</button>
                 </div>
-                <p class="text-xs text-gray-500 mt-1">Insira os 6 números separados por espaço.</p>
             </div>
-
-            <div class="bg-white p-4 rounded shadow-sm">
-                <label class="block text-sm font-bold mb-2">Importar Planilha (.xlsx):</label>
-                <input type="file" id="fileInput" accept=".xlsx" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"/>
-                <div class="mt-2 text-xs text-gray-500">
-                    <p><strong>Estrutura Exigida:</strong></p>
-                    <p>Coluna A: Nome do Participante</p>
-                    <p>Coluna B: Dezenas Jogo 1 (tudo na mesma célula)</p>
-                    <p>Coluna C: Dezenas Jogo 2 (opcional)</p>
-                </div>
+            <div>
+                <label class="block font-bold mb-1">Upload Planilha:</label>
+                <input type="file" id="fileInput" accept=".xlsx" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-green-50 file:text-green-700 hover:file:bg-green-100"/>
             </div>
         </div>
     </div>
 
     <div class="container mx-auto mt-6 px-4">
-        <div id="loading" class="text-center py-10 text-gray-500">
-            <i class="fas fa-spinner fa-spin fa-2x"></i>
-            <p class="mt-2">Carregando dados...</p>
-        </div>
-        
-        <div id="betsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-10">
-            </div>
+        <div id="loading" class="text-center py-10 text-gray-500"><i class="fas fa-spinner fa-spin"></i></div>
+        <div id="betsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, setDoc, onSnapshot, writeBatch, deleteDoc } 
-        from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, setDoc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // --- Configuração Firebase ---
         const firebaseConfig = {
             apiKey: "AIzaSyBo8G3ZcWk4EepN0cHdVBtXc7tGOfcw-yg",
             authDomain: "inscricaosinuca.firebaseapp.com",
             projectId: "inscricaosinuca",
             storageBucket: "inscricaosinuca.firebasestorage.app",
             messagingSenderId: "338241576305",
-            appId: "1:338241576305:web:288b6124384c6be4f76ad0",
-            measurementId: "G-PEDG30FS2R"
+            appId: "1:338241576305:web:288b6124384c6be4f76ad0"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-
-        // Estado Global
         let allParticipants = [];
         let currentDraw = [];
 
-        // Toggle Painel Admin
-        window.toggleAdminPanel = () => {
-            document.getElementById('adminPanel').classList.toggle('hidden');
-        };
-
-        // --- 1. Função de Tratamento de Números (ROBUSTA) ---
         function parseNumbers(input) {
             if (!input) return [];
-            
-            let str = input.toString();
-            // Substitui traços, pontos, barras e ; por ESPAÇO
-            str = str.replace(/[-./;]/g, ' ');
-            // Mantém apenas números e espaços
-            str = str.replace(/[^0-9\s]/g, '');
-            
-            // Quebra pelos espaços, converte para Inteiro
-            const nums = str.split(/\s+/)
-                .map(n => parseInt(n, 10))
-                .filter(n => !isNaN(n) && n > 0 && n <= 60) // Filtra inválidos
-                .sort((a, b) => a - b);
-            
-            // Remove duplicatas
-            return [...new Set(nums)];
+            // Pega tudo que é número, ignorando letras e símbolos
+            const matches = input.toString().match(/\d+/g);
+            if (!matches) return [];
+            return matches.map(n => parseInt(n, 10))
+                          .filter(n => n > 0 && n <= 60)
+                          .sort((a, b) => a - b);
         }
 
-        function formatNumber(n) {
-            return n.toString().padStart(2, '0');
-        }
-
-        // --- 2. Upload de Excel Melhorado ---
-        document.getElementById('fileInput').addEventListener('change', async (e) => {
+        document.getElementById('fileInput').addEventListener('change', (e) => {
             const file = e.target.files[0];
-            if (!file) return;
-
-            if(!confirm("Isso apagará TODO o bolão atual e importará a nova planilha. Confirmar?")) {
-                e.target.value = ''; 
-                return;
-            }
-
             const reader = new FileReader();
             reader.onload = async (evt) => {
-                try {
-                    const data = new Uint8Array(evt.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                const workbook = XLSX.read(evt.target.result, { type: 'array' });
+                const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
+                
+                const snap = await getDocs(collection(db, "participants"));
+                const batch = writeBatch(db);
+                snap.forEach(d => batch.delete(d.ref));
 
-                    // A. Limpar Banco Antigo
-                    const snap = await getDocs(collection(db, "participants"));
-                    const batchDel = writeBatch(db);
-                    snap.forEach(doc => batchDel.delete(doc.ref));
-                    await batchDel.commit();
+                let count = 0;
+                rows.forEach((row, index) => {
+                    if (index === 0 && isNaN(parseInt(row[1]))) return; // Pula cabeçalho
+                    if (!row[0]) return;
 
-                    // B. Processar Nova Planilha
-                    const batchAdd = writeBatch(db);
-                    let count = 0;
-                    let errors = [];
+                    // Tenta ler Coluna B (row[1]) e Coluna C (row[2])
+                    let c1 = parseNumbers(row[1]);
+                    let c2 = parseNumbers(row[2]);
+                    
+                    let validBets = [];
+                    if (c1.length >= 6) validBets.push(c1.slice(0, 6));
+                    if (c2.length >= 6) validBets.push(c2.slice(0, 6));
 
-                    // Detecção automática de cabeçalho (pula linha 1 se tiver texto na col de números)
-                    let startIndex = 0;
-                    if (rows.length > 0 && rows[0][1] && isNaN(parseInt(rows[0][1]))) {
-                        startIndex = 1; // Tem cabeçalho
+                    if (validBets.length > 0) {
+                        batch.set(doc(collection(db, "participants")), { name: row[0], bets: validBets });
+                        count++;
                     }
+                });
 
-                    for (let i = startIndex; i < rows.length; i++) {
-                        const row = rows[i];
-                        if (!row || !row[0]) continue; // Pula linha vazia
-
-                        const nome = row[0];
-                        // row[1] = Cartela 1, row[2] = Cartela 2
-                        const cartela1 = parseNumbers(row[1]); 
-                        const cartela2 = parseNumbers(row[2] || ""); 
-
-                        // Validação: Precisa de pelo menos 1 cartela válida (6 números)
-                        if (cartela1.length === 6) {
-                            const ref = doc(collection(db, "participants"));
-                            
-                            let betsToSave = [cartela1];
-                            // Só adiciona a segunda cartela se ela também tiver 6 números
-                            if (cartela2.length === 6) {
-                                betsToSave.push(cartela2);
-                            }
-
-                            batchAdd.set(ref, {
-                                name: nome,
-                                bets: betsToSave
-                            });
-                            count++;
-                        } else {
-                            // Registra erro se a cartela 1 estiver ruim
-                            if(cartela1.length > 0) { // Só avisa se tentou ter número mas falhou
-                                errors.push(`Linha ${i+1} (${nome}): Leu ${cartela1.length} números. Esperado: 6.`);
-                            }
-                        }
-                    }
-
-                    if (count > 0) {
-                        await batchAdd.commit();
-                        let msg = `✅ Sucesso! ${count} participantes carregados.`;
-                        if (errors.length > 0) {
-                            msg += `\n\n⚠️ Avisos:\n` + errors.slice(0, 5).join('\n') + (errors.length > 5 ? '\n(e outros...)' : '');
-                        }
-                        alert(msg);
-                    } else {
-                        alert("❌ Erro: Nenhum participante válido encontrado. Verifique se os números estão na Coluna B.");
-                    }
-
-                } catch (error) {
-                    console.error(error);
-                    alert("Erro crítico ao ler arquivo: " + error.message);
-                }
-                e.target.value = '';
+                await batch.commit();
+                alert(count + " participantes carregados!");
+                location.reload();
             };
             reader.readAsArrayBuffer(file);
         });
 
-        // --- 3. Salvar Sorteio ---
         window.saveDrawResult = async () => {
-            const input = document.getElementById('drawInput').value;
-            const nums = parseNumbers(input);
-            
-            if (nums.length !== 6) {
-                alert("Por favor, insira exatamente 6 dezenas válidas.");
-                return;
-            }
-
-            await setDoc(doc(db, "settings", "drawResult"), { numbers: nums });
-            alert("Resultado do sorteio atualizado!");
+            const nums = parseNumbers(document.getElementById('drawInput').value);
+            if (nums.length < 6) return alert("Insira 6 números!");
+            await setDoc(doc(db, "settings", "drawResult"), { numbers: nums.slice(0, 6) });
+            alert("Sorteio atualizado!");
         };
 
-        // --- 4. Listeners em Tempo Real ---
-        
-        // Listener do Resultado
-        onSnapshot(doc(db, "settings", "drawResult"), (docSnap) => {
-            if (docSnap.exists()) {
-                currentDraw = docSnap.data().numbers || [];
-                document.getElementById('drawInput').value = currentDraw.join(' ');
-            } else {
-                currentDraw = [];
-            }
-            renderApp();
+        onSnapshot(doc(db, "settings", "drawResult"), (s) => {
+            currentDraw = s.exists() ? s.data().numbers : [];
+            document.getElementById('drawInput').value = currentDraw.join(' ');
+            render();
         });
 
-        // Listener dos Participantes
-        onSnapshot(collection(db, "participants"), (querySnapshot) => {
-            allParticipants = [];
-            querySnapshot.forEach((doc) => {
-                allParticipants.push(doc.data());
-            });
-            document.getElementById('loading').style.display = 'none';
-            renderApp();
+        onSnapshot(collection(db, "participants"), (s) => {
+            allParticipants = s.docs.map(d => d.data());
+            document.getElementById('loading').classList.add('hidden');
+            render();
         });
 
-        // --- 5. Renderização e Filtros ---
-        const searchInput = document.getElementById('searchInput');
-        searchInput.addEventListener('input', renderApp);
-
-        function renderApp() {
+        function render() {
             const container = document.getElementById('betsList');
             container.innerHTML = '';
-
-            const searchTerms = parseNumbers(searchInput.value);
+            const search = parseNumbers(document.getElementById('searchInput').value);
             let stats = { sena: 0, quina: 0, quadra: 0 };
 
-            // Filtrar
-            const filtered = allParticipants.filter(p => {
-                if (searchTerms.length === 0) return true;
-                return p.bets.some(bet => searchTerms.every(term => bet.includes(term)));
-            });
-
-            // Ordenar por maior acerto
-            filtered.sort((a, b) => {
-                const maxA = Math.max(...a.bets.map(bet => getHits(bet).length));
-                const maxB = Math.max(...b.bets.map(bet => getHits(bet).length));
-                return maxB - maxA;
-            });
-
-            // Gerar HTML
-            filtered.forEach(p => {
-                let maxHitsForPlayer = 0;
-
-                const betsHtml = p.bets.map((bet, idx) => {
-                    const hits = getHits(bet);
-                    const count = hits.length;
-                    if(count > maxHitsForPlayer) maxHitsForPlayer = count;
-
-                    // Stats Globais
-                    if (count === 6) stats.sena++;
-                    else if (count === 5) stats.quina++;
-                    else if (count === 4) stats.quadra++;
-
-                    // Classes visuais
-                    let boxClass = "bg-gray-50 border-gray-200";
-                    let badge = "";
-
-                    if (count === 6) { boxClass = "sena-bg"; badge = "<span class='bg-green-600 text-white text-[10px] px-2 py-0.5 rounded ml-2'>SENA</span>"; }
-                    else if (count === 5) { boxClass = "quina-bg"; badge = "<span class='bg-yellow-600 text-white text-[10px] px-2 py-0.5 rounded ml-2'>QUINA</span>"; }
-                    else if (count === 4) { boxClass = "quadra-bg"; badge = "<span class='bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded ml-2'>QUADRA</span>"; }
-
-                    // Bolinhas
-                    const balls = bet.map(num => {
-                        const isHit = currentDraw.includes(num);
-                        const isSearched = searchTerms.includes(num);
-                        
-                        let ballClass = "w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium border ";
-                        if (isHit) ballClass += "hit-number"; // Verde escuro
-                        else if (isSearched) ballClass += "bg-green-200 border-green-400 text-green-900"; // Destaque busca
-                        else ballClass += "bg-white border-gray-300 text-gray-600";
-
-                        return `<div class="${ballClass}">${formatNumber(num)}</div>`;
-                    }).join('');
-
-                    return `
-                        <div class="p-3 rounded mb-2 border ${boxClass}">
-                            <div class="flex justify-between mb-2">
-                                <span class="text-xs font-bold text-gray-500 uppercase">JOGO ${idx + 1}</span>
-                                <div class="flex items-center">
-                                    <span class="text-xs font-bold text-gray-700">${count} acertos</span>
-                                    ${badge}
-                                </div>
-                            </div>
-                            <div class="flex flex-wrap gap-2 justify-center">${balls}</div>
-                        </div>
-                    `;
-                }).join('');
+            allParticipants.forEach(p => {
+                if (search.length > 0 && !p.bets.some(b => search.every(n => b.includes(n)))) return;
 
                 const card = document.createElement('div');
-                card.className = "bg-white rounded-lg shadow p-4 hover:shadow-lg transition-all";
-                card.innerHTML = `
-                    <div class="flex justify-between items-center border-b pb-2 mb-3">
-                        <h3 class="font-bold text-gray-800 truncate pr-2">${p.name}</h3>
-                        ${maxHitsForPlayer >= 4 ? '<i class="fas fa-trophy text-yellow-500 text-lg"></i>' : ''}
-                    </div>
-                    ${betsHtml}
-                `;
+                card.className = "bg-white p-4 rounded-lg shadow";
+                let betsHtml = p.bets.map(bet => {
+                    const hits = bet.filter(n => currentDraw.includes(n)).length;
+                    if (hits === 6) stats.sena++; else if (hits === 5) stats.quina++; else if (hits === 4) stats.quadra++;
+                    
+                    let bg = hits === 6 ? 'sena-bg' : hits === 5 ? 'quina-bg' : hits === 4 ? 'quadra-bg' : 'bg-gray-50';
+                    return `<div class="p-2 rounded mb-2 ${bg} border border-gray-100">
+                        <div class="flex flex-wrap gap-2 justify-center">
+                            ${bet.map(n => `<span class="w-8 h-8 flex items-center justify-center rounded-full border ${currentDraw.includes(n) ? 'hit-number' : 'bg-white'}">${n.toString().padStart(2,'0')}</span>`).join('')}
+                        </div>
+                        <div class="text-center text-xs mt-1 font-bold">${hits} acertos</div>
+                    </div>`;
+                }).join('');
+
+                card.innerHTML = `<h3 class="font-bold border-b mb-2">${p.name}</h3>${betsHtml}`;
                 container.appendChild(card);
             });
 
-            // Atualizar Totais
-            document.getElementById('countSena').textContent = stats.sena;
-            document.getElementById('countQuina').textContent = stats.quina;
-            document.getElementById('countQuadra').textContent = stats.quadra;
+            document.getElementById('countSena').innerText = stats.sena;
+            document.getElementById('countQuina').innerText = stats.quina;
+            document.getElementById('countQuadra').innerText = stats.quadra;
         }
 
-        function getHits(bet) {
-            return bet.filter(n => currentDraw.includes(n));
-        }
+        document.getElementById('searchInput').addEventListener('input', render);
     </script>
 </body>
 </html>

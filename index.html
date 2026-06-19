@@ -1,270 +1,1498 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bolão Mega da Virada 2025</title>
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Palpites Copa 2026 - Brasil</title>
+    
     <style>
-        .sena-bg { background-color: #dcfce7; border: 2px solid #16a34a; }
-        .quina-bg { background-color: #fef9c3; border: 2px solid #ca8a04; }
-        .quadra-bg { background-color: #dbeafe; border: 2px solid #2563eb; }
-        .hit-number { background-color: #16a34a; color: white; font-weight: bold; border-color: #16a34a; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #009c3b 0%, #002776 50%, #fedf00 100%);
+            min-height: 100vh;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #009c3b;
+            padding-bottom: 15px;
+        }
+
+        .header h1 {
+            color: #009c3b;
+            font-size: clamp(24px, 5vw, 32px);
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: clamp(14px, 3vw, 16px);
+        }
+
+        .status-bar {
+            text-align: center;
+            padding: 8px;
+            background: #d4edda;
+            color: #155724;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-logout {
+            padding: 4px 12px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .menu-principal {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .btn-menu {
+            padding: clamp(15px, 3vw, 20px);
+            border: none;
+            border-radius: 15px;
+            font-size: clamp(16px, 3vw, 18px);
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .btn-menu:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn-menu:active {
+            transform: translateY(0);
+        }
+
+        .btn-palpite {
+            background: linear-gradient(135deg, #009c3b, #00c853);
+            color: white;
+        }
+
+        .btn-participantes {
+            background: linear-gradient(135deg, #002776, #1565c0);
+            color: white;
+        }
+
+        .btn-acertos {
+            background: linear-gradient(135deg, #fedf00, #ffd600);
+            color: #333;
+        }
+
+        .btn-admin {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: #333;
+            color: white;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            transition: transform 0.3s;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-admin:hover {
+            transform: rotate(90deg) scale(1.1);
+        }
+
+        .icone {
+            font-size: clamp(24px, 5vw, 30px);
+            flex-shrink: 0;
+        }
+
+        .secao {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .secao.ativa {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-grupo {
+            margin-bottom: 15px;
+        }
+
+        .form-grupo label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+            color: #333;
+            font-size: clamp(14px, 2.5vw, 16px);
+        }
+
+        .form-grupo input,
+        .form-grupo select,
+        .form-grupo textarea {
+            width: 100%;
+            padding: clamp(10px, 2vw, 12px);
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: clamp(14px, 2.5vw, 16px);
+            transition: border-color 0.3s;
+            background: white;
+        }
+
+        .form-grupo input:focus,
+        .form-grupo select:focus,
+        .form-grupo textarea:focus {
+            outline: none;
+            border-color: #009c3b;
+        }
+
+        .placar-input {
+            display: flex;
+            align-items: center;
+            gap: clamp(8px, 2vw, 15px);
+            margin: 15px 0;
+        }
+
+        .time-input {
+            flex: 1;
+            text-align: center;
+        }
+
+        .time-input label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+            font-size: clamp(12px, 2vw, 14px);
+        }
+
+        .time-input input {
+            width: 100%;
+            padding: clamp(10px, 2vw, 15px);
+            text-align: center;
+            font-size: clamp(22px, 5vw, 28px);
+            font-weight: bold;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+        }
+
+        .vs-text {
+            font-size: clamp(22px, 5vw, 28px);
+            font-weight: bold;
+            color: #666;
+            margin-top: 20px;
+            flex-shrink: 0;
+        }
+
+        .btn-acao {
+            width: 100%;
+            padding: clamp(12px, 2.5vw, 15px);
+            border: none;
+            border-radius: 10px;
+            font-size: clamp(16px, 2.5vw, 18px);
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 8px;
+        }
+
+        .btn-acao:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-acao:active {
+            transform: translateY(0);
+        }
+
+        .btn-verde { background: #009c3b; color: white; }
+        .btn-azul { background: #002776; color: white; }
+        .btn-amarelo { background: #fedf00; color: #333; }
+        .btn-vermelho { background: #dc3545; color: white; }
+        .btn-cinza { background: #6c757d; color: white; }
+        .btn-laranja { background: #fd7e14; color: white; }
+
+        .btn-voltar {
+            background: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: clamp(14px, 2.5vw, 16px);
+            cursor: pointer;
+            margin-bottom: 15px;
+            width: auto;
+            display: inline-block;
+        }
+
+        .btn-voltar:hover {
+            background: #5a6268;
+        }
+
+        .card {
+            background: #f8f9fa;
+            padding: clamp(15px, 3vw, 20px);
+            border-radius: 10px;
+            margin-bottom: 12px;
+            border-left: 4px solid #009c3b;
+        }
+
+        .card h3 {
+            color: #002776;
+            margin-bottom: 8px;
+            font-size: clamp(16px, 3vw, 20px);
+        }
+
+        .card p {
+            margin: 4px 0;
+            color: #555;
+            font-size: clamp(13px, 2vw, 14px);
+        }
+
+        .card .placar {
+            font-size: clamp(20px, 4vw, 24px);
+            font-weight: bold;
+            color: #009c3b;
+            margin: 8px 0;
+        }
+
+        .btn-pequeno {
+            padding: clamp(6px, 1.5vw, 8px) clamp(12px, 2vw, 16px);
+            border: none;
+            border-radius: 6px;
+            font-size: clamp(12px, 2vw, 14px);
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-pequeno:hover {
+            transform: scale(1.05);
+        }
+
+        .filtro-container {
+            margin-bottom: 15px;
+        }
+
+        .filtro-container select {
+            width: 100%;
+            padding: clamp(10px, 2vw, 12px);
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: clamp(14px, 2.5vw, 16px);
+            background: white;
+        }
+
+        .mensagem {
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 12px;
+            display: none;
+            text-align: center;
+            font-weight: bold;
+            font-size: clamp(13px, 2vw, 14px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .mensagem.sucesso {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .mensagem.erro {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        .sem-dados {
+            text-align: center;
+            color: #999;
+            padding: clamp(30px, 5vw, 40px);
+            font-style: italic;
+            font-size: clamp(14px, 2.5vw, 16px);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: clamp(10px, 1.8vw, 12px);
+            font-weight: bold;
+            margin: 2px;
+        }
+
+        .badge-ativo {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-encerrado {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-resultado {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .tabela-selecoes {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            font-size: clamp(12px, 2vw, 14px);
+        }
+
+        .tabela-selecoes th {
+            background: #002776;
+            color: white;
+            padding: clamp(8px, 1.5vw, 12px);
+            text-align: left;
+        }
+
+        .tabela-selecoes td {
+            padding: clamp(8px, 1.5vw, 12px);
+            border-bottom: 1px solid #ddd;
+        }
+
+        .admin-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .admin-tab {
+            padding: clamp(8px, 1.5vw, 10px) clamp(15px, 2.5vw, 20px);
+            border: 2px solid #002776;
+            background: white;
+            color: #002776;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            font-size: clamp(12px, 2vw, 14px);
+        }
+
+        .admin-tab.ativa {
+            background: #002776;
+            color: white;
+        }
+
+        .admin-conteudo {
+            display: none;
+        }
+
+        .admin-conteudo.ativa {
+            display: block;
+        }
+
+        .contador-selecoes {
+            background: #002776;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: clamp(12px, 2vw, 14px);
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+
+        textarea {
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+            min-height: 100px;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            padding: clamp(10px, 2vw, 15px);
+            border-radius: 10px;
+            margin-bottom: 15px;
+            color: #004085;
+            font-size: clamp(12px, 2vw, 14px);
+        }
+
+        .tabela-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .grid-2-colunas {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .botoes-acao {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-google {
+            background: white;
+            color: #333;
+            border: 2px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-google:hover {
+            background: #f5f5f5;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+                border-radius: 15px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .btn-menu {
+                padding: 15px;
+                gap: 10px;
+            }
+
+            .placar-input {
+                gap: 8px;
+            }
+
+            .time-input input {
+                padding: 12px 8px;
+                font-size: 20px;
+            }
+
+            .admin-tabs {
+                gap: 5px;
+            }
+
+            .admin-tab {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+
+            .btn-pequeno {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+
+            .btn-admin {
+                width: 50px;
+                height: 50px;
+                font-size: 24px;
+                bottom: 15px;
+                right: 15px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .container {
+                padding: 10px;
+            }
+
+            .grid-2-colunas {
+                grid-template-columns: 1fr;
+            }
+
+            .botoes-acao {
+                flex-direction: column;
+            }
+
+            .btn-pequeno {
+                width: 100%;
+                text-align: center;
+            }
+        }
     </style>
 </head>
-
-<body class="bg-gray-100 min-h-screen pb-20">
-
-<!-- NAV -->
-<nav class="bg-green-700 text-white p-4 shadow-lg sticky top-0 z-50">
-    <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-        <h1 class="text-2xl font-bold flex items-center gap-2">
-            <i class="fas fa-clover"></i> Bolão Mega da Virada
-        </h1>
-
-        <input type="text" id="searchInput"
-               placeholder="Pesquisar por nome ou dezenas (ex: 05 12 33)"
-               class="w-full md:w-1/2 p-2 rounded text-gray-800 focus:outline-none">
-
-        <button onclick="toggleAdmin()"
-                class="bg-green-800 px-3 py-1 rounded text-xs border border-green-600">
-            Admin
-        </button>
-    </div>
-</nav>
-
-<!-- RESUMO -->
-<div class="container mx-auto mt-6 px-4">
-    <div class="bg-white p-4 rounded-lg shadow-md grid grid-cols-3 gap-2 text-center font-bold">
-        <div class="bg-green-50 p-2 rounded border border-green-500 text-green-700">
-            <div class="text-[10px] uppercase">Sena</div>
-            <span id="countSena">0</span>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏆 PALPITES COPA 2026</h1>
+            <p>Deixe seu palpite para os jogos do Brasil!</p>
         </div>
-        <div class="bg-yellow-50 p-2 rounded border border-yellow-500 text-yellow-700">
-            <div class="text-[10px] uppercase">Quina</div>
-            <span id="countQuina">0</span>
-        </div>
-        <div class="bg-blue-50 p-2 rounded border border-blue-500 text-blue-700">
-            <div class="text-[10px] uppercase">Quadra</div>
-            <span id="countQuadra">0</span>
-        </div>
-    </div>
-</div>
 
-<!-- ADMIN -->
-<div id="adminPanel" class="hidden container mx-auto mt-6 px-4">
-    <div class="bg-gray-200 p-4 rounded-lg border border-gray-300 shadow-inner">
+        <div class="status-bar" id="statusBar">
+            <span id="statusTexto">🟡 Conectando...</span>
+            <button class="btn-logout" id="btnLogout" style="display:none;" onclick="fazerLogout()">Sair</button>
+        </div>
 
-        <div class="mb-4 bg-white p-3 rounded shadow-sm">
-            <label class="block font-bold mb-1 text-sm text-gray-700">Resultado do Sorteio:</label>
-            <div class="flex gap-2">
-                <input type="text" id="drawInput"
-                       placeholder="Ex: 01 02 03 04 05 06"
-                       class="flex-1 p-2 rounded border border-gray-300">
-                <button onclick="saveDrawResult()"
-                        class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                    Salvar
+        <div id="menuPrincipal" class="secao ativa">
+            <div class="menu-principal">
+                <button class="btn-menu btn-palpite" onclick="mostrarSecao('deixarPalpite')">
+                    <span class="icone">🎯</span>
+                    <div>
+                        <strong>Deixe seu Palpite!</strong>
+                        <p style="font-size: clamp(12px, 2vw, 14px); margin-top: 5px; opacity: 0.9;">Registre seu palpite para o jogo</p>
+                    </div>
+                </button>
+                <button class="btn-menu btn-participantes" onclick="mostrarSecao('participantes')">
+                    <span class="icone">👥</span>
+                    <div>
+                        <strong>Participantes</strong>
+                        <p style="font-size: clamp(12px, 2vw, 14px); margin-top: 5px; opacity: 0.9;">Veja todos os palpites por jogo</p>
+                    </div>
+                </button>
+                <button class="btn-menu btn-acertos" onclick="mostrarSecao('acertos')">
+                    <span class="icone">✅</span>
+                    <div>
+                        <strong>Acertos</strong>
+                        <p style="font-size: clamp(12px, 2vw, 14px); margin-top: 5px; opacity: 0.9;">Veja quem acertou cada jogo</p>
+                    </div>
                 </button>
             </div>
         </div>
 
-        <div class="bg-white p-3 rounded shadow-sm">
-            <label class="block font-bold mb-1 text-sm text-gray-700">Importar Excel:</label>
-            <input type="file" id="fileInput" accept=".xlsx"
-                   class="block w-full text-sm text-gray-500
-                   file:mr-4 file:py-2 file:px-4
-                   file:rounded-full file:border-0
-                   file:bg-green-50 file:text-green-700
-                   hover:file:bg-green-100"/>
+        <div id="deixarPalpite" class="secao">
+            <button class="btn-voltar" onclick="voltarMenu()">⬅ Voltar</button>
+            <h2 style="color: #009c3b; margin-bottom: 15px; font-size: clamp(20px, 4vw, 28px);">🎯 Deixe seu Palpite</h2>
+            
+            <div class="filtro-container">
+                <label style="font-weight: bold; margin-bottom: 8px; display: block;">Selecione o Jogo:</label>
+                <select id="selectJogoPalpite" onchange="atualizarInfoJogo()">
+                    <option value="">Escolha um jogo...</option>
+                </select>
+            </div>
+
+            <div id="formPalpiteContainer" style="display: none;">
+                <div id="infoJogoSelecionado" style="background: #f0f0f0; padding: 15px; border-radius: 10px; margin-bottom: 15px;"></div>
+                
+                <form id="formPalpite">
+                    <div class="form-grupo">
+                        <label>👤 Seu Nome:</label>
+                        <input type="text" id="nomeParticipante" placeholder="Digite seu nome completo" required>
+                    </div>
+                    <div class="form-grupo">
+                        <label>📧 Seu Email:</label>
+                        <input type="email" id="emailParticipante" placeholder="seu@email.com" required>
+                        <small style="color: #dc3545; display: block; margin-top: 5px;">⚠️ Apenas 1 palpite por email para cada jogo!</small>
+                    </div>
+                    <div class="placar-input">
+                        <div class="time-input">
+                            <label id="labelTime1">Time 1</label>
+                            <input type="number" id="placarTime1" min="0" max="20" placeholder="0" required>
+                        </div>
+                        <div class="vs-text">X</div>
+                        <div class="time-input">
+                            <label id="labelTime2">Time 2</label>
+                            <input type="number" id="placarTime2" min="0" max="20" placeholder="0" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-acao btn-verde">✅ ENVIAR PALPITE</button>
+                </form>
+                <div id="mensagemPalpite" class="mensagem"></div>
+            </div>
+        </div>
+
+        <div id="participantes" class="secao">
+            <button class="btn-voltar" onclick="voltarMenu()">⬅ Voltar</button>
+            <h2 style="color: #002776; margin-bottom: 15px;">👥 Participantes</h2>
+            <div class="filtro-container">
+                <label style="font-weight: bold; margin-bottom: 8px; display: block;">Filtrar por Jogo:</label>
+                <select id="selectJogoParticipantes" onchange="carregarParticipantes()">
+                    <option value="">Todos os jogos</option>
+                </select>
+            </div>
+            <div id="listaParticipantes"></div>
+        </div>
+
+        <div id="acertos" class="secao">
+            <button class="btn-voltar" onclick="voltarMenu()">⬅ Voltar</button>
+            <h2 style="color: #fedf00; margin-bottom: 15px;">✅ Acertos</h2>
+            <div class="filtro-container">
+                <label style="font-weight: bold; margin-bottom: 8px; display: block;">Filtrar por Jogo:</label>
+                <select id="selectJogoAcertos" onchange="carregarAcertos()">
+                    <option value="">Selecione um jogo...</option>
+                </select>
+            </div>
+            <div id="listaAcertos"></div>
+        </div>
+
+        <div id="adminLogin" class="secao">
+            <button class="btn-voltar" onclick="voltarMenu()">⬅ Voltar</button>
+            <div class="login-admin">
+                <h2>⚙️ Acesso Administrativo</h2>
+                <p style="text-align: center; margin-bottom: 20px; color: #666;">
+                    Faça login com sua conta Google para acessar o painel.
+                </p>
+                <button class="btn-acao btn-google" onclick="fazerLoginGoogle()">
+                    <span style="font-size: 20px;">G</span> Entrar com Google
+                </button>
+                <div id="mensagemLogin" class="mensagem"></div>
+            </div>
+        </div>
+
+        <div id="adminPainel" class="secao">
+            <button class="btn-voltar" onclick="voltarMenu()">⬅ Voltar</button>
+            <h2 style="color: #002776; margin-bottom: 15px;">⚙️ Painel Administrativo</h2>
+            
+            <div class="admin-tabs">
+                <button class="admin-tab ativa" onclick="mudarAbaAdmin('jogos')">🎮 Jogos</button>
+                <button class="admin-tab" onclick="mudarAbaAdmin('selecoes')">🌍 Seleções</button>
+                <button class="admin-tab" onclick="mudarAbaAdmin('participantes')">👥 Participantes</button>
+            </div>
+
+            <div id="adminJogos" class="admin-conteudo ativa">
+                <div class="info-box">
+                    <strong>📋 Regras:</strong><br>
+                    🟢 Ativo: Aparece para palpites<br>
+                    🟡 Encerrado: Não aparece para palpites<br>
+                    🔵 Com Resultado: Libera seção de acertos
+                </div>
+
+                <div class="card">
+                    <h3>🎮 Criar Novo Jogo</h3>
+                    <form id="formCriarJogo">
+                        <div class="grid-2-colunas">
+                            <div class="form-grupo">
+                                <label>Time 1:</label>
+                                <select id="time1" required><option value="">Selecione...</option></select>
+                            </div>
+                            <div class="form-grupo">
+                                <label>Time 2:</label>
+                                <select id="time2" required><option value="">Selecione...</option></select>
+                            </div>
+                        </div>
+                        <div class="grid-2-colunas">
+                            <div class="form-grupo">
+                                <label>📅 Data:</label>
+                                <input type="date" id="dataJogo" required>
+                            </div>
+                            <div class="form-grupo">
+                                <label>⏰ Horário:</label>
+                                <input type="time" id="horarioJogo" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-acao btn-verde">✅ CRIAR JOGO</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3>📋 Jogos Cadastrados</h3>
+                    <div id="listaJogosAdmin"></div>
+                </div>
+            </div>
+
+            <div id="adminSelecoes" class="admin-conteudo">
+                <div class="card">
+                    <h3>🌍 Gerenciar Seleções</h3>
+                    
+                    <div class="botoes-acao" style="margin-bottom: 15px;">
+                        <button class="btn-pequeno btn-verde" onclick="mostrarFormAdicionarSelecao()">➕ Adicionar</button>
+                        <button class="btn-pequeno btn-azul" onclick="mostrarFormColarSelecoes()">📋 Colar Lista</button>
+                        <button class="btn-pequeno btn-laranja" onclick="carregarSelecoesPredefinidas()">📥 32 Seleções</button>
+                        <button class="btn-pequeno btn-vermelho" onclick="limparTodasSelecoes()">🗑 Limpar</button>
+                    </div>
+
+                    <span class="contador-selecoes" id="contadorSelecoes">0 seleções</span>
+
+                    <div id="formAdicionarSelecao" style="display: none; margin-top: 15px; padding: 15px; background: white; border-radius: 10px;">
+                        <h4 style="margin-bottom: 12px;">Nova Seleção</h4>
+                        <div class="form-grupo">
+                            <label>Nome:</label>
+                            <input type="text" id="nomeSelecao" placeholder="Ex: Brasil">
+                        </div>
+                        <div class="form-grupo">
+                            <label>Continente:</label>
+                            <select id="continenteSelecao">
+                                <option value="">Selecione...</option>
+                                <option value="América do Sul">América do Sul</option>
+                                <option value="Europa">Europa</option>
+                                <option value="África">África</option>
+                                <option value="Ásia">Ásia</option>
+                                <option value="América do Norte/Central">América do Norte/Central</option>
+                                <option value="Oceania">Oceania</option>
+                            </select>
+                        </div>
+                        <div class="botoes-acao">
+                            <button class="btn-acao btn-verde" onclick="adicionarSelecao()" style="flex: 1;">✅ Salvar</button>
+                            <button class="btn-acao btn-cinza" onclick="cancelarAdicionarSelecao()" style="flex: 1;">❌ Cancelar</button>
+                        </div>
+                        <div id="mensagemSelecao" class="mensagem"></div>
+                    </div>
+
+                    <div id="formColarSelecoes" style="display: none; margin-top: 15px; padding: 15px; background: white; border-radius: 10px;">
+                        <h4 style="margin-bottom: 12px;">📋 Colar Lista de Seleções</h4>
+                        <p style="color: #666; margin-bottom: 12px;">Cole os nomes das seleções, <strong>um por linha</strong>.</p>
+                        <div class="form-grupo">
+                            <textarea id="textoSelecoes" rows="8" placeholder="Cole aqui a lista de seleções..."></textarea>
+                        </div>
+                        <div class="botoes-acao">
+                            <button class="btn-acao btn-azul" onclick="processarListaSelecoes()" style="flex: 1;">✅ Carregar</button>
+                            <button class="btn-acao btn-cinza" onclick="cancelarColarSelecoes()" style="flex: 1;">❌ Cancelar</button>
+                        </div>
+                    </div>
+
+                    <div class="tabela-responsive" style="margin-top: 15px;">
+                        <table class="tabela-selecoes" id="tabelaSelecoes">
+                            <thead>
+                                <tr><th>Nome</th><th>Continente</th><th>Ações</th></tr>
+                            </thead>
+                            <tbody id="corpoTabelaSelecoes"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="adminParticipantes" class="admin-conteudo">
+                <div class="card">
+                    <h3>👥 Gerenciar Participantes (Admin)</h3>
+                    <div class="filtro-container">
+                        <select id="selectJogoAdmin" onchange="carregarParticipantesAdmin()">
+                            <option value="">Selecione um jogo...</option>
+                        </select>
+                    </div>
+                    <div id="listaParticipantesAdmin"></div>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- LISTA -->
-<div class="container mx-auto mt-6 px-4">
-    <div id="loading" class="text-center py-10 text-gray-500">
-        <i class="fas fa-spinner fa-spin fa-2x"></i>
-        <p class="mt-2">Carregando bolão...</p>
-    </div>
-    <div id="betsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-</div>
+    <button class="btn-admin" id="btnAdmin" onclick="abrirAdmin()" title="Acesso Admin">⚙️</button>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-    getFirestore, collection, getDocs, doc,
-    setDoc, onSnapshot, writeBatch
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-const firebaseConfig = {
-    apiKey: "AIzaSyBo8G3ZcWk4EepN0cHdVBtXc7tGOfcw-yg",
-    authDomain: "inscricaosinuca.firebaseapp.com",
-    projectId: "inscricaosinuca",
-    storageBucket: "inscricaosinuca.firebasestorage.app",
-    messagingSenderId: "338241576305",
-    appId: "1:338241576305:web:288b6124384c6be4f76ad0"
-};
+        const firebaseConfig = {
+            apiKey: "AIzaSyBf76ZgGb20sZXZSRWdV9F9HFPnaJvELAI",
+            authDomain: "palpite-copa-2026-e56fd.firebaseapp.com",
+            projectId: "palpite-copa-2026-e56fd",
+            storageBucket: "palpite-copa-2026-e56fd.firebasestorage.app",
+            messagingSenderId: "1040079893054",
+            appId: "1:1040079893054:web:39b99c9d45d7930db1976f",
+            measurementId: "G-MB5V39CK37"
+        };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
 
-let allParticipants = [];
-let currentDraw = [];
+        const jogosCollection = collection(db, 'jogos');
+        const palpitesCollection = collection(db, 'palpites');
+        const selecoesCollection = collection(db, 'selecoes');
 
-/* ---------- ADMIN ---------- */
-window.toggleAdmin = () => {
-    if (!localStorage.getItem("admin")) {
-        const pass = prompt("Senha do administrador:");
-        if (pass !== "bolao2025") return;
-        localStorage.setItem("admin", "ok");
-    }
-    document.getElementById("adminPanel").classList.toggle("hidden");
-};
+        let jogos = [];
+        let palpites = [];
+        let selecoes = [];
+        let usuarioAdmin = null;
 
-/* ---------- IMPORTAÇÃO ---------- */
-function parseNumbers(row) {
-    const text = row.slice(1).join(" ");
-    const nums = text.match(/\d+/g);
-    return nums ? nums.map(n => parseInt(n)).filter(n => n >= 1 && n <= 60) : [];
-}
+        const ADMIN_EMAIL = 'brunofe.qualidade@gmail.com';
 
-document.getElementById("fileInput").addEventListener("change", async e => {
-    const file = e.target.files[0];
-    const reader = new FileReader();
+        const SELECOES_PREDEFINIDAS = [
+            { nome: 'Brasil', continente: 'América do Sul' },
+            { nome: 'Argentina', continente: 'América do Sul' },
+            { nome: 'Uruguai', continente: 'América do Sul' },
+            { nome: 'Colômbia', continente: 'América do Sul' },
+            { nome: 'Chile', continente: 'América do Sul' },
+            { nome: 'Peru', continente: 'América do Sul' },
+            { nome: 'Equador', continente: 'América do Sul' },
+            { nome: 'Paraguai', continente: 'América do Sul' },
+            { nome: 'França', continente: 'Europa' },
+            { nome: 'Alemanha', continente: 'Europa' },
+            { nome: 'Espanha', continente: 'Europa' },
+            { nome: 'Inglaterra', continente: 'Europa' },
+            { nome: 'Portugal', continente: 'Europa' },
+            { nome: 'Itália', continente: 'Europa' },
+            { nome: 'Holanda', continente: 'Europa' },
+            { nome: 'Bélgica', continente: 'Europa' },
+            { nome: 'Croácia', continente: 'Europa' },
+            { nome: 'Dinamarca', continente: 'Europa' },
+            { nome: 'Suíça', continente: 'Europa' },
+            { nome: 'Polônia', continente: 'Europa' },
+            { nome: 'Senegal', continente: 'África' },
+            { nome: 'Marrocos', continente: 'África' },
+            { nome: 'Gana', continente: 'África' },
+            { nome: 'Camarões', continente: 'África' },
+            { nome: 'Nigéria', continente: 'África' },
+            { nome: 'Egito', continente: 'África' },
+            { nome: 'Japão', continente: 'Ásia' },
+            { nome: 'Coreia do Sul', continente: 'Ásia' },
+            { nome: 'Irã', continente: 'Ásia' },
+            { nome: 'Arábia Saudita', continente: 'Ásia' },
+            { nome: 'Austrália', continente: 'Oceania' },
+            { nome: 'México', continente: 'América do Norte/Central' },
+            { nome: 'EUA', continente: 'América do Norte/Central' },
+            { nome: 'Canadá', continente: 'América do Norte/Central' },
+            { nome: 'Costa Rica', continente: 'América do Norte/Central' }
+        ];
 
-    reader.onload = async evt => {
-        const data = new Uint8Array(evt.target.result);
-        const wb = XLSX.read(data, { type: "array" });
-        const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
+        // ============ AUTENTICAÇÃO ============
+        window.fazerLoginGoogle = async function() {
+            try {
+                const result = await signInWithPopup(auth, provider);
+                const user = result.user;
+                
+                if (user.email === ADMIN_EMAIL) {
+                    usuarioAdmin = user;
+                    window.mostrarSecao('adminPainel');
+                    atualizarStatusBar();
+                } else {
+                    await signOut(auth);
+                    alert('❌ Acesso negado! Apenas o administrador pode acessar.');
+                    usuarioAdmin = null;
+                }
+            } catch (error) {
+                console.error('Erro no login:', error);
+                alert('❌ Erro ao fazer login. Verifique se o Google Sign-in está ativado no Firebase Console.');
+            }
+        };
 
-        const snap = await getDocs(collection(db, "participants"));
-        const batch = writeBatch(db);
-        snap.forEach(d => batch.delete(d.ref));
+        window.fazerLogout = async function() {
+            await signOut(auth);
+            usuarioAdmin = null;
+            window.mostrarSecao('menuPrincipal');
+            atualizarStatusBar();
+        };
 
-        let count = 0;
+        window.abrirAdmin = function() {
+            if (usuarioAdmin) {
+                window.mostrarSecao('adminPainel');
+            } else {
+                window.mostrarSecao('adminLogin');
+            }
+        };
 
-        rows.forEach((row, index) => {
-    if (index === 0) return; // pula cabeçalho
+        function atualizarStatusBar() {
+            const statusTexto = document.getElementById('statusTexto');
+            const btnLogout = document.getElementById('btnLogout');
+            
+            if (usuarioAdmin) {
+                statusTexto.textContent = `🟢 Admin: ${usuarioAdmin.displayName || usuarioAdmin.email}`;
+                btnLogout.style.display = 'inline-block';
+            } else {
+                statusTexto.textContent = '🟢 Online! Pronto para palpitar.';
+                btnLogout.style.display = 'none';
+            }
+        }
 
-    const name = String(row[0] || "").trim();
-    const cartela1 = String(row[1] || "");
-    const cartela2 = String(row[2] || "");
-
-    if (!name) return;
-
-    const extract = txt =>
-        txt.match(/\d+/g)?.map(n => parseInt(n)).filter(n => n >= 1 && n <= 60) || [];
-
-    const nums1 = extract(cartela1);
-    const nums2 = extract(cartela2);
-
-    let bets = [];
-
-    if (nums1.length === 6) bets.push(nums1.sort((a,b)=>a-b));
-    if (nums2.length === 6) bets.push(nums2.sort((a,b)=>a-b));
-
-    if (bets.length > 0) {
-        batch.set(doc(collection(db, "participants")), { name, bets });
-        count++;
-    }
-});
-
-        await batch.commit();
-        alert(`✅ ${count} participantes importados`);
-        location.reload();
-    };
-
-    reader.readAsArrayBuffer(file);
-});
-
-/* ---------- RESULTADO ---------- */
-window.saveDrawResult = async () => {
-    const nums = document.getElementById("drawInput").value.match(/\d+/g);
-    if (!nums || nums.length < 6) return alert("Informe 6 números");
-    const draw = nums.map(n => parseInt(n)).slice(0,6).sort((a,b)=>a-b);
-    await setDoc(doc(db,"settings","draw"), { numbers: draw });
-};
-
-onSnapshot(doc(db,"settings","draw"), s => {
-    currentDraw = s.exists() ? s.data().numbers : [];
-    document.getElementById("drawInput").value = currentDraw.join(" ");
-    render();
-});
-
-onSnapshot(collection(db,"participants"), s => {
-    allParticipants = s.docs.map(d => d.data());
-    document.getElementById("loading").classList.add("hidden");
-    render();
-});
-
-/* ---------- RENDER ---------- */
-function render() {
-    const container = document.getElementById("betsList");
-    container.innerHTML = "";
-
-    const searchText = document.getElementById("searchInput").value.toLowerCase();
-    const searchNums = searchText.match(/\d+/g)?.map(n=>parseInt(n)) || [];
-
-    let stats = { sena:0, quina:0, quadra:0 };
-
-    // estatística global
-    allParticipants.forEach(p => {
-        p.bets.forEach(b => {
-            const hits = b.filter(n=>currentDraw.includes(n)).length;
-            if (hits===6) stats.sena++;
-            else if (hits===5) stats.quina++;
-            else if (hits===4) stats.quadra++;
+        onAuthStateChanged(auth, (user) => {
+            if (user && user.email === ADMIN_EMAIL) {
+                usuarioAdmin = user;
+            } else {
+                usuarioAdmin = null;
+            }
+            atualizarStatusBar();
         });
-    });
 
-    document.getElementById("countSena").innerText = stats.sena;
-    document.getElementById("countQuina").innerText = stats.quina;
-    document.getElementById("countQuadra").innerText = stats.quadra;
+        // ============ LISTENERS EM TEMPO REAL ============
+        function iniciarListeners() {
+            onSnapshot(jogosCollection, (snapshot) => {
+                jogos = [];
+                snapshot.forEach((doc) => {
+                    jogos.push({ id: doc.id, ...doc.data() });
+                });
+                console.log('📋 Jogos:', jogos.length);
+                atualizarTodasListas();
+            });
 
-    const ordered = [...allParticipants].sort((a,b)=>{
-        const ma = Math.max(...a.bets.map(bt=>bt.filter(n=>currentDraw.includes(n)).length));
-        const mb = Math.max(...b.bets.map(bt=>bt.filter(n=>currentDraw.includes(n)).length));
-        return mb - ma;
-    });
+            onSnapshot(palpitesCollection, (snapshot) => {
+                palpites = [];
+                snapshot.forEach((doc) => {
+                    palpites.push({ id: doc.id, ...doc.data() });
+                });
+                console.log('📝 Palpites:', palpites.length);
+                atualizarTodasListas();
+            });
 
-    ordered.forEach(p => {
-        const match =
-            p.name.toLowerCase().includes(searchText) ||
-            searchNums.length===0 ||
-            p.bets.some(b=>searchNums.every(n=>b.includes(n)));
+            onSnapshot(selecoesCollection, (snapshot) => {
+                selecoes = [];
+                snapshot.forEach((doc) => {
+                    selecoes.push({ id: doc.id, ...doc.data() });
+                });
+                console.log('🌍 Seleções:', selecoes.length);
+                // ATUALIZA OS SELECTS IMEDIATAMENTE
+                preencherSelectSelecoes();
+                atualizarTodasListas();
+            });
+        }
 
-        if (!match) return;
+        function atualizarTodasListas() {
+            carregarSelectJogosPalpite();
+            carregarSelectTodosJogos('selectJogoParticipantes');
+            carregarSelectJogosComResultado();
+            carregarSelectTodosJogos('selectJogoAdmin');
+            carregarTabelaSelecoes();
+            
+            if (document.getElementById('participantes').classList.contains('ativa')) {
+                carregarParticipantes();
+            }
+            if (document.getElementById('acertos').classList.contains('ativa')) {
+                carregarAcertos();
+            }
+            if (document.getElementById('adminPainel').classList.contains('ativa') && usuarioAdmin) {
+                carregarJogosAdmin();
+            }
+        }
 
-        const card = document.createElement("div");
-        card.className = "bg-white p-4 rounded-lg shadow border";
+        function jogoDisponivelParaPalpite(jogo) {
+            return jogo.ativo && !jogo.resultado;
+        }
 
-        let html = `<h3 class="font-bold mb-3">${p.name}</h3>`;
+        function getJogosParaPalpite() {
+            return jogos.filter(j => jogoDisponivelParaPalpite(j));
+        }
 
-        p.bets.forEach((b,i)=>{
-            const hits = b.filter(n=>currentDraw.includes(n)).length;
-            const bg = hits===6?'sena-bg':hits===5?'quina-bg':hits===4?'quadra-bg':'bg-gray-50';
+        function getJogosComResultado() {
+            return jogos.filter(j => j.resultado);
+        }
 
-            html += `
-            <div class="p-2 mb-2 rounded ${bg}">
-                <div class="text-xs mb-1">${i+1}º jogo • ${hits} acertos</div>
-                <div class="flex flex-wrap gap-1 justify-center">
-                    ${b.map(n=>`<span class="w-7 h-7 rounded-full flex items-center justify-center text-xs border ${currentDraw.includes(n)?'hit-number':'bg-white'}">${String(n).padStart(2,'0')}</span>`).join("")}
+        // ============ NAVEGAÇÃO ============
+        window.mostrarSecao = function(id) {
+            document.querySelectorAll('.secao').forEach(s => s.classList.remove('ativa'));
+            const secao = document.getElementById(id);
+            if (secao) {
+                secao.classList.add('ativa');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+            
+            if (id === 'adminPainel' && !usuarioAdmin) {
+                window.mostrarSecao('adminLogin');
+                return;
+            }
+            
+            if (id === 'adminPainel') carregarPainelAdmin();
+        };
+
+        window.voltarMenu = function() {
+            window.mostrarSecao('menuPrincipal');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.mudarAbaAdmin = function(aba) {
+            if (!usuarioAdmin) return;
+            
+            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('ativa'));
+            document.querySelectorAll('.admin-conteudo').forEach(c => c.classList.remove('ativa'));
+            
+            event.target.classList.add('ativa');
+            document.getElementById('admin' + aba.charAt(0).toUpperCase() + aba.slice(1)).classList.add('ativa');
+            
+            if (aba === 'jogos') carregarJogosAdmin();
+            if (aba === 'selecoes') carregarTabelaSelecoes();
+            if (aba === 'participantes') carregarSelectTodosJogos('selectJogoAdmin');
+        };
+
+        // ============ SELEÇÕES ============
+        function preencherSelectSelecoes() {
+            console.log('🔄 Atualizando selects com', selecoes.length, 'seleções');
+            
+            ['time1', 'time2'].forEach(id => {
+                const select = document.getElementById(id);
+                if (select) {
+                    // Ordena por nome
+                    const selecoesOrdenadas = [...selecoes].sort((a, b) => a.nome.localeCompare(b.nome));
+                    
+                    select.innerHTML = '<option value="">Selecione...</option>';
+                    selecoesOrdenadas.forEach(s => {
+                        select.innerHTML += `<option value="${s.nome}">${s.nome}</option>`;
+                    });
+                    console.log(`✅ Select ${id} atualizado com ${selecoesOrdenadas.length} opções`);
+                }
+            });
+        }
+
+        window.carregarSelecoesPredefinidas = async function() {
+            if (!usuarioAdmin) return;
+            if (confirm('Carregar 32 seleções predefinidas? Isso substituirá todas as atuais.')) {
+                const snapshot = await getDocs(selecoesCollection);
+                const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+                await Promise.all(deletePromises);
+                
+                const addPromises = SELECOES_PREDEFINIDAS.map(s => addDoc(selecoesCollection, s));
+                await Promise.all(addPromises);
+                alert('✅ 32 seleções carregadas com sucesso!');
+            }
+        };
+
+        window.limparTodasSelecoes = async function() {
+            if (!usuarioAdmin) return;
+            if (confirm('Excluir TODAS as seleções?')) {
+                const snapshot = await getDocs(selecoesCollection);
+                const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+                await Promise.all(deletePromises);
+                alert('🗑 Todas as seleções removidas!');
+            }
+        };
+
+        window.mostrarFormAdicionarSelecao = function() {
+            if (!usuarioAdmin) return;
+            document.getElementById('formAdicionarSelecao').style.display = 'block';
+            document.getElementById('formColarSelecoes').style.display = 'none';
+        };
+
+        window.cancelarAdicionarSelecao = function() {
+            document.getElementById('formAdicionarSelecao').style.display = 'none';
+        };
+
+        window.adicionarSelecao = async function() {
+            if (!usuarioAdmin) return;
+            const nome = document.getElementById('nomeSelecao').value.trim();
+            const continente = document.getElementById('continenteSelecao').value;
+            if (!nome) return alert('Digite o nome!');
+            
+            await addDoc(selecoesCollection, { nome, continente: continente || 'Não definido' });
+            document.getElementById('formAdicionarSelecao').style.display = 'none';
+            document.getElementById('nomeSelecao').value = '';
+        };
+
+        window.mostrarFormColarSelecoes = function() {
+            if (!usuarioAdmin) return;
+            document.getElementById('formColarSelecoes').style.display = 'block';
+            document.getElementById('formAdicionarSelecao').style.display = 'none';
+        };
+
+        window.cancelarColarSelecoes = function() {
+            document.getElementById('formColarSelecoes').style.display = 'none';
+        };
+
+        window.processarListaSelecoes = async function() {
+            if (!usuarioAdmin) return;
+            const texto = document.getElementById('textoSelecoes').value.trim();
+            if (!texto) return alert('Cole a lista!');
+            
+            const linhas = texto.split('\n').map(l => l.trim()).filter(l => l);
+            const addPromises = linhas.map(nome => {
+                nome = nome.replace(/^[\d\.\-\s\)]+/, '').trim();
+                return addDoc(selecoesCollection, { nome, continente: 'Não definido' });
+            });
+            
+            await Promise.all(addPromises);
+            document.getElementById('formColarSelecoes').style.display = 'none';
+            alert(`✅ ${linhas.length} seleções adicionadas!`);
+        };
+
+        window.editarSelecao = async function(selecaoId) {
+            if (!usuarioAdmin) return;
+            const selecao = selecoes.find(s => s.id === selecaoId);
+            if (!selecao) return;
+            const novoNome = prompt('Novo nome:', selecao.nome);
+            if (novoNome) {
+                await updateDoc(doc(db, 'selecoes', selecaoId), { nome: novoNome.trim() });
+            }
+        };
+
+        window.excluirSelecao = async function(selecaoId) {
+            if (!usuarioAdmin) return;
+            if (confirm('Excluir esta seleção?')) {
+                await deleteDoc(doc(db, 'selecoes', selecaoId));
+            }
+        };
+
+        function carregarTabelaSelecoes() {
+            const tbody = document.getElementById('corpoTabelaSelecoes');
+            const contador = document.getElementById('contadorSelecoes');
+            if (contador) contador.textContent = `${selecoes.length} seleções`;
+            
+            if (!tbody) return;
+            
+            if (selecoes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Nenhuma seleção</td></tr>';
+                return;
+            }
+            
+            const selecoesOrdenadas = [...selecoes].sort((a, b) => a.nome.localeCompare(b.nome));
+            
+            tbody.innerHTML = selecoesOrdenadas.map(s => `
+                <tr>
+                    <td>🌍 ${s.nome}</td>
+                    <td>${s.continente || 'Não definido'}</td>
+                    <td>
+                        ${usuarioAdmin ? `
+                            <button class="btn-pequeno btn-azul" onclick="editarSelecao('${s.id}')">✏️</button>
+                            <button class="btn-pequeno btn-vermelho" onclick="excluirSelecao('${s.id}')">🗑</button>
+                        ` : '🔒'}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // ============ JOGOS ============
+        function carregarSelectJogosPalpite() {
+            const select = document.getElementById('selectJogoPalpite');
+            if (!select) return;
+            const disponiveis = getJogosParaPalpite();
+            select.innerHTML = '<option value="">Escolha um jogo...</option>';
+            disponiveis.forEach(j => {
+                select.innerHTML += `<option value="${j.id}">${j.time1} x ${j.time2} - ${j.data} ${j.horario}</option>`;
+            });
+        }
+
+        function carregarSelectTodosJogos(selectId) {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+            select.innerHTML = '<option value="">Selecione um jogo...</option>';
+            jogos.forEach(j => {
+                let status = j.resultado ? '🔵' : (j.ativo ? '🟢' : '🟡');
+                select.innerHTML += `<option value="${j.id}">${status} ${j.time1} x ${j.time2} - ${j.data}</option>`;
+            });
+        }
+
+        function carregarSelectJogosComResultado() {
+            const select = document.getElementById('selectJogoAcertos');
+            if (!select) return;
+            const comResultado = getJogosComResultado();
+            select.innerHTML = '<option value="">Selecione um jogo...</option>';
+            comResultado.forEach(j => {
+                select.innerHTML += `<option value="${j.id}">${j.time1} ${j.resultado.placarTime1} x ${j.resultado.placarTime2} ${j.time2}</option>`;
+            });
+        }
+
+        window.atualizarInfoJogo = function() {
+            const jogoId = document.getElementById('selectJogoPalpite').value;
+            const container = document.getElementById('formPalpiteContainer');
+            if (!jogoId) { container.style.display = 'none'; return; }
+            
+            const jogo = jogos.find(j => j.id === jogoId);
+            if (!jogo || !jogoDisponivelParaPalpite(jogo)) {
+                container.style.display = 'none';
+                return;
+            }
+            
+            container.style.display = 'block';
+            document.getElementById('infoJogoSelecionado').innerHTML = `
+                <strong>${jogo.time1} x ${jogo.time2}</strong><br>
+                📅 ${jogo.data} ⏰ ${jogo.horario}
+            `;
+            document.getElementById('labelTime1').textContent = jogo.time1;
+            document.getElementById('labelTime2').textContent = jogo.time2;
+        };
+
+        // ============ PALPITE ============
+        document.getElementById('formPalpite').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const jogoId = document.getElementById('selectJogoPalpite').value;
+            const nome = document.getElementById('nomeParticipante').value.trim();
+            const email = document.getElementById('emailParticipante').value.trim().toLowerCase();
+            const placar1 = document.getElementById('placarTime1').value;
+            const placar2 = document.getElementById('placarTime2').value;
+            const msgDiv = document.getElementById('mensagemPalpite');
+
+            if (!jogoId || !nome || !email || placar1 === '' || placar2 === '') {
+                msgDiv.textContent = '❌ Preencha todos os campos!';
+                msgDiv.className = 'mensagem erro';
+                return;
+            }
+
+            if (!email.includes('@')) {
+                msgDiv.textContent = '❌ Email inválido!';
+                msgDiv.className = 'mensagem erro';
+                return;
+            }
+
+            const jaPalpitou = palpites.some(p => p.email === email && p.jogoId === jogoId);
+            if (jaPalpitou) {
+                msgDiv.textContent = '❌ Este email já palpitou neste jogo!';
+                msgDiv.className = 'mensagem erro';
+                return;
+            }
+
+            await addDoc(palpitesCollection, {
+                nome, email, jogoId,
+                placarTime1: parseInt(placar1),
+                placarTime2: parseInt(placar2),
+                data: new Date().toISOString()
+            });
+
+            msgDiv.textContent = '✅ Palpite registrado com sucesso!';
+            msgDiv.className = 'mensagem sucesso';
+            this.reset();
+            document.getElementById('selectJogoPalpite').value = '';
+            document.getElementById('formPalpiteContainer').style.display = 'none';
+            
+            setTimeout(() => { msgDiv.className = 'mensagem'; }, 3000);
+        });
+
+        // ============ PARTICIPANTES ============
+        window.carregarParticipantes = function() {
+            const jogoId = document.getElementById('selectJogoParticipantes').value;
+            const div = document.getElementById('listaParticipantes');
+            
+            let lista = jogoId ? palpites.filter(p => p.jogoId === jogoId) : palpites;
+            
+            if (lista.length === 0) {
+                div.innerHTML = '<div class="sem-dados">📭 Nenhum palpite</div>';
+                return;
+            }
+
+            div.innerHTML = lista.map(p => {
+                const jogo = jogos.find(j => j.id === p.jogoId);
+                const jogoInfo = jogo ? `${jogo.time1} x ${jogo.time2}` : 'Jogo não encontrado';
+                return `
+                    <div class="card">
+                        <strong>👤 ${p.nome}</strong>
+                        <p><strong>Jogo:</strong> ${jogoInfo}</p>
+                        <div class="placar">${p.placarTime1} x ${p.placarTime2}</div>
+                    </div>
+                `;
+            }).join('');
+        };
+
+        // ============ ACERTOS ============
+        window.carregarAcertos = function() {
+            const jogoId = document.getElementById('selectJogoAcertos').value;
+            const div = document.getElementById('listaAcertos');
+            
+            if (!jogoId) {
+                div.innerHTML = '<div class="sem-dados">Selecione um jogo</div>';
+                return;
+            }
+
+            const jogo = jogos.find(j => j.id === jogoId);
+            if (!jogo || !jogo.resultado) {
+                div.innerHTML = '<div class="sem-dados">Sem resultado definido</div>';
+                return;
+            }
+
+            const acertos = palpites.filter(p => 
+                p.jogoId === jogoId &&
+                p.placarTime1 === jogo.resultado.placarTime1 &&
+                p.placarTime2 === jogo.resultado.placarTime2
+            );
+
+            div.innerHTML = `
+                <div style="background: #d4edda; padding: 15px; border-radius: 10px; margin-bottom: 15px; text-align: center;">
+                    <strong>Resultado Oficial:</strong> ${jogo.time1} ${jogo.resultado.placarTime1} x ${jogo.resultado.placarTime2} ${jogo.time2}
+                    <br><small>${acertos.length} acertaram</small>
                 </div>
-            </div>`;
+                ${acertos.length === 0 ? '<div class="sem-dados">😞 Ninguém acertou</div>' : 
+                    acertos.map(p => `
+                        <div class="card" style="border-left-color: #28a745;">
+                            <strong>🎉 ${p.nome}</strong>
+                            <div class="placar">${p.placarTime1} x ${p.placarTime2}</div>
+                            <span class="badge badge-ativo">✅ Acertou!</span>
+                        </div>
+                    `).join('')
+                }
+            `;
+        };
+
+        // ============ ADMIN ============
+        function carregarPainelAdmin() {
+            if (!usuarioAdmin) return;
+            preencherSelectSelecoes(); // ATUALIZA OS SELECTS
+            carregarJogosAdmin();
+            carregarTabelaSelecoes();
+            carregarSelectTodosJogos('selectJogoAdmin');
+        }
+
+        document.getElementById('formCriarJogo').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if (!usuarioAdmin) return alert('❌ Faça login como admin!');
+            
+            const time1 = document.getElementById('time1').value;
+            const time2 = document.getElementById('time2').value;
+            const data = document.getElementById('dataJogo').value;
+            const horario = document.getElementById('horarioJogo').value;
+
+            if (!time1 || !time2 || !data || !horario) return alert('Preencha todos os campos!');
+            if (time1 === time2) return alert('Times diferentes!');
+
+            await addDoc(jogosCollection, {
+                time1, time2, data, horario,
+                ativo: true, resultado: null,
+                dataCriacao: new Date().toISOString()
+            });
+
+            this.reset();
+            alert('✅ Jogo criado com sucesso!');
         });
 
-        card.innerHTML = html;
-        container.appendChild(card);
-    });
-}
+        function carregarJogosAdmin() {
+            const div = document.getElementById('listaJogosAdmin');
+            if (!div) return;
+            
+            if (jogos.length === 0) {
+                div.innerHTML = '<p style="text-align: center;">Nenhum jogo</p>';
+                return;
+            }
 
-document.getElementById("searchInput").addEventListener("input", render);
-</script>
+            div.innerHTML = jogos.map(j => `
+                <div class="card">
+                    <strong>${j.time1} x ${j.time2}</strong>
+                    <span class="badge ${j.resultado ? 'badge-resultado' : (j.ativo ? 'badge-ativo' : 'badge-encerrado')}">
+                        ${j.resultado ? 'RESULTADO' : (j.ativo ? 'ATIVO' : 'ENCERRADO')}
+                    </span>
+                    <p>📅 ${j.data} ⏰ ${j.horario}</p>
+                    ${j.resultado ? `<p>Resultado: ${j.time1} ${j.resultado.placarTime1} x ${j.resultado.placarTime2} ${j.time2}</p>` : ''}
+                    ${usuarioAdmin ? `
+                        <div class="botoes-acao">
+                            ${!j.resultado ? 
+                                (j.ativo ? 
+                                    `<button class="btn-pequeno btn-azul" onclick="toggleJogo('${j.id}')">Encerrar</button>` :
+                                    `<button class="btn-pequeno btn-verde" onclick="toggleJogo('${j.id}')">Ativar</button>`
+                                ) : ''
+                            }
+                            ${!j.resultado ? `<button class="btn-pequeno btn-amarelo" onclick="definirResultado('${j.id}')">Resultado</button>` : ''}
+                            <button class="btn-pequeno btn-vermelho" onclick="excluirJogo('${j.id}')">🗑</button>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
 
+        window.toggleJogo = async function(id) {
+            if (!usuarioAdmin) return;
+            const jogo = jogos.find(j => j.id === id);
+            if (jogo && !jogo.resultado) {
+                await updateDoc(doc(db, 'jogos', id), { ativo: !jogo.ativo });
+            }
+        };
+
+        window.definirResultado = async function(id) {
+            if (!usuarioAdmin) return;
+            const jogo = jogos.find(j => j.id === id);
+            if (!jogo || jogo.resultado) return;
+            
+            const p1 = prompt(`Placar do ${jogo.time1}:`);
+            if (p1 === null) return;
+            const p2 = prompt(`Placar do ${jogo.time2}:`);
+            if (p2 === null) return;
+            
+            if (!isNaN(p1) && !isNaN(p2)) {
+                await updateDoc(doc(db, 'jogos', id), {
+                    resultado: { placarTime1: parseInt(p1), placarTime2: parseInt(p2) },
+                    ativo: false
+                });
+            }
+        };
+
+        window.excluirJogo = async function(id) {
+            if (!usuarioAdmin) return;
+            if (confirm('Excluir este jogo e todos os palpites?')) {
+                await deleteDoc(doc(db, 'jogos', id));
+                const palpitesDoJogo = palpites.filter(p => p.jogoId === id);
+                const deletePromises = palpitesDoJogo.map(p => deleteDoc(doc(db, 'palpites', p.id)));
+                await Promise.all(deletePromises);
+            }
+        };
+
+        window.carregarParticipantesAdmin = function() {
+            if (!usuarioAdmin) return;
+            
+            const jogoId = document.getElementById('selectJogoAdmin').value;
+            const div = document.getElementById('listaParticipantesAdmin');
+            
+            if (!jogoId) {
+                div.innerHTML = '<p style="text-align: center;">Selecione um jogo</p>';
+                return;
+            }
+
+            const lista = palpites.filter(p => p.jogoId === jogoId);
+            if (lista.length === 0) {
+                div.innerHTML = '<p style="text-align: center;">Nenhum participante</p>';
+                return;
+            }
+
+            div.innerHTML = lista.map(p => `
+                <div class="card">
+                    <strong>👤 ${p.nome}</strong>
+                    <p style="color: #666;">📧 ${p.email}</p>
+                    <div class="placar">${p.placarTime1} x ${p.placarTime2}</div>
+                    <button class="btn-pequeno btn-vermelho" onclick="excluirParticipante('${p.id}')">🗑 Excluir</button>
+                </div>
+            `).join('');
+        };
+
+        window.excluirParticipante = async function(id) {
+            if (!usuarioAdmin) return;
+            if (confirm('Excluir este participante?')) {
+                await deleteDoc(doc(db, 'palpites', id));
+            }
+        };
+
+        // ============ INICIALIZAÇÃO ============
+        async function inicializar() {
+            const snapshotSelecoes = await getDocs(selecoesCollection);
+            if (snapshotSelecoes.empty) {
+                const promises = SELECOES_PREDEFINIDAS.map(s => addDoc(selecoesCollection, s));
+                await Promise.all(promises);
+                console.log('✅ Seleções predefinidas carregadas!');
+            }
+
+            const snapshotJogos = await getDocs(jogosCollection);
+            if (snapshotJogos.empty) {
+                await addDoc(jogosCollection, {
+                    time1: 'Brasil', time2: 'Argentina',
+                    data: '2026-06-25', horario: '16:00',
+                    ativo: true, resultado: null,
+                    dataCriacao: new Date().toISOString()
+                });
+                console.log('✅ Jogo exemplo criado!');
+            }
+
+            iniciarListeners();
+            atualizarStatusBar();
+            preencherSelectSelecoes(); // Garante que os selects sejam preenchidos
+        }
+
+        inicializar();
+    </script>
 </body>
 </html>
-
